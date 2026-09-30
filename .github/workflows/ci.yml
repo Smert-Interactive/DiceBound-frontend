@@ -57,7 +57,7 @@ jobs:
 
       - name: Test
         if: steps.project.outputs.ready == 'true'
-        run: npm run test --if-present -- --run
+        run: npm run test
 
       - name: Build
         if: steps.project.outputs.ready == 'true'
