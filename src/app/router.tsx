@@ -8,6 +8,7 @@ import CharacterVersionPage from "../pages/CharacterVersionPage";
 import ImportSystemPage from "../pages/ImportSystemPage";
 import ProfilePage from "../pages/ProfilePage";
 import NotFoundPage from "../pages/NotFoundPage";
+import AppLayout from "../layouts/AppLayout";
 
 
 export const router = createBrowserRouter([
@@ -17,34 +18,39 @@ export const router = createBrowserRouter([
   },
 
   {
-    path: "/characters",
-    element: <CharactersPage />,
-  },
+  element: <AppLayout />,
+  children: [
+    {
+      path: "/characters",
+      element: <CharactersPage />,
+    },
+ 
+    {
+      path: "/characters/new",
+      element: <NewCharacterPage />,
+    },
 
-  {
-    path: "/characters/new",
-    element: <NewCharacterPage />,
-  },
+    {
+      path: "/characters/:id",
+      element: <CharacterPage />,
+    },
 
-  {
-    path: "/characters/:id",
-    element: <CharacterPage />,
-  },
+    {
+      path: "/characters/:id/versions/:version",
+      element: <CharacterVersionPage />,
+    },
 
-  {
-    path: "/characters/:id/versions/:version",
-    element: <CharacterVersionPage />,
-  },
+    {
+      path: "/systems/import",
+      element: <ImportSystemPage />,
+    },
 
-  {
-    path: "/systems/import",
-    element: <ImportSystemPage />,
-  },
-
-  {
-    path: "/profile",
-    element: <ProfilePage />,
-  },
+    {
+      path: "/profile",
+      element: <ProfilePage />,
+    },
+  ],
+},
 
   {
     path: "*",

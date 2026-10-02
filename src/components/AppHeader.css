@@ -1,0 +1,86 @@
+/* =====================
+   DESKTOP
+===================== */
+
+.desktop-header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  border-bottom: 1px solid #292936;
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+}
+
+.header__profile{border:1px solid #343440;
+    border-radius:30px;
+    padding:10px 18px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    color:white
+}
+.header__profile img{
+    width:20px
+}
+
+.mobile-header {
+  display: none;
+}
+
+/* =====================
+   MOBILE
+===================== */
+
+@media (max-width: 768px) {
+  .desktop-header {
+    display: none;
+  }
+
+  .mobile-header {
+    display: flex;
+    height: 72px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid #292936;
+    background: var(--color-bg-sidebar);
+  }
+
+  .mobile-header__logo {
+    width: 130px;
+    margin-left: 16px;
+  }
+
+  .burger {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    height: 18px;
+  }
+
+  .flex-cont{
+    display: flex;
+    align-items: center;
+  }
+
+  .burger span {
+    width: 24px;
+    height: 2px;
+    background: white;
+  }
+
+  .mobile-profile {
+    background: none;
+    border: none;
+  }
+
+  .mobile-profile img {
+    width: 28px;
+  }
+}
