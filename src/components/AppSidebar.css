@@ -1,8 +1,8 @@
 .sidebar {
-  width: 276px;
+  width: var(--width-sidebar);
   height: 100vh;
   background: var(--color-bg-sidebar);
-  border-right: 1px solid #292936;
+  border-right: 1px solid var(--color-border-default);
   position: relative;
   z-index: 1000;
 }
@@ -48,7 +48,7 @@
 
 /* mobile sidebar */
 
-@media (max-width: 768px) {
+@media (max-width: 639px) {
   .sidebar:not(.sidebar--mobile) {
     display: none;
   }
