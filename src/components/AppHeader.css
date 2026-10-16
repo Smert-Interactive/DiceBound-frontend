@@ -21,8 +21,8 @@
     align-items:center;
     color:var(--color-text-primary)
 }
-.header__profile img{
-    width:20px
+.header__profile svg{
+    flex-shrink:0
 }
 
 .mobile-header {
@@ -56,12 +56,14 @@
   .burger {
     display: flex;
     align-items: center;
-    flex-direction: column;
-    gap: 5px;
+    justify-content: center;
+    width: var(--size-button);
+    height: var(--size-button);
+    padding: 0;
     background: none;
     border: none;
+    color: var(--color-text-primary);
     cursor: pointer;
-    height: 18px;
   }
 
   .flex-cont{
@@ -69,18 +71,16 @@
     align-items: center;
   }
 
-  .burger span {
-    width: 24px;
-    height: 2px;
-    background: var(--color-text-primary);
-  }
-
   .mobile-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-button);
+    height: var(--size-button);
+    padding: 0;
     background: none;
     border: none;
-  }
-
-  .mobile-profile img {
-    width: 28px;
+    color: var(--color-text-primary);
+    cursor: pointer;
   }
 }
