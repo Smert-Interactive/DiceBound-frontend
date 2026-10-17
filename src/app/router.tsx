@@ -11,6 +11,7 @@ import ImportSystemPage from "../pages/ImportSystemPage";
 import ProfilePage from "../pages/ProfilePage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AppLayout from "../layouts/AppLayout";
+import ProtectedRoute from "../components/ProtectedRoute";
 import { ROUTES } from "../constants/routes";
 
 export const routes: RouteObject[] = [
@@ -25,41 +26,46 @@ export const routes: RouteObject[] = [
   },
 
   {
-    element: <AppLayout />,
+    element: <ProtectedRoute />,
     children: [
       {
-        path: ROUTES.characters,
-        element: <CharactersPage />,
-      },
+        element: <AppLayout />,
+        children: [
+          {
+            path: ROUTES.characters,
+            element: <CharactersPage />,
+          },
 
-      {
-        path: ROUTES.newCharacter,
-        element: <NewCharacterPage />,
-      },
+          {
+            path: ROUTES.newCharacter,
+            element: <NewCharacterPage />,
+          },
 
-      {
-        path: ROUTES.character,
-        element: <CharacterPage />,
-      },
+          {
+            path: ROUTES.character,
+            element: <CharacterPage />,
+          },
 
-      {
-        path: ROUTES.characterVersion,
-        element: <CharacterVersionPage />,
-      },
+          {
+            path: ROUTES.characterVersion,
+            element: <CharacterVersionPage />,
+          },
 
-      {
-        path: ROUTES.systems,
-        element: <SystemsPage />,
-      },
+          {
+            path: ROUTES.systems,
+            element: <SystemsPage />,
+          },
 
-      {
-        path: ROUTES.importSystem,
-        element: <ImportSystemPage />,
-      },
+          {
+            path: ROUTES.importSystem,
+            element: <ImportSystemPage />,
+          },
 
-      {
-        path: ROUTES.profile,
-        element: <ProfilePage />,
+          {
+            path: ROUTES.profile,
+            element: <ProfilePage />,
+          },
+        ],
       },
     ],
   },
