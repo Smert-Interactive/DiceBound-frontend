@@ -1,0 +1,32 @@
+.breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Разделитель рисуется через CSS, в HTML его нет. */
+.breadcrumbs__item + .breadcrumbs__item::before {
+  content: "/";
+  margin: 0 10px;
+  color: var(--color-text-muted);
+}
+
+.breadcrumbs__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.breadcrumbs__link:hover {
+  color: var(--color-text-primary);
+}
+
+/* Текущая страница ярче остальных. */
+.breadcrumbs__item [aria-current="page"] {
+  color: var(--color-text-secondary);
+}
