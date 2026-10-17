@@ -42,6 +42,24 @@ describe("getBreadcrumbs", () => {
     ]);
   });
 
+  // По холсту: на странице импорта только одна крошка.
+  test("builds crumbs for /systems/import", () => {
+    const crumbs = getBreadcrumbs("/systems/import");
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual(["Импорт системы"]);
+  });
+
+  // По холсту: список систем показан как шаг после импорта.
+  test("builds crumbs for /systems", () => {
+    const crumbs = getBreadcrumbs("/systems");
+
+    expect(crumbs.map((crumb) => crumb.label)).toEqual([
+      "Импорт системы",
+      "Игровые системы",
+    ]);
+    expect(crumbs[0].to).toBe("/systems/import");
+  });
+
   // У «Истории» нет собственного адреса, поэтому нет и ссылки.
   test("history crumb has no link", () => {
     const history = getBreadcrumbs("/characters/42/versions/4")[2];

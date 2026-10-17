@@ -35,7 +35,7 @@ describe("routes", () => {
     renderAt("/systems/import");
 
     expect(
-      screen.getByRole("link", { name: "К списку систем" }),
+      screen.getByRole("link", { name: "Мои игровые системы" }),
     ).toHaveAttribute("href", "/systems");
   });
 

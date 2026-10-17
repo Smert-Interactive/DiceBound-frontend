@@ -18,6 +18,27 @@ export function getBreadcrumbs(
   const parts = pathname.split("/").filter(Boolean);
   const isCharacterPath = parts[0] === "characters";
 
+  // По холсту крошки систем следуют сценарию, а не адресу:
+  // список систем показан как шаг после импорта.
+  const importCrumb: Crumb = {
+    path: "/systems/import",
+    label: routeLabels.import,
+    to: "/systems/import",
+  };
+
+  // /systems/import → Импорт системы
+  if (parts.length === 2 && parts[0] === "systems" && parts[1] === "import") {
+    return [importCrumb];
+  }
+
+  // /systems → Импорт системы / Игровые системы
+  if (parts.length === 1 && parts[0] === "systems") {
+    return [
+      importCrumb,
+      { path: "/systems", label: routeLabels.systems, to: "/systems" },
+    ];
+  }
+
   let path = "";
 
   return parts.map((part, index) => {
@@ -41,7 +62,7 @@ export function getBreadcrumbs(
       }
     }
 
-    // «Системы» и «Профиль» и так далее берём из словаря, неизвестное показываем как есть.
+    // «Персонажи», «Профиль» и так далее берём из словаря, неизвестное показываем как есть.
     return { path, label: routeLabels[part] ?? part, to: path };
   });
 }

@@ -67,6 +67,15 @@ describe("AppSidebar", () => {
     ).not.toHaveAttribute("aria-current");
   });
 
+  // По холсту на странице /systems в меню активен «Импорт системы».
+  test("marks import link as current on /systems", () => {
+    renderSidebar(<AppSidebar />, ["/systems"]);
+
+    expect(
+      screen.getByRole("link", { name: "Импорт системы" }),
+    ).toHaveAttribute("aria-current", "page");
+  });
+
   //Проверяет, что при нажатии на кнопку закрытия вызывается callback onClose.
 
   test("calls onClose when close button clicked", () => {

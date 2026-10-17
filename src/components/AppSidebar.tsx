@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, matchPath, useLocation } from "react-router-dom";
 
 import "./AppSidebar.css";
 
@@ -12,25 +12,32 @@ interface Props {
   onClose?: () => void;
 }
 
+// path — куда ведёт ссылка, activePath — на каких адресах пункт считается активным
+// (совпадение по началу пути: «/systems» включает и «/systems/import»).
 const menuItems = [
   {
     title: "Персонажи",
     Icon: UsersIcon,
     path: "/characters",
+    activePath: "/characters",
   },
   {
     title: "Импорт системы",
     Icon: UploadIcon,
     path: "/systems/import",
+    // По холсту на странице /systems в меню активен «Импорт системы».
+    activePath: "/systems",
   },
   {
     title: "Профиль",
     Icon: UserIcon,
     path: "/profile",
+    activePath: "/profile",
   },
 ];
 
 export default function AppSidebar({ mobile, onClose }: Props) {
+  const { pathname } = useLocation();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // При открытии мобильного меню фокус переходит внутрь него.
@@ -66,13 +73,22 @@ export default function AppSidebar({ mobile, onClose }: Props) {
       </div>
 
       <nav className="sidebar__nav" aria-label="Основная навигация">
-        {menuItems.map(({ path, title, Icon }) => (
-          <NavLink key={path} to={path} className="sidebar__item">
-            <Icon className="sidebar__icon" />
+        {menuItems.map(({ path, activePath, title, Icon }) => {
+          const isActive = matchPath({ path: activePath, end: false }, pathname);
 
-            <span>{title}</span>
-          </NavLink>
-        ))}
+          return (
+            <Link
+              key={path}
+              to={path}
+              className="sidebar__item"
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon className="sidebar__icon" />
+
+              <span>{title}</span>
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
