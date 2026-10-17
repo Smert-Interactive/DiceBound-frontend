@@ -3,6 +3,7 @@ import type { Ref } from "react";
 import "./AppHeader.css";
 
 import logo from "../assets/logo.svg";
+import { useAuth } from "../auth/authContext";
 import AppBreadcrumbs from "./AppBreadcrumbs";
 import { MenuIcon, UserIcon } from "./icons";
 
@@ -17,6 +18,9 @@ export default function AppHeader({
   menuOpen = false,
   menuButtonRef,
 }: Props) {
+  // Берём вошедшего пользователя из AuthProvider, а не пишем email в коде.
+  const { user } = useAuth();
+
   return (
     <>
       {/* =====================
@@ -26,7 +30,7 @@ export default function AppHeader({
         <AppBreadcrumbs />
         <div className="header__profile">
           <UserIcon width={20} height={20} />
-          <span>alex@example.com</span>
+          <span>{user?.email}</span>
         </div>
       </header>
 

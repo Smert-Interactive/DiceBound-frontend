@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
 
 import AppHeader from "../components/AppHeader";
+import AuthProvider from "../auth/AuthProvider";
 
 
 vi.mock("../components/AppBreadcrumbs", () => ({
@@ -16,7 +17,11 @@ describe("AppHeader", () => {
     const onMenuClick = vi.fn();
 
     // Рендерим компонент AppHeader. Передаём ему функцию, которая должна вызваться при нажатии на кнопку меню.
-    render(<AppHeader onMenuClick={onMenuClick} />);
+    render(
+      <AuthProvider>
+        <AppHeader onMenuClick={onMenuClick} />
+      </AuthProvider>,
+    );
 
     // Находим кнопку открытия меню по доступному имени.
     const button = screen.getByRole("button", { name: "Открыть меню" });
@@ -26,5 +31,16 @@ describe("AppHeader", () => {
 
     // Проверяем, что после клика функция onMenuClick была вызвана ровно один раз.
     expect(onMenuClick).toHaveBeenCalledTimes(1);
+  });
+
+  // Email в шапке берётся из вошедшего пользователя, а не прописан в коде.
+  test("shows the email of the signed-in user", () => {
+    render(
+      <AuthProvider initialUser={{ email: "bob@example.com" }}>
+        <AppHeader />
+      </AuthProvider>,
+    );
+
+    expect(screen.getByText("bob@example.com")).toBeInTheDocument();
   });
 });
