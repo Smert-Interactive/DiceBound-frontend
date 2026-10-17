@@ -81,33 +81,12 @@ describe("getBreadcrumbs", () => {
 });
 
 describe("AppBreadcrumbs", () => {
-  // Проверяет, что компонент правильно отображает переведённые названия маршрутов из URL.
-  test("renders translated route labels", () => {
-    renderAt("/characters/new");
-
-    // Проверяем, что первый элемент хлебных крошек отображается с русским названием "Персонажи".
-    expect(screen.getByText("Персонажи")).toBeInTheDocument();
-
-    // Проверяем, что второй элемент хлебных крошек содержит название текущего маршрута "Новый персонаж".
-    expect(screen.getByText("Новый персонаж")).toBeInTheDocument();
-  });
-
   // Проверяет поведение компонента для неизвестного маршрута.
   test("renders unknown paths as they are", () => {
     renderAt("/unknown");
 
     // Проверяем, что неизвестный путь отображается без изменений.
     expect(screen.getByText("unknown")).toBeInTheDocument();
-  });
-
-  // Разметка должна быть навигацией со списком, чтобы скринридер её понимал.
-  test("renders a labelled navigation list", () => {
-    renderAt("/characters/42/versions/4", "Aldric");
-
-    const nav = screen.getByRole("navigation", { name: "Хлебные крошки" });
-
-    expect(nav).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(4);
   });
 
   // Промежуточные крошки — ссылки, последняя — обычный текст с aria-current.

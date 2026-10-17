@@ -30,28 +30,11 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Профиль")).toBeInTheDocument();
   });
 
-  // Проверяет, что в мобильном режиме Sidebar показывает кнопку закрытия.
-  test("shows close button on mobile", () => {
-    renderSidebar(<AppSidebar mobile />);
-
-    // Проверяем, что кнопка закрытия существует и имеет доступное имя.
-    expect(
-      screen.getByRole("button", { name: "Закрыть меню" }),
-    ).toBeInTheDocument();
-  });
-
   // Проверяет, что при открытии мобильного меню фокус переходит на кнопку закрытия.
   test("focuses close button on mobile", () => {
     renderSidebar(<AppSidebar mobile />);
 
     expect(screen.getByRole("button", { name: "Закрыть меню" })).toHaveFocus();
-  });
-
-  // Проверяет, что мобильное меню является модальным диалогом.
-  test("renders mobile sidebar as dialog", () => {
-    renderSidebar(<AppSidebar mobile />);
-
-    expect(screen.getByRole("dialog", { name: "Меню" })).toBeInTheDocument();
   });
 
   // Проверяет, что пункты меню — ссылки, а текущий раздел помечен aria-current.

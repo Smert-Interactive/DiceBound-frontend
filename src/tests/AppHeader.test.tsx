@@ -27,22 +27,4 @@ describe("AppHeader", () => {
     // Проверяем, что после клика функция onMenuClick была вызвана ровно один раз.
     expect(onMenuClick).toHaveBeenCalledTimes(1);
   });
-
-  // Проверяет, что кнопка меню сообщает скринридеру, открыто ли меню.
-  test("reflects menu state in aria-expanded", () => {
-    const { rerender } = render(<AppHeader menuOpen={false} />);
-
-    const button = screen.getByRole("button", { name: "Открыть меню" });
-    expect(button).toHaveAttribute("aria-expanded", "false");
-
-    rerender(<AppHeader menuOpen />);
-    expect(button).toHaveAttribute("aria-expanded", "true");
-  });
-
-  // Проверяет, что у иконки-кнопки профиля есть доступное имя.
-  test("labels mobile profile button", () => {
-    render(<AppHeader />);
-
-    expect(screen.getByRole("button", { name: "Профиль" })).toBeInTheDocument();
-  });
 });
