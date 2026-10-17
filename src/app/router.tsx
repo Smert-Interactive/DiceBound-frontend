@@ -11,58 +11,64 @@ import ImportSystemPage from "../pages/ImportSystemPage";
 import ProfilePage from "../pages/ProfilePage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AppLayout from "../layouts/AppLayout";
-
+import ProtectedRoute from "../components/ProtectedRoute";
+import { ROUTES } from "../constants/routes";
 
 export const routes: RouteObject[] = [
   {
-    path: "/",
-    element: <Navigate to="/characters" replace />,
+    path: ROUTES.root,
+    element: <Navigate to={ROUTES.characters} replace />,
   },
 
   {
-    path: "/login",
+    path: ROUTES.login,
     element: <LoginPage />,
   },
 
   {
-  element: <AppLayout />,
-  children: [
-    {
-      path: "/characters",
-      element: <CharactersPage />,
-    },
- 
-    {
-      path: "/characters/new",
-      element: <NewCharacterPage />,
-    },
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          {
+            path: ROUTES.characters,
+            element: <CharactersPage />,
+          },
 
-    {
-      path: "/characters/:id",
-      element: <CharacterPage />,
-    },
+          {
+            path: ROUTES.newCharacter,
+            element: <NewCharacterPage />,
+          },
 
-    {
-      path: "/characters/:id/versions/:version",
-      element: <CharacterVersionPage />,
-    },
+          {
+            path: ROUTES.character,
+            element: <CharacterPage />,
+          },
 
-    {
-      path: "/systems",
-      element: <SystemsPage />,
-    },
+          {
+            path: ROUTES.characterVersion,
+            element: <CharacterVersionPage />,
+          },
 
-    {
-      path: "/systems/import",
-      element: <ImportSystemPage />,
-    },
+          {
+            path: ROUTES.systems,
+            element: <SystemsPage />,
+          },
 
-    {
-      path: "/profile",
-      element: <ProfilePage />,
-    },
-  ],
-},
+          {
+            path: ROUTES.importSystem,
+            element: <ImportSystemPage />,
+          },
+
+          {
+            path: ROUTES.profile,
+            element: <ProfilePage />,
+          },
+        ],
+      },
+    ],
+  },
 
   {
     path: "*",

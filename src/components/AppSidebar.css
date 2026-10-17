@@ -26,20 +26,23 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  height: 52px;
+  height: 40px;
   padding: 0 16px;
-  border-radius: 12px;
+  border-radius: 9px;
   color: var(--color-text-secondary);
   text-decoration: none;
 }
 
 .sidebar__item:hover {
-  background: var(--color-bg-input);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
 }
 
+/* Правило стоит после :hover, поэтому у активного пункта фон не меняется при наведении. */
 .sidebar__item[aria-current="page"] {
   background: var(--color-bg-input);
   color: var(--color-text-primary);
+  font-weight: 500;
 }
 
 .sidebar__icon {
@@ -84,6 +87,73 @@
     left: 0;
     top: 0;
     animation: slide 0.25s ease;
+  }
+}
+
+/* tablet sidebar: 64 px, только иконки, названия — в подсказках */
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .sidebar {
+    width: var(--width-sidebar-tablet);
+  }
+
+  .sidebar__top {
+    justify-content: center;
+    padding: 24px 0;
+  }
+
+  /* Вордмарк обрезается до первого знака: квадрат 40 px, виден левый край картинки. */
+  .sidebar__logo {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    object-position: left;
+  }
+
+  .sidebar__nav {
+    padding: 10px 8px;
+  }
+
+  .sidebar__item {
+    position: relative;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* Подпись скрыта только визуально: имя ссылки для скринридера остаётся. */
+  .sidebar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Подсказка справа от иконки при наведении и фокусе с клавиатуры. */
+  .sidebar__item::after {
+    content: attr(data-tooltip);
+    /* Пустой alt-текст, чтобы подсказка не дублировала имя ссылки для скринридера. */
+    content: attr(data-tooltip) / "";
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 10px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button-sm);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sidebar__item:hover::after,
+  .sidebar__item:focus-visible::after {
+    opacity: 1;
   }
 }
 

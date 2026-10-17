@@ -5,6 +5,7 @@ import "./AppSidebar.css";
 
 import logo from "../assets/logo.svg";
 
+import { ROUTES } from "../constants/routes";
 import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
 
 interface Props {
@@ -18,21 +19,21 @@ const menuItems = [
   {
     title: "Персонажи",
     Icon: UsersIcon,
-    path: "/characters",
-    activePath: "/characters",
+    path: ROUTES.characters,
+    activePath: ROUTES.characters,
   },
   {
     title: "Импорт системы",
     Icon: UploadIcon,
-    path: "/systems/import",
+    path: ROUTES.importSystem,
     // По холсту на странице /systems в меню активен «Импорт системы».
-    activePath: "/systems",
+    activePath: ROUTES.systems,
   },
   {
     title: "Профиль",
     Icon: UserIcon,
-    path: "/profile",
-    activePath: "/profile",
+    path: ROUTES.profile,
+    activePath: ROUTES.profile,
   },
 ];
 
@@ -81,11 +82,12 @@ export default function AppSidebar({ mobile, onClose }: Props) {
               key={path}
               to={path}
               className="sidebar__item"
+              data-tooltip={title}
               aria-current={isActive ? "page" : undefined}
             >
               <Icon className="sidebar__icon" />
 
-              <span>{title}</span>
+              <span className="sidebar__label">{title}</span>
             </Link>
           );
         })}

@@ -13,12 +13,22 @@
   color: var(--color-text-secondary);
 }
 
-.header__profile{border:1px solid var(--color-border-strong);
+/* Пилюля аккаунта: высота 36 px, граница #2a2a37, текст #b9b6c2.
+   Hover на холсте не нарисован, по решению владельца он такой же, как у пунктов сайдбара. */
+.header__profile{
+    box-sizing:border-box;
+    height:36px;
+    border:1px solid var(--color-border-default);
     border-radius:30px;
-    padding:10px 18px;
+    padding:0 18px;
     display:flex;
     gap:10px;
     align-items:center;
+    color:var(--color-text-secondary);
+    text-decoration:none
+}
+.header__profile:hover{
+    background:var(--color-bg-surface);
     color:var(--color-text-primary)
 }
 .header__profile svg{
@@ -57,8 +67,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-button);
-    height: var(--size-button);
+    width: var(--size-button-touch);
+    height: var(--size-button-touch);
     padding: 0;
     background: none;
     border: none;
@@ -75,8 +85,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-button);
-    height: var(--size-button);
+    width: var(--size-button-touch);
+    height: var(--size-button-touch);
     padding: 0;
     background: none;
     border: none;

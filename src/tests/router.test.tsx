@@ -3,12 +3,21 @@ import { describe, test, expect } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
+import AuthProvider from "../auth/AuthProvider";
+import type { User } from "../auth/authContext";
 
 // Рисует приложение с настоящими маршрутами, но с «фальшивым» адресом вместо адресной строки.
-function renderAt(path: string) {
+// По умолчанию пользователь вошёл (mock), user: null — не вошёл.
+function renderAt(path: string, user?: User | null) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
 
-  return render(<RouterProvider router={router} />);
+  render(
+    <AuthProvider initialUser={user}>
+      <RouterProvider router={router} />
+    </AuthProvider>,
+  );
+
+  return router;
 }
 
 describe("routes", () => {
@@ -37,6 +46,32 @@ describe("routes", () => {
     expect(
       screen.getByRole("link", { name: "Мои игровые системы" }),
     ).toHaveAttribute("href", "/systems");
+  });
+
+  // Без входа защищённая страница недоступна: человека отправляет на /login.
+  test("redirects to /login when not signed in", () => {
+    renderAt("/characters", null);
+
+    expect(
+      screen.getByRole("heading", { name: "Login page" }),
+    ).toBeInTheDocument();
+  });
+
+  // Адрес, куда шёл человек, сохраняется, чтобы вернуть его туда после входа.
+  test("remembers the requested page when redirecting to /login", () => {
+    const router = renderAt("/characters/new", null);
+
+    expect(router.state.location.pathname).toBe("/login");
+    expect(router.state.location.state.from.pathname).toBe("/characters/new");
+  });
+
+  // Страница входа доступна без входа и не зацикливается.
+  test("renders /login when not signed in", () => {
+    renderAt("/login", null);
+
+    expect(
+      screen.getByRole("heading", { name: "Login page" }),
+    ).toBeInTheDocument();
   });
 
   // Неизвестный адрес по-прежнему показывает 404.

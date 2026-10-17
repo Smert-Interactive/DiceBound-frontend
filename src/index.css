@@ -107,6 +107,8 @@
   --size-field: 40px;
   --radius-field: 9px;
   --size-button: 38px;
+  /* Размер касания на телефоне: кнопка и поле 44 px. */
+  --size-button-touch: 44px;
   --radius-button: 10px;
   --size-button-sm: 32px;
   --radius-button-sm: 8px;
@@ -117,8 +119,20 @@
   --padding-modal: 24px;
   --width-layout: 1280px;
   --width-sidebar: 224px;
+  --width-sidebar-tablet: 64px;
   --height-topbar: 56px;
   --height-savebar: 68px;
+
+  /* =========================
+     Breakpoints
+     desktop от 1024, планшет 640-1023, телефон до 640, минимум 360.
+     var() не работает внутри @media, поэтому в медиазапросах пишем
+     числа вручную (телефон: max-width: 639px, планшет: max-width: 1023px),
+     а токены нужны как единый источник значений для calc() и JS.
+     ========================= */
+  --breakpoint-desktop: 1024px;
+  --breakpoint-tablet: 640px;
+  --breakpoint-min: 360px;
 
   /* =========================
      Focus
