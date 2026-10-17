@@ -69,4 +69,22 @@ describe("AppLayout", () => {
     // Проверяем, что Sidebar больше не отображается.
     expect(screen.queryByText("close")).not.toBeInTheDocument();
   });
+
+  //Проверяет закрытие мобильного Sidebar клавишей Escape.
+  test("closes sidebar on Escape", () => {
+    render(
+      <MemoryRouter>
+        <AppLayout />
+      </MemoryRouter>,
+    );
+
+    // Открываем мобильный Sidebar.
+    fireEvent.click(screen.getByText("menu"));
+
+    // Нажимаем Escape.
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    // Проверяем, что Sidebar больше не отображается.
+    expect(screen.queryByText("close")).not.toBeInTheDocument();
+  });
 });

@@ -1,56 +1,94 @@
+import { useEffect, useRef } from "react";
+import { Link, matchPath, useLocation } from "react-router-dom";
+
 import "./AppSidebar.css";
 
 import logo from "../assets/logo.svg";
 
-import charactersIcon from "../assets/icons/characters.svg";
-import importIcon from "../assets/icons/import.svg";
-import profileIcon from "../assets/icons/profile.svg";
-import closeIcon from "../assets/icons/close.svg";
+import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
 
 interface Props {
   mobile?: boolean;
   onClose?: () => void;
 }
 
+// path — куда ведёт ссылка, activePath — на каких адресах пункт считается активным
+// (совпадение по началу пути: «/systems» включает и «/systems/import»).
 const menuItems = [
   {
     title: "Персонажи",
-    icon: charactersIcon,
+    Icon: UsersIcon,
     path: "/characters",
+    activePath: "/characters",
   },
   {
     title: "Импорт системы",
-    icon: importIcon,
+    Icon: UploadIcon,
     path: "/systems/import",
+    // По холсту на странице /systems в меню активен «Импорт системы».
+    activePath: "/systems",
   },
   {
     title: "Профиль",
-    icon: profileIcon,
+    Icon: UserIcon,
     path: "/profile",
+    activePath: "/profile",
   },
 ];
 
 export default function AppSidebar({ mobile, onClose }: Props) {
+  const { pathname } = useLocation();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // При открытии мобильного меню фокус переходит внутрь него.
+  useEffect(() => {
+    if (mobile) {
+      closeButtonRef.current?.focus();
+    }
+  }, [mobile]);
+
   return (
-    <aside className={mobile ? "sidebar sidebar--mobile" : "sidebar"}>
+    <aside
+      className={mobile ? "sidebar sidebar--mobile" : "sidebar"}
+      {...(mobile && {
+        role: "dialog",
+        "aria-modal": true,
+        "aria-label": "Меню",
+      })}
+    >
       <div className="sidebar__top">
         <img src={logo} className="sidebar__logo" alt="DiceBound" />
 
         {mobile && (
-          <button className="sidebar__close" onClick={onClose}>
-            <img src={closeIcon} alt="DiceBound" />
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="sidebar__close"
+            aria-label="Закрыть меню"
+            onClick={onClose}
+          >
+            <CloseIcon width={20} height={20} />
           </button>
         )}
       </div>
 
-      <nav className="sidebar__nav">
-        {menuItems.map((item) => (
-          <a key={item.path} href={item.path} className="sidebar__item">
-            <img src={item.icon} className="sidebar__icon" alt="" />
+      <nav className="sidebar__nav" aria-label="Основная навигация">
+        {menuItems.map(({ path, activePath, title, Icon }) => {
+          const isActive = matchPath({ path: activePath, end: false }, pathname);
 
-            <span>{item.title}</span>
-          </a>
-        ))}
+          return (
+            <Link
+              key={path}
+              to={path}
+              className="sidebar__item"
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon className="sidebar__icon" />
+
+              <span>{title}</span>
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );

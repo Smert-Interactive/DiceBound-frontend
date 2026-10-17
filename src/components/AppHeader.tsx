@@ -1,14 +1,22 @@
+import type { Ref } from "react";
+
 import "./AppHeader.css";
 
 import logo from "../assets/logo.svg";
-import profileIcon from "../assets/icons/profile.svg";
 import AppBreadcrumbs from "./AppBreadcrumbs";
+import { MenuIcon, UserIcon } from "./icons";
 
 interface Props {
   onMenuClick?: () => void;
+  menuOpen?: boolean;
+  menuButtonRef?: Ref<HTMLButtonElement>;
 }
 
-export default function AppHeader({ onMenuClick }: Props) {
+export default function AppHeader({
+  onMenuClick,
+  menuOpen = false,
+  menuButtonRef,
+}: Props) {
   return (
     <>
       {/* =====================
@@ -17,7 +25,7 @@ export default function AppHeader({ onMenuClick }: Props) {
       <header className="desktop-header">
         <AppBreadcrumbs />
         <div className="header__profile">
-          <img src={profileIcon} alt="" />
+          <UserIcon width={20} height={20} />
           <span>alex@example.com</span>
         </div>
       </header>
@@ -28,17 +36,23 @@ export default function AppHeader({ onMenuClick }: Props) {
 
       <header className="mobile-header">
         <div className="flex-cont">
-          <button className="burger" onClick={onMenuClick}>
-            <span />
-            <span />
-            <span />
+          <button
+            ref={menuButtonRef}
+            type="button"
+            className="burger"
+            aria-label="Открыть меню"
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+            onClick={onMenuClick}
+          >
+            <MenuIcon />
           </button>
 
           <img src={logo} alt="DiceBound" className="mobile-header__logo" />
         </div>
 
-        <button className="mobile-profile">
-          <img src={profileIcon} alt="" />
+        <button type="button" className="mobile-profile" aria-label="Профиль">
+          <UserIcon />
         </button>
       </header>
     </>

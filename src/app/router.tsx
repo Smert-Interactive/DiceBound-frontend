@@ -1,17 +1,24 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 
 import LoginPage from "../pages/LoginPage";
 import CharactersPage from "../pages/CharactersPage";
 import NewCharacterPage from "../pages/NewCharacterPage";
 import CharacterPage from "../pages/CharacterPage";
 import CharacterVersionPage from "../pages/CharacterVersionPage";
+import SystemsPage from "../pages/SystemsPage";
 import ImportSystemPage from "../pages/ImportSystemPage";
 import ProfilePage from "../pages/ProfilePage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AppLayout from "../layouts/AppLayout";
 
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
+  {
+    path: "/",
+    element: <Navigate to="/characters" replace />,
+  },
+
   {
     path: "/login",
     element: <LoginPage />,
@@ -41,6 +48,11 @@ export const router = createBrowserRouter([
     },
 
     {
+      path: "/systems",
+      element: <SystemsPage />,
+    },
+
+    {
       path: "/systems/import",
       element: <ImportSystemPage />,
     },
@@ -56,4 +68,6 @@ export const router = createBrowserRouter([
     path: "*",
     element: <NotFoundPage />,
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);

@@ -21,7 +21,7 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 639px) {
   .app-layout__content {
     padding: 20px;
   }
@@ -30,7 +30,7 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--color-backdrop);
     z-index: 999;
   }
 }

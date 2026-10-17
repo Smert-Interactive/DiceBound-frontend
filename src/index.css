@@ -22,10 +22,10 @@
   /* =========================
      Border colors
      ========================= */
-  /* Границы карточек */
-  --color-border-card: #2a2a37;
+  /* Границы карточек, сайдбара, шапки */
+  --color-border-default: #2a2a37;
   /* Границы полей и кнопок */
-  --color-border-default: #3b3b4e;
+  --color-border-strong: #3b3b4e;
   /* Разделители таблиц */
   --color-border-divider: #23232e;
 
@@ -39,7 +39,7 @@
   /* Подписи полей, метаданные */
   --color-text-muted: #8b8899;
   /* Диапазоны min-max */
-  --color-text-disabled: #6f6c7e;
+  --color-text-faint: #6f6c7e;
   /* Значения read-only полей */
   --color-text-readonly: #d8d4de;
 
@@ -58,6 +58,15 @@
   );
   /* Ошибки, изменённые поля, HP */
   --color-error: #ea6a7e;
+  /* Затемнение под модалкой и мобильным меню */
+  --color-backdrop: rgba(9, 9, 12, 0.74);
+  /* Подложка и граница чипов и баннеров: фон 9-16 %, граница 34-45 % от акцента */
+  --tint-primary-bg: rgba(201, 52, 80, 0.12);
+  --tint-primary-border: rgba(201, 52, 80, 0.4);
+  --tint-calculated-bg: rgba(154, 143, 230, 0.12);
+  --tint-calculated-border: rgba(154, 143, 230, 0.4);
+  --tint-success-bg: rgba(109, 191, 149, 0.12);
+  --tint-success-border: rgba(109, 191, 149, 0.4);
 
   /* =========================
      Calculated values
@@ -78,18 +87,53 @@
   --color-success-light: #8fd4b0;
 
   /* =========================
-     CoC
+     Метки систем
      ========================= */
-  /* Метка CoC */
-  --color-coc: #6dbf95;
-  --color-coc-light: #8fd4b0;
+  /* D&D красная, CoC зелёная, импортированные фиолетовые */
+  --color-system-dnd: var(--color-error);
+  --color-system-coc: var(--color-success-light);
+  --color-system-imported: var(--color-calculated-text);
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* =========================
+     Typography
+     ========================= */
+  --sans: "Geist", system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+  --heading: "Cormorant Garamond", Georgia, serif;
 
-  font: 18px/145% var(--sans);
-  color: var(--text);
+  /* =========================
+     Sizes
+     ========================= */
+  --size-field: 40px;
+  --radius-field: 9px;
+  --size-button: 38px;
+  --radius-button: 10px;
+  --size-button-sm: 32px;
+  --radius-button-sm: 8px;
+  --radius-card: 14px;
+  --padding-card: 18px;
+  --width-modal: 460px;
+  --radius-modal: 18px;
+  --padding-modal: 24px;
+  --width-layout: 1280px;
+  --width-sidebar: 224px;
+  --height-topbar: 56px;
+  --height-savebar: 68px;
+
+  /* =========================
+     Focus
+     ========================= */
+  --focus-ring: 2px solid var(--color-calculated);
+  --focus-offset: 2px;
+
+  font: 14px/1.5 var(--sans);
+  color: var(--color-text-primary);
+  background: var(--color-bg-overlay);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 body {
@@ -98,12 +142,13 @@ body {
 
 h1 {
   font-family: var(--heading);
-  font-weight: 500;
-  color: var(--color-text-disabled);
-  font-size: 56px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 40px;
+  line-height: 1.1;
   margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
+  @media (max-width: 639px) {
+    font-size: 32px;
     margin: 20px 0;
   }
 }

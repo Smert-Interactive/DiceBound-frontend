@@ -1,22 +1,40 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import { routeLabels } from "../constants/routes";
+import "./AppBreadcrumbs.css";
 
-function AppBreadcrumbs() {
+import { getBreadcrumbs } from "./breadcrumbs";
+
+interface Props {
+  characterName?: string;
+}
+
+function AppBreadcrumbs({ characterName }: Props) {
   const location = useLocation();
 
-  const paths = location.pathname.split("/").filter(Boolean);
+  const crumbs = getBreadcrumbs(location.pathname, characterName);
 
   return (
-    <div className="breadcrumbs">
-      {paths.map((path, index) => (
-        <span key={path}>
-          {index > 0 && " / "}
+    <nav className="breadcrumbs" aria-label="Хлебные крошки">
+      <ol className="breadcrumbs__list">
+        {crumbs.map((crumb, index) => {
+          const isLast = index === crumbs.length - 1;
 
-          {routeLabels[path] ?? path}
-        </span>
-      ))}
-    </div>
+          return (
+            <li key={crumb.path} className="breadcrumbs__item">
+              {crumb.to && !isLast ? (
+                <Link to={crumb.to} className="breadcrumbs__link">
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span aria-current={isLast ? "page" : undefined}>
+                  {crumb.label}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 

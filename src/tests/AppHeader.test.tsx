@@ -1,4 +1,4 @@
-import { render, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
 
 import AppHeader from "../components/AppHeader";
@@ -16,13 +16,13 @@ describe("AppHeader", () => {
     const onMenuClick = vi.fn();
 
     // Рендерим компонент AppHeader. Передаём ему функцию, которая должна вызваться при нажатии на кнопку меню.
-    const { container } = render(<AppHeader onMenuClick={onMenuClick} />);
+    render(<AppHeader onMenuClick={onMenuClick} />);
 
-    // Находим кнопку открытия меню.
-    const button = container.querySelector(".burger");
+    // Находим кнопку открытия меню по доступному имени.
+    const button = screen.getByRole("button", { name: "Открыть меню" });
 
     // Имитируем клик пользователя по кнопке меню.
-    fireEvent.click(button!);
+    fireEvent.click(button);
 
     // Проверяем, что после клика функция onMenuClick была вызвана ровно один раз.
     expect(onMenuClick).toHaveBeenCalledTimes(1);
