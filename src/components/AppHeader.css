@@ -21,6 +21,12 @@
     align-items:center;
     color:var(--color-text-primary)
 }
+.header__profile{
+    text-decoration:none
+}
+.header__profile:hover{
+    background:var(--color-bg-input)
+}
 .header__profile svg{
     flex-shrink:0
 }

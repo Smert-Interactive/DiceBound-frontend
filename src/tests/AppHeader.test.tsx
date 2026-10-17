@@ -49,6 +49,21 @@ describe("AppHeader", () => {
     expect(screen.getByText("bob@example.com")).toBeInTheDocument();
   });
 
+  // Блок с email в шапке на desktop ведёт на страницу профиля.
+  test("links the desktop profile block to /profile", () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider initialUser={{ email: "bob@example.com" }}>
+          <AppHeader />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Профиль: bob@example.com" }),
+    ).toHaveAttribute("href", "/profile");
+  });
+
   // Кнопка профиля на телефоне ведёт на страницу профиля.
   test("links the mobile profile button to /profile", () => {
     render(

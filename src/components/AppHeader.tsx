@@ -30,10 +30,14 @@ export default function AppHeader({
         ===================== */}
       <header className="desktop-header">
         <AppBreadcrumbs />
-        <div className="header__profile">
+        <Link
+          to={ROUTES.profile}
+          className="header__profile"
+          aria-label={`Профиль: ${user?.email}`}
+        >
           <UserIcon width={20} height={20} />
           <span>{user?.email}</span>
-        </div>
+        </Link>
       </header>
 
       {/* =====================
