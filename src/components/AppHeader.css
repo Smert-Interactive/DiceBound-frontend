@@ -62,8 +62,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-button);
-    height: var(--size-button);
+    width: var(--size-button-touch);
+    height: var(--size-button-touch);
     padding: 0;
     background: none;
     border: none;
@@ -80,8 +80,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-button);
-    height: var(--size-button);
+    width: var(--size-button-touch);
+    height: var(--size-button-touch);
     padding: 0;
     background: none;
     border: none;
