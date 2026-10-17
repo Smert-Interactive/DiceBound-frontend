@@ -13,7 +13,8 @@
 
 .app-layout__content {
   flex: 1;
-  padding: 32px;
+  /* Отступы по ui-ux.md: desktop 28 px сверху и 36 px по бокам, планшет 24 px, телефон 16 px. */
+  padding: 28px 36px;
   overflow: auto;
 }
 
@@ -21,9 +22,15 @@
   display: none;
 }
 
+@media (min-width: 640px) and (max-width: 1023px) {
+  .app-layout__content {
+    padding: 24px;
+  }
+}
+
 @media (max-width: 639px) {
   .app-layout__content {
-    padding: 20px;
+    padding: 16px;
   }
 
   .sidebar-overlay {
