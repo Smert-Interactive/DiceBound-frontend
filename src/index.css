@@ -121,6 +121,17 @@
   --height-savebar: 68px;
 
   /* =========================
+     Breakpoints
+     desktop от 1024, планшет 640-1023, телефон до 640, минимум 360.
+     var() не работает внутри @media, поэтому в медиазапросах пишем
+     числа вручную (телефон: max-width: 639px, планшет: max-width: 1023px),
+     а токены нужны как единый источник значений для calc() и JS.
+     ========================= */
+  --breakpoint-desktop: 1024px;
+  --breakpoint-tablet: 640px;
+  --breakpoint-min: 360px;
+
+  /* =========================
      Focus
      ========================= */
   --focus-ring: 2px solid var(--color-calculated);
