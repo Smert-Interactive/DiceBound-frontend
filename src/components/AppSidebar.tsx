@@ -82,11 +82,12 @@ export default function AppSidebar({ mobile, onClose }: Props) {
               key={path}
               to={path}
               className="sidebar__item"
+              data-tooltip={title}
               aria-current={isActive ? "page" : undefined}
             >
               <Icon className="sidebar__icon" />
 
-              <span>{title}</span>
+              <span className="sidebar__label">{title}</span>
             </Link>
           );
         })}
