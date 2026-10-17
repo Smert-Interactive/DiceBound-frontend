@@ -1,4 +1,4 @@
-import { routeLabels } from "../constants/routes";
+import { ROUTES, routeLabels } from "../constants/routes";
 
 export interface Crumb {
   // Накопленный адрес («/characters/42»). Уникален, поэтому годится как key в списке.
@@ -21,9 +21,9 @@ export function getBreadcrumbs(
   // По холсту крошки систем следуют сценарию, а не адресу:
   // список систем показан как шаг после импорта.
   const importCrumb: Crumb = {
-    path: "/systems/import",
+    path: ROUTES.importSystem,
     label: routeLabels.import,
-    to: "/systems/import",
+    to: ROUTES.importSystem,
   };
 
   // /systems/import → Импорт системы
@@ -35,7 +35,7 @@ export function getBreadcrumbs(
   if (parts.length === 1 && parts[0] === "systems") {
     return [
       importCrumb,
-      { path: "/systems", label: routeLabels.systems, to: "/systems" },
+      { path: ROUTES.systems, label: routeLabels.systems, to: ROUTES.systems },
     ];
   }
 
