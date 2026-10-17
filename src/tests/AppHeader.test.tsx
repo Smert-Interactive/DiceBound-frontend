@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 
 import AppHeader from "../components/AppHeader";
 import AuthProvider from "../auth/AuthProvider";
@@ -18,9 +19,11 @@ describe("AppHeader", () => {
 
     // Рендерим компонент AppHeader. Передаём ему функцию, которая должна вызваться при нажатии на кнопку меню.
     render(
-      <AuthProvider>
-        <AppHeader onMenuClick={onMenuClick} />
-      </AuthProvider>,
+      <MemoryRouter>
+        <AuthProvider>
+          <AppHeader onMenuClick={onMenuClick} />
+        </AuthProvider>
+      </MemoryRouter>,
     );
 
     // Находим кнопку открытия меню по доступному имени.
@@ -36,11 +39,29 @@ describe("AppHeader", () => {
   // Email в шапке берётся из вошедшего пользователя, а не прописан в коде.
   test("shows the email of the signed-in user", () => {
     render(
-      <AuthProvider initialUser={{ email: "bob@example.com" }}>
-        <AppHeader />
-      </AuthProvider>,
+      <MemoryRouter>
+        <AuthProvider initialUser={{ email: "bob@example.com" }}>
+          <AppHeader />
+        </AuthProvider>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText("bob@example.com")).toBeInTheDocument();
+  });
+
+  // Кнопка профиля на телефоне ведёт на страницу профиля.
+  test("links the mobile profile button to /profile", () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <AppHeader />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: "Профиль" })).toHaveAttribute(
+      "href",
+      "/profile",
+    );
   });
 });

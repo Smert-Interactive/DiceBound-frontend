@@ -1,9 +1,11 @@
 import type { Ref } from "react";
+import { Link } from "react-router-dom";
 
 import "./AppHeader.css";
 
 import logo from "../assets/logo.svg";
 import { useAuth } from "../auth/authContext";
+import { ROUTES } from "../constants/routes";
 import AppBreadcrumbs from "./AppBreadcrumbs";
 import { MenuIcon, UserIcon } from "./icons";
 
@@ -55,9 +57,9 @@ export default function AppHeader({
           <img src={logo} alt="DiceBound" className="mobile-header__logo" />
         </div>
 
-        <button type="button" className="mobile-profile" aria-label="Профиль">
+        <Link to={ROUTES.profile} className="mobile-profile" aria-label="Профиль">
           <UserIcon />
-        </button>
+        </Link>
       </header>
     </>
   );
