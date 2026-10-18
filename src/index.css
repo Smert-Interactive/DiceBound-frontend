@@ -154,15 +154,17 @@ body {
   margin: 0;
 }
 
+/* Заголовок страницы по ui-ux: Geist 600, 24 px (телефон 20 px).
+   Cormorant остаётся только у имени персонажа, слогана /login и справочных досок.
+   Нижний отступ равен вертикальному шагу между блоками: 22 px (телефон 14 px). */
 h1 {
-  font-family: var(--heading);
+  font-family: var(--sans);
   font-weight: 600;
   color: var(--color-text-primary);
-  font-size: 40px;
-  line-height: 1.1;
-  margin: 32px 0;
+  font-size: 24px;
+  margin: 0 0 22px;
   @media (max-width: 639px) {
-    font-size: 32px;
-    margin: 20px 0;
+    font-size: 20px;
+    margin: 0 0 14px;
   }
 }
