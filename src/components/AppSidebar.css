@@ -1,4 +1,6 @@
 .sidebar {
+  /* Ширина панели включает границу справа. */
+  box-sizing: border-box;
   width: var(--width-sidebar);
   height: 100vh;
   background: var(--color-bg-sidebar);
@@ -11,15 +13,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  /* Отступы панели по ui-ux: 20 px сверху, 14 px по бокам. */
+  padding: 20px 14px 0;
 }
 
+.sidebar__logo-link {
+  display: flex;
+}
+
+/* Горизонтальный логотип высотой 28 px, ширина считается по пропорциям. */
 .sidebar__logo {
-  width: 140px;
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+/* Знак показывается только в рейке на планшете. */
+.sidebar__mark {
+  display: none;
 }
 
 .sidebar__nav {
-  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  /* Промежуток между пунктами 2 px. Расстояние от логотипа до пунктов в документе
+     не задано, взято 18 px, как промежуток между блоками рейки. */
+  gap: 2px;
+  padding: 18px 14px 20px;
 }
 
 .sidebar__item {
@@ -29,12 +49,21 @@
   height: 40px;
   padding: 0 16px;
   border-radius: 9px;
+  font-size: 13.5px;
   color: var(--color-text-secondary);
   text-decoration: none;
 }
 
-.sidebar__item:hover {
-  background: var(--color-bg-surface);
+/* Hover не применяется на устройствах без наведения. */
+@media (hover: hover) {
+  .sidebar__item:hover {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+}
+
+.sidebar__item:active {
+  background: var(--color-bg-input);
   color: var(--color-text-primary);
 }
 
@@ -46,8 +75,8 @@
 }
 
 .sidebar__icon {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
@@ -65,9 +94,11 @@
   cursor: pointer;
 }
 
-.sidebar__close:hover {
-  background: var(--color-bg-input);
-  color: var(--color-text-primary);
+@media (hover: hover) {
+  .sidebar__close:hover {
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
+  }
 }
 
 .sidebar--mobile {
@@ -81,44 +112,92 @@
     display: none;
   }
 
+  /* Выдвижное меню: 280 px слева поверх затемнения, появляется за motion/slow. */
   .sidebar--mobile {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 0;
-    animation: slide 0.25s ease;
+    width: 280px;
+    animation: sidebar-in var(--motion-slow);
+  }
+
+  /* Закрытие за motion/exit; длительность должна совпадать с SIDEBAR_EXIT_MS в AppLayout. */
+  .sidebar--closing {
+    animation: sidebar-out var(--motion-exit) forwards;
+  }
+
+  /* Пункты 48 px, шрифт 15 px, иконка 20 px. */
+  .sidebar--mobile .sidebar__item {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .sidebar--mobile .sidebar__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Почта аккаунта прижата вниз. Начертание в документе не задано, взят приглушённый текст. */
+  .sidebar__account {
+    margin-top: auto;
+    padding: 14px 28px 20px;
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-/* tablet sidebar: 64 px, только иконки, названия — в подсказках */
+/* tablet sidebar: рейка 64 px, только иконки, названия — в подсказках */
 
 @media (min-width: 640px) and (max-width: 1023px) {
-  .sidebar {
+  /* Отступы 14 px сверху и 10 px по бокам, промежуток между знаком и пунктами 18 px.
+     Мобильное меню сюда не входит: на планшете оно скрыто. */
+  .sidebar:not(.sidebar--mobile) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
     width: var(--width-sidebar-tablet);
+    padding: 14px 10px;
   }
 
   .sidebar__top {
-    justify-content: center;
-    padding: 24px 0;
+    padding: 0;
   }
 
-  /* Вордмарк обрезается до первого знака: квадрат 40 px, виден левый край картинки. */
+  /* Вместо вордмарка знак 44 x 44 px. */
   .sidebar__logo {
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    object-position: left;
+    display: none;
+  }
+
+  .sidebar__mark {
+    display: block;
+    width: 44px;
+    height: 44px;
   }
 
   .sidebar__nav {
-    padding: 10px 8px;
+    align-items: center;
+    padding: 0;
   }
 
+  /* Пункт 44 x 44 px, иконка 20 px по центру. */
   .sidebar__item {
     position: relative;
     justify-content: center;
     gap: 0;
+    width: 44px;
+    height: 44px;
     padding: 0;
+  }
+
+  .sidebar__icon {
+    width: 20px;
+    height: 20px;
   }
 
   /* Подпись скрыта только визуально: имя ссылки для скринридера остаётся. */
@@ -140,29 +219,44 @@
     left: calc(100% + 10px);
     top: 50%;
     transform: translateY(-50%);
-    padding: 4px 10px;
+    padding: 5px 10px;
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-button-sm);
-    background: var(--color-bg-surface);
+    background: var(--color-bg-hover);
     color: var(--color-text-primary);
-    font-size: 12px;
+    font-size: 12.5px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
   }
 
-  .sidebar__item:hover::after,
   .sidebar__item:focus-visible::after {
     opacity: 1;
   }
+
+  @media (hover: hover) {
+    .sidebar__item:hover::after {
+      opacity: 1;
+    }
+  }
 }
 
-@keyframes slide {
+@keyframes sidebar-in {
   from {
     transform: translateX(-100%);
   }
 
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes sidebar-out {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
   }
 }

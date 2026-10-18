@@ -3,14 +3,18 @@ import { describe, test, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
 import AppSidebar from "../components/AppSidebar";
+import AuthProvider from "../auth/AuthProvider";
 
-// NavLink работает только внутри Router, поэтому оборачиваем Sidebar в MemoryRouter.
+// Link работает только внутри Router, поэтому оборачиваем Sidebar в MemoryRouter.
+// AuthProvider нужен мобильному меню: внизу оно показывает почту аккаунта.
 function renderSidebar(
   ui: React.ReactElement,
   initialEntries: string[] = ["/"],
 ) {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>,
+    <MemoryRouter initialEntries={initialEntries}>
+      <AuthProvider initialUser={{ email: "bob@example.com" }}>{ui}</AuthProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -28,6 +32,16 @@ describe("AppSidebar", () => {
 
     // Проверяем наличие пункта меню "Профиль".
     expect(screen.getByText("Профиль")).toBeInTheDocument();
+  });
+
+  // Логотип ведёт на список персонажей.
+  test("links the logo to /characters", () => {
+    renderSidebar(<AppSidebar />, ["/profile"]);
+
+    expect(screen.getByRole("link", { name: "DiceBound" })).toHaveAttribute(
+      "href",
+      "/characters",
+    );
   });
 
   // Проверяет, что при открытии мобильного меню фокус переходит на кнопку закрытия.
@@ -57,6 +71,27 @@ describe("AppSidebar", () => {
     expect(
       screen.getByRole("link", { name: "Импорт системы" }),
     ).toHaveAttribute("aria-current", "page");
+  });
+
+  // Переход по пункту мобильного меню закрывает меню.
+  test("closes mobile menu after navigating", () => {
+    const onClose = vi.fn();
+
+    renderSidebar(<AppSidebar mobile onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Профиль" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // Внизу мобильного меню показана почта аккаунта, на desktop её в панели нет.
+  test("shows the account email only in the mobile menu", () => {
+    const { unmount } = renderSidebar(<AppSidebar mobile />);
+    expect(screen.getByText("bob@example.com")).toBeInTheDocument();
+    unmount();
+
+    renderSidebar(<AppSidebar />);
+    expect(screen.queryByText("bob@example.com")).not.toBeInTheDocument();
   });
 
   //Проверяет, что при нажатии на кнопку закрытия вызывается callback onClose.

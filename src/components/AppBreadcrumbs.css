@@ -22,8 +22,14 @@
   text-decoration: none;
 }
 
-.breadcrumbs__link:hover {
-  color: var(--color-text-primary);
+/* Hover по ui-ux: цвет #ece8e2 и подчёркивание со смещением 3 px.
+   Не применяется на устройствах без наведения. */
+@media (hover: hover) {
+  .breadcrumbs__link:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 /* Текущая страница ярче остальных. */

@@ -13,8 +13,8 @@
   color: var(--color-text-secondary);
 }
 
-/* Пилюля аккаунта: высота 36 px, граница #2a2a37, текст #b9b6c2.
-   Hover на холсте не нарисован, по решению владельца он такой же, как у пунктов сайдбара. */
+/* Пилюля аккаунта по ui-ux: высота 36 px, граница #2a2a37, текст #b9b6c2.
+   Hover: граница #3b3b4e и текст #ece8e2. Pressed: дополнительно фон #17171f. */
 .header__profile{
     box-sizing:border-box;
     height:36px;
@@ -27,7 +27,15 @@
     color:var(--color-text-secondary);
     text-decoration:none
 }
-.header__profile:hover{
+/* Hover не применяется на устройствах без наведения. */
+@media (hover: hover) {
+    .header__profile:hover{
+        border-color:var(--color-border-strong);
+        color:var(--color-text-primary)
+    }
+}
+.header__profile:active{
+    border-color:var(--color-border-strong);
     background:var(--color-bg-surface);
     color:var(--color-text-primary)
 }
@@ -63,24 +71,9 @@
     margin-left: 16px;
   }
 
-  .burger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--size-button-touch);
-    height: var(--size-button-touch);
-    padding: 0;
-    background: none;
-    border: none;
-    color: var(--color-text-primary);
-    cursor: pointer;
-  }
-
-  .flex-cont{
-    display: flex;
-    align-items: center;
-  }
-
+  /* Кнопки-иконки телефона 44 px по ui-ux: текст #b9b6c2, скругление 10 px.
+     Hover: фон #1e1e28 и текст #ece8e2. Pressed: фон #17171f. */
+  .burger,
   .mobile-profile {
     display: flex;
     align-items: center;
@@ -90,7 +83,27 @@
     padding: 0;
     background: none;
     border: none;
-    color: var(--color-text-primary);
+    border-radius: 10px;
+    color: var(--color-text-secondary);
     cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .burger:hover,
+    .mobile-profile:hover {
+      background: var(--color-bg-input);
+      color: var(--color-text-primary);
+    }
+  }
+
+  .burger:active,
+  .mobile-profile:active {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .flex-cont{
+    display: flex;
+    align-items: center;
   }
 }

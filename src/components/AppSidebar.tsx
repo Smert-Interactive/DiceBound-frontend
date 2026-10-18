@@ -4,12 +4,16 @@ import { Link, matchPath, useLocation } from "react-router-dom";
 import "./AppSidebar.css";
 
 import logo from "../assets/logo.svg";
+import logoMark from "../assets/logo-mark.svg";
 
+import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
 
 interface Props {
   mobile?: boolean;
+  // Мобильное меню уже закрывается: играет анимация выхода.
+  closing?: boolean;
   onClose?: () => void;
 }
 
@@ -37,9 +41,13 @@ const menuItems = [
   },
 ];
 
-export default function AppSidebar({ mobile, onClose }: Props) {
+export default function AppSidebar({ mobile, closing, onClose }: Props) {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // После перехода по ссылке мобильное меню закрывается, а на desktop обработчика нет.
+  const handleNavigate = mobile ? onClose : undefined;
 
   // При открытии мобильного меню фокус переходит внутрь него.
   useEffect(() => {
@@ -50,7 +58,11 @@ export default function AppSidebar({ mobile, onClose }: Props) {
 
   return (
     <aside
-      className={mobile ? "sidebar sidebar--mobile" : "sidebar"}
+      className={
+        mobile
+          ? `sidebar sidebar--mobile${closing ? " sidebar--closing" : ""}`
+          : "sidebar"
+      }
       {...(mobile && {
         role: "dialog",
         "aria-modal": true,
@@ -58,7 +70,17 @@ export default function AppSidebar({ mobile, onClose }: Props) {
       })}
     >
       <div className="sidebar__top">
-        <img src={logo} className="sidebar__logo" alt="DiceBound" />
+        {/* Имя ссылки задаёт aria-label: картинки декоративные, потому что на планшете
+            вордмарк скрыт и вместо него показывается знак. */}
+        <Link
+          to={ROUTES.characters}
+          className="sidebar__logo-link"
+          aria-label="DiceBound"
+          onClick={handleNavigate}
+        >
+          <img src={logo} className="sidebar__logo" alt="" />
+          <img src={logoMark} className="sidebar__mark" alt="" />
+        </Link>
 
         {mobile && (
           <button
@@ -84,6 +106,7 @@ export default function AppSidebar({ mobile, onClose }: Props) {
               className="sidebar__item"
               data-tooltip={title}
               aria-current={isActive ? "page" : undefined}
+              onClick={handleNavigate}
             >
               <Icon className="sidebar__icon" />
 
@@ -92,6 +115,9 @@ export default function AppSidebar({ mobile, onClose }: Props) {
           );
         })}
       </nav>
+
+      {/* Внизу мобильного меню почта аккаунта. */}
+      {mobile && <div className="sidebar__account">{user?.email}</div>}
     </aside>
   );
 }
