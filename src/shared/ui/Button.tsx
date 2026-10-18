@@ -4,7 +4,8 @@ import type {
   ReactNode,
 } from "react";
 
-type Variant = "primary" | "default" | "ghost" | "danger";
+import { getButtonClassName } from "./buttonClassName";
+import type { ButtonVariant as Variant } from "./buttonClassName";
 
 interface Appearance {
   variant?: Variant;
@@ -36,22 +37,6 @@ type ButtonLinkProps = Appearance &
   AccessibleIcon &
   AnchorHTMLAttributes<HTMLAnchorElement> & { disabled?: boolean };
 
-function getButtonClassName({
-  variant = "default",
-  size = "normal",
-  iconOnly,
-  className = "",
-}: Appearance) {
-  return [
-    "ui-button",
-    `ui-button--${variant}`,
-    `ui-button--${size}`,
-    iconOnly && "ui-button--icon",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
 
 export function Loader() {
   return (

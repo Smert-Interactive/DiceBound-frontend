@@ -74,12 +74,17 @@ describe("routes", () => {
     ).toBeInTheDocument();
   });
 
-  // Неизвестный адрес по-прежнему показывает 404.
-  test("renders 404 for unknown path", () => {
+  // Неизвестный адрес показывает экран «не найден или доступ закрыт» со ссылкой на список.
+  test("renders the not found screen for unknown path", () => {
     renderAt("/nope");
 
     expect(
-      screen.getByRole("heading", { name: "404 - Page not found" }),
+      screen.getByRole("heading", {
+        name: "Персонаж не найден или доступ закрыт",
+      }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "К списку персонажей" }),
+    ).toHaveAttribute("href", "/characters");
   });
 });

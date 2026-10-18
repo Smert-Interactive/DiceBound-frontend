@@ -1,3 +1,10 @@
+import NotFoundOrForbidden from "../shared/states/NotFoundOrForbidden";
+
+// Неизвестный адрес. Живёт вне каркаса приложения, поэтому сама центрирует экран.
 export default function NotFoundPage() {
-  return <h1>404 - Page not found</h1>;
+  return (
+    <main className="state-page">
+      <NotFoundOrForbidden />
+    </main>
+  );
 }
