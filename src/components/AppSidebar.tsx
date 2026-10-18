@@ -4,6 +4,7 @@ import { Link, matchPath, useLocation } from "react-router-dom";
 import "./AppSidebar.css";
 
 import logo from "../assets/logo.svg";
+import logoMark from "../assets/logo-mark.svg";
 
 import { ROUTES } from "../constants/routes";
 import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
@@ -58,8 +59,15 @@ export default function AppSidebar({ mobile, onClose }: Props) {
       })}
     >
       <div className="sidebar__top">
-        <Link to={ROUTES.characters} className="sidebar__logo-link">
-          <img src={logo} className="sidebar__logo" alt="DiceBound" />
+        {/* Имя ссылки задаёт aria-label: картинки декоративные, потому что на планшете
+            вордмарк скрыт и вместо него показывается знак. */}
+        <Link
+          to={ROUTES.characters}
+          className="sidebar__logo-link"
+          aria-label="DiceBound"
+        >
+          <img src={logo} className="sidebar__logo" alt="" />
+          <img src={logoMark} className="sidebar__mark" alt="" />
         </Link>
 
         {mobile && (

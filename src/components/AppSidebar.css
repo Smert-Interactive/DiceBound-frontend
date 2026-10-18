@@ -1,4 +1,6 @@
 .sidebar {
+  /* Ширина панели включает границу справа. */
+  box-sizing: border-box;
   width: var(--width-sidebar);
   height: 100vh;
   background: var(--color-bg-sidebar);
@@ -24,6 +26,11 @@
   display: block;
   height: 28px;
   width: auto;
+}
+
+/* Знак показывается только в рейке на планшете. */
+.sidebar__mark {
+  display: none;
 }
 
 .sidebar__nav {
@@ -109,35 +116,52 @@
   }
 }
 
-/* tablet sidebar: 64 px, только иконки, названия — в подсказках */
+/* tablet sidebar: рейка 64 px, только иконки, названия — в подсказках */
 
 @media (min-width: 640px) and (max-width: 1023px) {
+  /* Отступы 14 px сверху и 10 px по бокам, промежуток между знаком и пунктами 18 px. */
   .sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
     width: var(--width-sidebar-tablet);
+    padding: 14px 10px;
   }
 
   .sidebar__top {
-    justify-content: center;
-    padding: 24px 0;
+    padding: 0;
   }
 
-  /* Вордмарк обрезается до первого знака: квадрат 40 px, виден левый край картинки. */
+  /* Вместо вордмарка знак 44 x 44 px. */
   .sidebar__logo {
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    object-position: left;
+    display: none;
+  }
+
+  .sidebar__mark {
+    display: block;
+    width: 44px;
+    height: 44px;
   }
 
   .sidebar__nav {
-    padding: 10px 8px;
+    align-items: center;
+    padding: 0;
   }
 
+  /* Пункт 44 x 44 px, иконка 20 px по центру. */
   .sidebar__item {
     position: relative;
     justify-content: center;
     gap: 0;
+    width: 44px;
+    height: 44px;
     padding: 0;
+  }
+
+  .sidebar__icon {
+    width: 20px;
+    height: 20px;
   }
 
   /* Подпись скрыта только визуально: имя ссылки для скринридера остаётся. */
@@ -159,12 +183,12 @@
     left: calc(100% + 10px);
     top: 50%;
     transform: translateY(-50%);
-    padding: 4px 10px;
+    padding: 5px 10px;
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-button-sm);
-    background: var(--color-bg-surface);
+    background: var(--color-bg-hover);
     color: var(--color-text-primary);
-    font-size: 12px;
+    font-size: 12.5px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
