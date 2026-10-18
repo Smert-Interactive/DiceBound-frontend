@@ -18,6 +18,22 @@
   --color-bg-hover: #282836;
   /* JSON редактор */
   --color-bg-editor: #101016;
+  --color-code-gutter: #4a4a60;
+  --color-code-number: #e6c07b;
+  --gradient-primary-hover: linear-gradient(180deg, #d33d59, #bb3047);
+  --color-primary-pressed: #b02a40;
+  --color-danger-hover: #c93450;
+  --color-danger-pressed: #9a2438;
+  --color-action-disabled: #3a2a31;
+  --color-default-pressed: #23232e;
+  --color-row-hover: #1a1a23;
+  --color-skeleton: #1a1a22;
+  --color-border-changed: rgba(234, 106, 126, .55);
+  --color-border-pair-changed: rgba(234, 106, 126, .35);
+  --color-border-pair-error: rgba(234, 106, 126, .6);
+  --color-resource-dnd: var(--color-system-dnd);
+  --color-resource-coc: var(--color-system-coc);
+  --color-resource-imported: var(--color-system-imported);
 
   /* =========================
      Border colors
@@ -94,6 +110,22 @@
   --color-system-coc: var(--color-success-light);
   --color-system-imported: var(--color-calculated-text);
 
+  /* Подложки UI-kit: у меток, чипов и баннеров разные значения по ui-ux и холсту. */
+  --color-white: #fff;
+  --tint-crimson-mark-bg: rgba(176, 42, 64, .16);
+  --tint-crimson-border: rgba(234, 106, 126, .36);
+  --tint-violet-mark-bg: rgba(154, 143, 230, .13);
+  --tint-violet-border: rgba(154, 143, 230, .34);
+  --tint-green-mark-bg: rgba(109, 191, 149, .10);
+  --tint-green-mark-border: rgba(109, 191, 149, .30);
+  --tint-green-chip-bg: rgba(109, 191, 149, .12);
+  --tint-green-border: rgba(109, 191, 149, .34);
+  --tint-banner-info-bg: rgba(154, 143, 230, .09);
+  --tint-banner-warning-bg: rgba(176, 42, 64, .10);
+  --tint-banner-success-bg: rgba(109, 191, 149, .08);
+  --tint-radio-bg: rgba(176, 42, 64, .12);
+  --tint-radio-border: rgba(234, 106, 126, .45);
+
   /* =========================
      Typography
      ========================= */
@@ -112,6 +144,7 @@
   --radius-button: 10px;
   --size-button-sm: 32px;
   --radius-button-sm: 8px;
+  --radius-button-sm-touch: 9px;
   --radius-card: 14px;
   --padding-card: 18px;
   --width-modal: 460px;
@@ -122,6 +155,44 @@
   --width-sidebar-tablet: 64px;
   --height-topbar: 56px;
   --height-savebar: 68px;
+
+  /* Смысловые размеры и шрифты UI-kit из холста. */
+  --size-button-sm-touch: 36px;
+  --size-icon-button: 15px;
+  --size-icon-feedback: 18px;
+  --size-checkbox: 18px;
+  --size-radio: 16px;
+  --size-select-arrow: 16px;
+  --padding-select-end: 36px;
+  --size-system-list: 38px;
+  --size-system-sheet: 52px;
+  --size-system-list-touch: 40px;
+  --size-system-sheet-touch: 44px;
+  --width-sheet-handle: 36px;
+  --height-sheet-handle: 4px;
+  --radius-pill: 99px;
+  --radius-banner: 12px;
+  --radius-radio: 11px;
+  --radius-system-list: 10px;
+  --radius-system-sheet: 13px;
+  --radius-checkbox: 5px;
+  --radius-skeleton: 8px;
+  --font-ui: 14px;
+  --font-button: 13px;
+  --font-button-sm: 12.5px;
+  --font-field: 13.5px;
+  --font-field-touch: 16px;
+  --font-checkbox: 13.5px;
+  --font-tab: 13.5px;
+  --font-modal-body-touch: 13.5px;
+  --font-caption: 11.5px;
+  --font-caption-touch: 11px;
+  --font-explanation: 12.5px;
+  --font-modal-title: 17px;
+  --font-system-list: 10.5px;
+  --font-system-sheet: 12px;
+  --line-field-label: 17px;
+  --shadow-modal: 0 30px 60px -20px rgba(0, 0, 0, .7);
 
   /* =========================
      Breakpoints
@@ -164,15 +235,14 @@
   outline-offset: var(--focus-offset);
 }
 
-/* При prefers-reduced-motion все переходы 0 ms, loader не вращается (ui-ux).
-   Значение 0.01ms, а не 0: событие animationend всё равно срабатывает. */
+/* При prefers-reduced-motion движения нет, loader остаётся статичным (ui-ux). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0ms !important;
   }
 }
 
