@@ -13,8 +13,11 @@
 
 .app-layout__content {
   flex: 1;
-  /* Отступы по ui-ux.md: desktop 28 px сверху и 36 px по бокам, планшет 24 px, телефон 16 px. */
-  padding: 28px 36px;
+  /* Отступы по ui-ux-for-ai.md: desktop 28 px сверху, 36 px по бокам, 40 px снизу;
+     планшет 24 px по бокам и сверху, 40 px снизу; телефон 16 px.
+     Увеличенный нижний отступ под панель сохранения (108 px, на телефоне 140 px)
+     задаётся на странице листа, когда она появится. */
+  padding: 28px 36px 40px;
   overflow: auto;
 }
 
@@ -24,7 +27,7 @@
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .app-layout__content {
-    padding: 24px;
+    padding: 24px 24px 40px;
   }
 }
 
