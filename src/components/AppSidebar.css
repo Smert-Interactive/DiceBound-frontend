@@ -11,7 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  /* Отступы панели по ui-ux: 20 px сверху, 14 px по бокам. */
+  padding: 20px 14px 0;
 }
 
 .sidebar__logo {
@@ -19,7 +20,12 @@
 }
 
 .sidebar__nav {
-  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  /* Промежуток между пунктами 2 px. Расстояние от логотипа до пунктов в документе
+     не задано, взято 18 px, как промежуток между блоками рейки. */
+  gap: 2px;
+  padding: 18px 14px 20px;
 }
 
 .sidebar__item {
@@ -29,12 +35,18 @@
   height: 40px;
   padding: 0 16px;
   border-radius: 9px;
+  font-size: 13.5px;
   color: var(--color-text-secondary);
   text-decoration: none;
 }
 
 .sidebar__item:hover {
   background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.sidebar__item:active {
+  background: var(--color-bg-input);
   color: var(--color-text-primary);
 }
 
@@ -46,8 +58,8 @@
 }
 
 .sidebar__icon {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
