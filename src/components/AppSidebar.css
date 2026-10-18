@@ -112,20 +112,51 @@
     display: none;
   }
 
+  /* Выдвижное меню: 280 px слева поверх затемнения, появляется за motion/slow. */
   .sidebar--mobile {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 0;
-    animation: slide 0.25s ease;
+    width: 280px;
+    animation: sidebar-in var(--motion-slow);
+  }
+
+  /* Закрытие за motion/exit; длительность должна совпадать с SIDEBAR_EXIT_MS в AppLayout. */
+  .sidebar--closing {
+    animation: sidebar-out var(--motion-exit) forwards;
+  }
+
+  /* Пункты 48 px, шрифт 15 px, иконка 20 px. */
+  .sidebar--mobile .sidebar__item {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .sidebar--mobile .sidebar__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Почта аккаунта прижата вниз. Начертание в документе не задано, взят приглушённый текст. */
+  .sidebar__account {
+    margin-top: auto;
+    padding: 14px 28px 20px;
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
 /* tablet sidebar: рейка 64 px, только иконки, названия — в подсказках */
 
 @media (min-width: 640px) and (max-width: 1023px) {
-  /* Отступы 14 px сверху и 10 px по бокам, промежуток между знаком и пунктами 18 px. */
-  .sidebar {
+  /* Отступы 14 px сверху и 10 px по бокам, промежуток между знаком и пунктами 18 px.
+     Мобильное меню сюда не входит: на планшете оно скрыто. */
+  .sidebar:not(.sidebar--mobile) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -210,12 +241,22 @@
   }
 }
 
-@keyframes slide {
+@keyframes sidebar-in {
   from {
     transform: translateX(-100%);
   }
 
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes sidebar-out {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
   }
 }

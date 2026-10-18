@@ -135,6 +135,20 @@
   --breakpoint-min: 360px;
 
   /* =========================
+     Motion (длительность и кривая в одном значении)
+     ========================= */
+  /* Цвета при hover и pressed */
+  --motion-fast: 120ms ease-out;
+  /* Модальное окно, баннер */
+  --motion-base: 180ms cubic-bezier(0.2, 0, 0, 1);
+  /* Меню и лист снизу */
+  --motion-slow: 240ms cubic-bezier(0.2, 0, 0, 1);
+  /* Закрытие окна, меню, листа */
+  --motion-exit: 140ms ease-in;
+  /* Вращение loader */
+  --motion-spin: 800ms linear infinite;
+
+  /* =========================
      Focus
      ========================= */
   --focus-ring: 2px solid var(--color-calculated);
@@ -148,6 +162,18 @@
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
+}
+
+/* При prefers-reduced-motion все переходы 0 ms, loader не вращается (ui-ux).
+   Значение 0.01ms, а не 0: событие animationend всё равно срабатывает. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
