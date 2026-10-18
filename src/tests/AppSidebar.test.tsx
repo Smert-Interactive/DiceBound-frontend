@@ -30,6 +30,16 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Профиль")).toBeInTheDocument();
   });
 
+  // Логотип ведёт на список персонажей.
+  test("links the logo to /characters", () => {
+    renderSidebar(<AppSidebar />, ["/profile"]);
+
+    expect(screen.getByRole("link", { name: "DiceBound" })).toHaveAttribute(
+      "href",
+      "/characters",
+    );
+  });
+
   // Проверяет, что при открытии мобильного меню фокус переходит на кнопку закрытия.
   test("focuses close button on mobile", () => {
     renderSidebar(<AppSidebar mobile />);

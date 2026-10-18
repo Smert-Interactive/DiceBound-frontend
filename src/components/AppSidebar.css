@@ -15,8 +15,15 @@
   padding: 20px 14px 0;
 }
 
+.sidebar__logo-link {
+  display: flex;
+}
+
+/* Горизонтальный логотип высотой 28 px, ширина считается по пропорциям. */
 .sidebar__logo {
-  width: 140px;
+  display: block;
+  height: 28px;
+  width: auto;
 }
 
 .sidebar__nav {

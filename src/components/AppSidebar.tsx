@@ -58,7 +58,9 @@ export default function AppSidebar({ mobile, onClose }: Props) {
       })}
     >
       <div className="sidebar__top">
-        <img src={logo} className="sidebar__logo" alt="DiceBound" />
+        <Link to={ROUTES.characters} className="sidebar__logo-link">
+          <img src={logo} className="sidebar__logo" alt="DiceBound" />
+        </Link>
 
         {mobile && (
           <button
