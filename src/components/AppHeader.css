@@ -71,24 +71,9 @@
     margin-left: 16px;
   }
 
-  .burger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--size-button-touch);
-    height: var(--size-button-touch);
-    padding: 0;
-    background: none;
-    border: none;
-    color: var(--color-text-primary);
-    cursor: pointer;
-  }
-
-  .flex-cont{
-    display: flex;
-    align-items: center;
-  }
-
+  /* Кнопки-иконки телефона 44 px по ui-ux: текст #b9b6c2, скругление 10 px.
+     Hover: фон #1e1e28 и текст #ece8e2. Pressed: фон #17171f. */
+  .burger,
   .mobile-profile {
     display: flex;
     align-items: center;
@@ -98,7 +83,27 @@
     padding: 0;
     background: none;
     border: none;
-    color: var(--color-text-primary);
+    border-radius: 10px;
+    color: var(--color-text-secondary);
     cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .burger:hover,
+    .mobile-profile:hover {
+      background: var(--color-bg-input);
+      color: var(--color-text-primary);
+    }
+  }
+
+  .burger:active,
+  .mobile-profile:active {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
+
+  .flex-cont{
+    display: flex;
+    align-items: center;
   }
 }
