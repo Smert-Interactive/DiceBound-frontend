@@ -173,6 +173,7 @@
 }
 .ui-field__hint,
 .ui-field__error {
+  /* На холсте текст стоит в 5 px под полем, а gap колонки равен 6 px. */
   margin-top: -1px;
   font-size: 11.5px;
   line-height: 1.5;
@@ -581,7 +582,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 22px;
+  margin-top: 20px;
 }
 .ui-modal__handle {
   display: none;
@@ -709,7 +710,8 @@
   .ui-modal__body {
     font-size: var(--font-modal-body-touch);
   }
-  /* Родитель передаёт отмену первой; на телефоне основное действие показывается сверху. */
+  /* Родитель передаёт отмену первой;
+     на телефоне основное действие показывается сверху. */
   .ui-modal__actions {
     flex-direction: column-reverse;
     gap: 10px;

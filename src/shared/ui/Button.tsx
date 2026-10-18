@@ -100,7 +100,8 @@ export function Button({
       aria-busy={loading || undefined}
       data-loading={loading || undefined}
     >
-      {/* Скрытая подпись загрузки резервирует ширину и предотвращает сдвиг соседних кнопок. */}
+      {/* Скрытая подпись загрузки резервирует ширину,
+          поэтому соседние кнопки не сдвигаются. */}
       <span className="ui-button__rest" aria-hidden={loading || undefined}>
         {icon}
         {children}
