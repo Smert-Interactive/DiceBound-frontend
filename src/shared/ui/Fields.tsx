@@ -1,5 +1,13 @@
 import { useId } from "react";
-import type { InputHTMLAttributes, SelectHTMLAttributes, ReactNode } from "react";
+import type {
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  ReactNode,
+} from "react";
+import {
+  joinDescriptions,
+  useFieldAccessibility,
+} from "./useFieldAccessibility";
 
 interface FieldProps {
   label: string;
@@ -9,74 +17,306 @@ interface FieldProps {
   readOnly?: boolean;
   className?: string;
 }
-function descriptions(id: string, hint?: string, error?: string, external?: string) {
-  return [external, hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
-}
-function FieldNotes({ id, hint, error }: { id: string; hint?: string; error?: string }) {
-  return <>{hint && <span className="ui-field__hint" id={`${id}-hint`}>{hint}</span>}
-    {error && <span className="ui-field__error" id={`${id}-error`}>{error}</span>}</>;
+
+interface FieldNotesProps {
+  hintId: string;
+  errorId: string;
+  hint?: string;
+  error?: string;
 }
 
-export function Input({ label, hint, error, changed, readOnly, className = "", id: suppliedId,
-  "aria-describedby": external, ...props }: FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, "className">) {
-  const generated = useId();
-  const id = suppliedId ?? generated;
-  const describedBy = descriptions(id, hint, error, external);
-  return <div className={`ui-field ${className}`}>
-    {readOnly ? <><span className="ui-field__label" id={`${id}-label`}>{label}</span>
-      <div className="ui-readonly" data-type={props.type} aria-labelledby={`${id}-label`} aria-describedby={describedBy}>{props.value ?? props.defaultValue ?? "—"}</div></>
-      : <><label className="ui-field__label" htmlFor={id}>{label}</label>
-        <input {...props} id={id} className="ui-control" data-changed={changed || undefined}
-          aria-invalid={error ? true : props["aria-invalid"]} aria-describedby={describedBy} /></>}
-    <FieldNotes id={id} hint={hint} error={error} />
-  </div>;
+function FieldNotes({ hintId, errorId, hint, error }: FieldNotesProps) {
+  return (
+    <>
+      {hint && (
+        <span className="ui-field__hint" id={hintId}>
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span className="ui-field__error" id={errorId}>
+          {error}
+        </span>
+      )}
+    </>
+  );
 }
 
-interface Option { value: string; label: string }
-export function Select({ label, hint, error, changed, readOnly, options, className = "", id: suppliedId,
-  "aria-describedby": external, ...props }: FieldProps & Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> & { options: readonly Option[] }) {
-  const generated = useId();
-  const id = suppliedId ?? generated;
-  const describedBy = descriptions(id, hint, error, external);
-  const value = props.value ?? props.defaultValue;
-  return <div className={`ui-field ${className}`}>
-    {readOnly ? <><span className="ui-field__label" id={`${id}-label`}>{label}</span>
-      <div className="ui-readonly" aria-labelledby={`${id}-label`} aria-describedby={describedBy}>{options.find(option => option.value === value)?.label ?? "—"}</div></>
-      : <><label className="ui-field__label" htmlFor={id}>{label}</label>
+type InputProps = FieldProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "className">;
+
+export function Input({
+  label,
+  hint,
+  error,
+  changed,
+  readOnly,
+  className = "",
+  id,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+  ...inputProps
+}: InputProps) {
+  const accessibility = useFieldAccessibility({
+    id,
+    hint,
+    error,
+    describedBy,
+    invalid,
+  });
+  let control: ReactNode;
+
+  if (readOnly) {
+    control = (
+      <>
+        <span className="ui-field__label" id={accessibility.labelId}>
+          {label}
+        </span>
+        <div
+          role="group"
+          className="ui-readonly"
+          data-type={inputProps.type}
+          aria-labelledby={accessibility.labelId}
+          aria-describedby={accessibility.describedBy}
+        >
+          {inputProps.value ?? inputProps.defaultValue ?? "—"}
+        </div>
+      </>
+    );
+  } else {
+    control = (
+      <>
+        <label className="ui-field__label" htmlFor={accessibility.id}>
+          {label}
+        </label>
+        <input
+          {...inputProps}
+          id={accessibility.id}
+          className="ui-control"
+          data-changed={changed || undefined}
+          aria-invalid={accessibility.invalid}
+          aria-describedby={accessibility.describedBy}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className={`ui-field ${className}`}>
+      {control}
+      <FieldNotes {...accessibility} hint={hint} error={error} />
+    </div>
+  );
+}
+
+interface Option {
+  value: string;
+  label: string;
+}
+
+type SelectProps = FieldProps &
+  Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> & {
+    options: readonly Option[];
+  };
+
+export function Select({
+  label,
+  hint,
+  error,
+  changed,
+  readOnly,
+  options,
+  className = "",
+  id,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+  ...selectProps
+}: SelectProps) {
+  const accessibility = useFieldAccessibility({
+    id,
+    hint,
+    error,
+    describedBy,
+    invalid,
+  });
+  const value = selectProps.value ?? selectProps.defaultValue;
+  const selectedLabel =
+    options.find((option) => option.value === value)?.label ?? "—";
+  let control: ReactNode;
+
+  if (readOnly) {
+    control = (
+      <>
+        <span className="ui-field__label" id={accessibility.labelId}>
+          {label}
+        </span>
+        <div
+          role="group"
+          className="ui-readonly"
+          aria-labelledby={accessibility.labelId}
+          aria-describedby={accessibility.describedBy}
+        >
+          {selectedLabel}
+        </div>
+      </>
+    );
+  } else {
+    control = (
+      <>
+        <label className="ui-field__label" htmlFor={accessibility.id}>
+          {label}
+        </label>
         <div className="ui-select">
-        <select {...props} id={id} className="ui-control" data-changed={changed || undefined}
-          aria-invalid={error ? true : props["aria-invalid"]} aria-describedby={describedBy}>
-          {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-        </select>
-        <svg className="ui-select__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-        </div></>}
-    <FieldNotes id={id} hint={hint} error={error} />
-  </div>;
+          <select
+            {...selectProps}
+            id={accessibility.id}
+            className="ui-control"
+            data-changed={changed || undefined}
+            aria-invalid={accessibility.invalid}
+            aria-describedby={accessibility.describedBy}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="ui-select__arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className={`ui-field ${className}`}>
+      {control}
+      <FieldNotes {...accessibility} hint={hint} error={error} />
+    </div>
+  );
 }
 
-export function Checkbox({ label, hint, error, readOnly, changed, className = "", id: suppliedId,
-  "aria-describedby": external, ...props }: FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
-  const generated = useId();
-  const id = suppliedId ?? generated;
-  const checked = props.checked ?? props.defaultChecked ?? false;
-  const describedBy = descriptions(id, hint, error, external);
-  return <div className={`ui-field ${className}`}>
-    {readOnly ? <div className="ui-check ui-readonly" aria-describedby={describedBy}>
-      <svg className="ui-check__box" data-checked={checked || undefined} viewBox="0 0 18 18" aria-hidden="true"><path d="m4 9 3 3 7-7" /></svg><span>{label}: {checked ? "Да" : "Нет"}</span>
-    </div> : <label className="ui-check" data-disabled={props.disabled || undefined} data-changed={changed || undefined} data-error={!!error || undefined}>
-      <input {...props} id={id} type="checkbox" aria-invalid={error ? true : props["aria-invalid"]} aria-describedby={describedBy} />
-      <svg className="ui-check__box" viewBox="0 0 18 18" aria-hidden="true"><path d="m4 9 3 3 7-7" /></svg><span>{label}</span>
-    </label>}
-    <FieldNotes id={id} hint={hint} error={error} />
-  </div>;
+type CheckboxProps = FieldProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
+
+function CheckMark({ checked }: { checked?: boolean }) {
+  return (
+    <svg
+      className="ui-check__box"
+      data-checked={checked || undefined}
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+    >
+      <path d="m4 9 3 3 7-7" />
+    </svg>
+  );
 }
 
-export function RadioCard({ label, description, className = "", ...props }:
-  Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { label: string; description?: ReactNode }) {
-  const id = useId();
-  return <label className={`ui-radio ${className}`}>
-    <input {...props} type="radio" aria-describedby={description ? id : props["aria-describedby"]} />
-    <span className="ui-radio__circle" aria-hidden="true" />
-    <span><span className="ui-radio__title">{label}</span>{description && <span className="ui-radio__description" id={id}>{description}</span>}</span>
-  </label>;
+export function Checkbox({
+  label,
+  hint,
+  error,
+  readOnly,
+  changed,
+  className = "",
+  id,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+  ...inputProps
+}: CheckboxProps) {
+  const accessibility = useFieldAccessibility({
+    id,
+    hint,
+    error,
+    describedBy,
+    invalid,
+  });
+  const checked = inputProps.checked ?? inputProps.defaultChecked ?? false;
+  let control: ReactNode;
+
+  if (readOnly) {
+    control = (
+      <div
+        role="group"
+        className="ui-check ui-readonly"
+        aria-labelledby={accessibility.labelId}
+        aria-describedby={accessibility.describedBy}
+      >
+        <CheckMark checked={checked} />
+        <span id={accessibility.labelId}>
+          {label}: {checked ? "Да" : "Нет"}
+        </span>
+      </div>
+    );
+  } else {
+    control = (
+      <label
+        className="ui-check"
+        data-disabled={inputProps.disabled || undefined}
+        data-changed={changed || undefined}
+        data-error={Boolean(error) || undefined}
+      >
+        <input
+          {...inputProps}
+          id={accessibility.id}
+          type="checkbox"
+          aria-invalid={accessibility.invalid}
+          aria-describedby={accessibility.describedBy}
+        />
+        <CheckMark />
+        <span>{label}</span>
+      </label>
+    );
+  }
+
+  return (
+    <div className={`ui-field ${className}`}>
+      {control}
+      <FieldNotes {...accessibility} hint={hint} error={error} />
+    </div>
+  );
+}
+
+type RadioCardProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  label: string;
+  description?: ReactNode;
+};
+
+export function RadioCard({
+  label,
+  description,
+  className = "",
+  "aria-describedby": externalDescription,
+  ...inputProps
+}: RadioCardProps) {
+  const descriptionId = useId();
+  const describedBy = joinDescriptions(
+    externalDescription,
+    description ? descriptionId : undefined,
+  );
+
+  return (
+    <label className={`ui-radio ${className}`}>
+      <input {...inputProps} type="radio" aria-describedby={describedBy} />
+      <span className="ui-radio__circle" aria-hidden="true" />
+      <span>
+        <span className="ui-radio__title">{label}</span>
+        {description && (
+          <span className="ui-radio__description" id={descriptionId}>
+            {description}
+          </span>
+        )}
+      </span>
+    </label>
+  );
 }

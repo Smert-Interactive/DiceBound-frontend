@@ -144,6 +144,7 @@
   --radius-button: 10px;
   --size-button-sm: 32px;
   --radius-button-sm: 8px;
+  --radius-button-sm-touch: 9px;
   --radius-card: 14px;
   --padding-card: 18px;
   --width-modal: 460px;
@@ -155,32 +156,14 @@
   --height-topbar: 56px;
   --height-savebar: 68px;
 
-  /* Размеры UI-kit из холста; общие отступы переиспользуются компонентами. */
-  --space-1: 1px;
-  --space-2: 2px;
-  --space-3: 3px;
-  --space-4: 4px;
-  --space-5: 5px;
-  --space-6: 6px;
-  --space-7: 7px;
-  --space-8: 8px;
-  --space-9: 9px;
-  --space-10: 10px;
-  --space-11: 11px;
-  --space-12: 12px;
-  --space-13: 13px;
-  --space-14: 14px;
-  --space-15: 15px;
-  --space-16: 16px;
-  --space-18: 18px;
-  --space-20: 20px;
-  --space-22: 22px;
-  --space-26: 26px;
+  /* Смысловые размеры и шрифты UI-kit из холста. */
   --size-button-sm-touch: 36px;
   --size-icon-button: 15px;
   --size-icon-feedback: 18px;
   --size-checkbox: 18px;
   --size-radio: 16px;
+  --size-select-arrow: 16px;
+  --padding-select-end: 36px;
   --size-system-list: 38px;
   --size-system-sheet: 52px;
   --size-system-list-touch: 40px;
@@ -193,13 +176,15 @@
   --radius-system-list: 10px;
   --radius-system-sheet: 13px;
   --radius-checkbox: 5px;
-  --radius-skeleton: 6px;
+  --radius-skeleton: 8px;
   --font-ui: 14px;
   --font-button: 13px;
   --font-button-sm: 12.5px;
-  --font-field: 14px;
+  --font-field: 13.5px;
   --font-field-touch: 16px;
   --font-checkbox: 13.5px;
+  --font-tab: 13.5px;
+  --font-modal-body-touch: 13.5px;
   --font-caption: 11.5px;
   --font-caption-touch: 11px;
   --font-explanation: 12.5px;
