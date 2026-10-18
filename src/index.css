@@ -162,6 +162,8 @@
   --size-icon-feedback: 18px;
   --size-checkbox: 18px;
   --size-radio: 16px;
+  --color-bg-savebar: rgba(18, 18, 24, 0.96);
+  --color-border-save-error: rgba(234, 106, 126, 0.4);
   --size-state-icon: 52px;
   --radius-state-icon: 14px;
   --size-select-arrow: 16px;
