@@ -54,9 +54,12 @@
   text-decoration: none;
 }
 
-.sidebar__item:hover {
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
+/* Hover не применяется на устройствах без наведения. */
+@media (hover: hover) {
+  .sidebar__item:hover {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+  }
 }
 
 .sidebar__item:active {
@@ -91,9 +94,11 @@
   cursor: pointer;
 }
 
-.sidebar__close:hover {
-  background: var(--color-bg-input);
-  color: var(--color-text-primary);
+@media (hover: hover) {
+  .sidebar__close:hover {
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
+  }
 }
 
 .sidebar--mobile {
@@ -194,9 +199,14 @@
     pointer-events: none;
   }
 
-  .sidebar__item:hover::after,
   .sidebar__item:focus-visible::after {
     opacity: 1;
+  }
+
+  @media (hover: hover) {
+    .sidebar__item:hover::after {
+      opacity: 1;
+    }
   }
 }
 
