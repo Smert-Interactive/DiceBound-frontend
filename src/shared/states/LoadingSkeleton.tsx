@@ -67,11 +67,7 @@ function ListSkeleton() {
     <div className="state-skeleton__card state-skeleton__card--list">
       {LIST_ROWS.map((row) => (
         <div key={row.title} className="state-skeleton__row">
-          <Skeleton
-            className="state-skeleton__badge"
-            width={38}
-            height={38}
-          />
+          <Skeleton className="state-skeleton__badge" width={38} height={38} />
           <div className="state-skeleton__lines state-skeleton__lines--grow">
             <Skeleton width={row.title} height={12} />
             <Skeleton width={row.subtitle} height={10} />
