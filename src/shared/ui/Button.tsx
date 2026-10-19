@@ -4,6 +4,7 @@ import type {
   ReactNode,
 } from "react";
 
+import { LoaderIcon } from "../icons";
 import { getButtonClassName } from "./buttonClassName";
 import type { ButtonVariant as Variant } from "./buttonClassName";
 
@@ -39,23 +40,6 @@ type ButtonLinkProps = Appearance &
   AccessibleIcon &
   AnchorHTMLAttributes<HTMLAnchorElement> & { disabled?: boolean };
 
-
-export function Loader() {
-  return (
-    <svg
-      className="ui-loader"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 12a8 8 0 1 1-8-8" />
-    </svg>
-  );
-}
 
 export function Button({
   variant = "default",
@@ -98,7 +82,7 @@ export function Button({
           className="ui-button__loading"
           aria-hidden={!loading || undefined}
         >
-          <Loader />
+          <LoaderIcon />
           {!iconOnly && (loadingText ?? children)}
         </span>
       )}

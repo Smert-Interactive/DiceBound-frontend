@@ -1,5 +1,5 @@
-import { CheckIcon } from "../../components/icons";
-import { Button, Loader } from "../ui";
+import { CheckIcon, LoaderIcon } from "../icons";
+import { Button } from "../ui";
 import { getSaveBarModel } from "./saveBarModel";
 import type { SaveBarStatus } from "./saveBarModel";
 import { useMediaQuery } from "./useMediaQuery";
@@ -48,7 +48,7 @@ export default function SaveBar({
       >
         {model.dot === "loader" ? (
           <span className="save-bar__loader">
-            <Loader />
+            <LoaderIcon />
           </span>
         ) : (
           <span

@@ -7,7 +7,7 @@ import logo from "../assets/logo.svg";
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import AppBreadcrumbs from "./AppBreadcrumbs";
-import { MenuIcon, UserIcon } from "./icons";
+import { MenuIcon, UserIcon } from "../shared/icons";
 
 interface Props {
   onMenuClick?: () => void;

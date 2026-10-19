@@ -1,4 +1,4 @@
-import { AlertIcon } from "../../components/icons";
+import { AlertIcon } from "../icons";
 import { Button } from "../ui";
 import StateMessage from "./StateMessage";
 

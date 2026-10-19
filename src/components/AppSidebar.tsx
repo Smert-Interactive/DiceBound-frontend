@@ -8,7 +8,12 @@ import logoMark from "../assets/logo-mark.svg";
 
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
-import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
+import {
+  CloseIcon,
+  UploadIcon,
+  UserIcon,
+  UsersIcon,
+} from "../shared/icons";
 
 interface Props {
   mobile?: boolean;

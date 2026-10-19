@@ -1,4 +1,4 @@
-export { Button, ButtonLink, Loader } from "./Button";
+export { Button, ButtonLink } from "./Button";
 export { getButtonClassName } from "./buttonClassName";
 export { Input, Select, Checkbox, RadioCard } from "./Fields";
 export { Chip, SystemBadge, Banner, Skeleton, EmptyState } from "./Feedback";

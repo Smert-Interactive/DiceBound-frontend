@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { LockIcon } from "../../components/icons";
+import { LockIcon } from "../icons";
 import { ROUTES } from "../../constants/routes";
 import { getButtonClassName } from "../ui";
 import StateMessage from "./StateMessage";
