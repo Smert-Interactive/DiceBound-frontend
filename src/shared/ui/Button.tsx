@@ -7,6 +7,8 @@ import type {
 import { getButtonClassName } from "./buttonClassName";
 import type { ButtonVariant as Variant } from "./buttonClassName";
 
+import "./Button.css";
+
 interface Appearance {
   variant?: Variant;
   size?: "normal" | "sm";

@@ -1,6 +1,9 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import { Button } from "./Button";
 
+import "./animations.css";
+import "./Feedback.css";
+
 type Tone = "neutral" | "crimson" | "violet" | "ok";
 type ChipProps = HTMLAttributes<HTMLSpanElement> & { tone?: Tone };
 

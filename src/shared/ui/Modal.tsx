@@ -8,6 +8,9 @@ import type {
   SyntheticEvent,
 } from "react";
 
+import "./animations.css";
+import "./Modal.css";
+
 const FOCUSABLE_SELECTOR = [
   "button",
   "a[href]",
