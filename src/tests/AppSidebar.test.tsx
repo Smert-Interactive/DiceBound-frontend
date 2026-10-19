@@ -51,6 +51,21 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("button", { name: "Закрыть меню" })).toHaveFocus();
   });
 
+  // Мобильное меню удерживает фокус: Tab с последнего пункта ведёт на первый, Shift+Tab с первого на последний.
+  test("keeps focus inside the mobile menu", () => {
+    renderSidebar(<AppSidebar mobile />);
+
+    const first = screen.getByRole("link", { name: "DiceBound" });
+    const last = screen.getByRole("link", { name: "Профиль" });
+
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(first).toHaveFocus();
+
+    fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+    expect(last).toHaveFocus();
+  });
+
   // Проверяет, что пункты меню — ссылки, а текущий раздел помечен aria-current.
   test("marks current page link", () => {
     renderSidebar(<AppSidebar />, ["/characters/new"]);

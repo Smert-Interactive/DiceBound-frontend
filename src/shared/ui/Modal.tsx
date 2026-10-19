@@ -1,36 +1,11 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import type {
-  KeyboardEvent,
-  MouseEvent,
-  ReactNode,
-  RefObject,
-  SyntheticEvent,
-} from "react";
+import type { MouseEvent, ReactNode, RefObject, SyntheticEvent } from "react";
+
+import { getFocusableElements, trapTab } from "./focusTrap";
 
 import "./animations.css";
 import "./Modal.css";
-
-const FOCUSABLE_SELECTOR = [
-  "button",
-  "a[href]",
-  "input:not([type='hidden'])",
-  "select",
-  "textarea",
-  "[tabindex]",
-].join(", ");
-
-function getFocusableElements(dialog: HTMLDialogElement) {
-  return Array.from(
-    dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-  ).filter((element) => {
-    if (element.tabIndex < 0 || element.matches(":disabled")) return false;
-    if (element.closest("[hidden], [inert]")) return false;
-
-    const style = getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
-}
 
 function parseCssTime(value: string) {
   const number = parseFloat(value);
@@ -74,36 +49,6 @@ export function Modal({
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
     onClose();
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
-    if (event.key !== "Tab") return;
-
-    const dialog = event.currentTarget;
-    const focusableElements = getFocusableElements(dialog);
-    const first = focusableElements[0];
-    const last = focusableElements.at(-1);
-    const activeElement = document.activeElement;
-
-    if (!first) {
-      event.preventDefault();
-      dialog.focus();
-      return;
-    }
-
-    if (
-      event.shiftKey &&
-      (activeElement === first || activeElement === dialog)
-    ) {
-      event.preventDefault();
-      last?.focus();
-    } else if (
-      !event.shiftKey &&
-      (activeElement === last || activeElement === dialog)
-    ) {
-      event.preventDefault();
-      first.focus();
-    }
   }
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
@@ -199,7 +144,7 @@ export function Modal({
       aria-labelledby={`${id}-title`}
       tabIndex={-1}
       onCancel={handleCancel}
-      onKeyDown={handleKeyDown}
+      onKeyDown={trapTab}
       onClick={handleBackdropClick}
     >
       <div className="ui-modal__handle" aria-hidden="true" />
