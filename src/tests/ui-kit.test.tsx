@@ -326,6 +326,31 @@ test("tabs mount only the selected panel and unmount the previous one", async ()
   );
 });
 
+test("tabs stay reachable by keyboard when the value matches no tab", () => {
+  render(
+    <Tabs
+      label="Персонаж"
+      value="missing"
+      onChange={vi.fn()}
+      items={[
+        { id: "sheet", label: "Лист", content: <p>Поля</p>, disabled: true },
+        { id: "history", label: "История", content: <p>Версии</p> },
+        { id: "access", label: "Доступ", content: <p>Выдача</p> },
+      ]}
+    />,
+  );
+
+  expect(screen.getByRole("tab", { name: "История" })).toHaveAttribute(
+    "tabindex",
+    "0",
+  );
+  expect(screen.getByRole("tab", { name: "Доступ" })).toHaveAttribute(
+    "tabindex",
+    "-1",
+  );
+  expect(screen.queryByRole("tabpanel")).not.toBeInTheDocument();
+});
+
 describe("Modal lifecycle", () => {
   // jsdom lacks the native dialog lifecycle; focus navigation is exercised with real events.
   beforeEach(() => {

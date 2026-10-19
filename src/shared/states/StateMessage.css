@@ -48,12 +48,3 @@
 .state-message:not(.state-message--card) > .ui-button {
   margin-top: 6px;
 }
-
-/* Страница 404 для адреса, которого нет в приложении: вне каркаса, по центру окна. */
-.state-page {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 16px;
-  background: var(--color-bg-primary);
-}

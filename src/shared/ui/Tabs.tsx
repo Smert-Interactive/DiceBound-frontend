@@ -20,6 +20,9 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const enabledTabs = items.filter((item) => !item.disabled);
   const activeTab = enabledTabs.find((item) => item.id === value);
+  // В Tab-порядке всегда одна вкладка. Если выбранной нет (value не совпал ни с чем),
+  // это первая доступная, иначе список вкладок нельзя было бы достичь с клавиатуры.
+  const focusableId = activeTab?.id ?? enabledTabs[0]?.id;
 
   function handleKeyDown(event: KeyboardEvent, currentId: string) {
     const currentIndex = enabledTabs.findIndex((item) => item.id === currentId);
@@ -73,7 +76,7 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
               id={`${prefix}-tab-${item.id}`}
               aria-controls={selected ? `${prefix}-panel-${item.id}` : undefined}
               aria-selected={selected}
-              tabIndex={selected ? 0 : -1}
+              tabIndex={item.id === focusableId ? 0 : -1}
               disabled={item.disabled}
               onClick={() => onChange(item.id)}
               onKeyDown={(event) => handleKeyDown(event, item.id)}

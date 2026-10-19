@@ -149,17 +149,18 @@ export function Modal({
     dialog.classList.add("ui-modal--closing");
     let finished = false;
 
-    function finishClosing() {
+    // Стрелочные функции, а не function: так TypeScript помнит, что dialog не null.
+    const finishClosing = () => {
       if (finished) return;
       finished = true;
-      dialog!.close();
-      dialog!.classList.remove("ui-modal--closing");
+      dialog.close();
+      dialog.classList.remove("ui-modal--closing");
       restorePage();
-    }
+    };
 
-    function handleAnimationEnd(event: AnimationEvent) {
+    const handleAnimationEnd = (event: AnimationEvent) => {
       if (event.target === dialog) finishClosing();
-    }
+    };
 
     dialog.addEventListener("animationend", handleAnimationEnd);
     // Таймер завершает закрытие даже без animationend, в том числе при reduced motion.

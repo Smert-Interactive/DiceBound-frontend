@@ -2,7 +2,7 @@
   /* Ширина панели включает границу справа. */
   box-sizing: border-box;
   width: var(--width-sidebar);
-  height: 100vh;
+  height: 100dvh;
   background: var(--color-bg-sidebar);
   border-right: 1px solid var(--color-border-default);
   position: relative;
@@ -123,7 +123,7 @@
     animation: sidebar-in var(--motion-slow);
   }
 
-  /* Закрытие за motion/exit; длительность должна совпадать с SIDEBAR_EXIT_MS в AppLayout. */
+  /* Закрытие за motion/exit; AppLayout читает тот же токен, чтобы убрать меню после анимации. */
   .sidebar--closing {
     animation: sidebar-out var(--motion-exit) forwards;
   }
