@@ -1,3 +1,3 @@
 export default function CharacterPage() {
-  return <h1>New character page</h1>;
+  return <h1>Character page</h1>;
 }

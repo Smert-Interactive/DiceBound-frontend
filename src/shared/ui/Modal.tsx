@@ -1,33 +1,11 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
-import type {
-  KeyboardEvent,
-  MouseEvent,
-  ReactNode,
-  RefObject,
-  SyntheticEvent,
-} from "react";
+import type { MouseEvent, ReactNode, RefObject, SyntheticEvent } from "react";
 
-const FOCUSABLE_SELECTOR = [
-  "button",
-  "a[href]",
-  "input:not([type='hidden'])",
-  "select",
-  "textarea",
-  "[tabindex]",
-].join(", ");
+import { getFocusableElements, trapTab } from "./focusTrap";
 
-function getFocusableElements(dialog: HTMLDialogElement) {
-  return Array.from(
-    dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-  ).filter((element) => {
-    if (element.tabIndex < 0 || element.matches(":disabled")) return false;
-    if (element.closest("[hidden], [inert]")) return false;
-
-    const style = getComputedStyle(element);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
-}
+import "./animations.css";
+import "./Modal.css";
 
 function parseCssTime(value: string) {
   const number = parseFloat(value);
@@ -46,17 +24,23 @@ function getAnimationDuration(element: HTMLElement) {
   }, 0);
 }
 
-interface ModalProps {
+// Закрываемое окно требует onClose. Незакрываемое (dismissible: false) не реагирует на Esc и клик
+// по затемнению, поэтому onClose ему не нужен: окно убирает только родитель, меняя open.
+type CloseProps =
+  | { dismissible?: true; onClose: () => void }
+  | { dismissible: false; onClose?: undefined };
+
+type ModalProps = CloseProps & {
   open: boolean;
-  onClose: () => void;
   title: string;
   children: ReactNode;
   actions?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
-}
+};
 
 export function Modal({
   open,
+  dismissible = true,
   onClose,
   title,
   children,
@@ -68,43 +52,15 @@ export function Modal({
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const originalOverflowRef = useRef<string | null>(null);
 
+  // Esc: браузер сам закрыл бы окно, поэтому отмена всегда блокируется,
+  // а закрывает окно родитель через onClose (если окно закрываемое).
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
-    onClose();
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
-    if (event.key !== "Tab") return;
-
-    const dialog = event.currentTarget;
-    const focusableElements = getFocusableElements(dialog);
-    const first = focusableElements[0];
-    const last = focusableElements.at(-1);
-    const activeElement = document.activeElement;
-
-    if (!first) {
-      event.preventDefault();
-      dialog.focus();
-      return;
-    }
-
-    if (
-      event.shiftKey &&
-      (activeElement === first || activeElement === dialog)
-    ) {
-      event.preventDefault();
-      last?.focus();
-    } else if (
-      !event.shiftKey &&
-      (activeElement === last || activeElement === dialog)
-    ) {
-      event.preventDefault();
-      first.focus();
-    }
+    if (dismissible) onClose?.();
   }
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target !== event.currentTarget) return;
+    if (!dismissible || event.target !== event.currentTarget) return;
 
     const bounds = event.currentTarget.getBoundingClientRect();
     const outsideHorizontal =
@@ -112,7 +68,7 @@ export function Modal({
     const outsideVertical =
       event.clientY < bounds.top || event.clientY > bounds.bottom;
 
-    if (outsideHorizontal || outsideVertical) onClose();
+    if (outsideHorizontal || outsideVertical) onClose?.();
   }
 
   useEffect(() => {
@@ -149,17 +105,18 @@ export function Modal({
     dialog.classList.add("ui-modal--closing");
     let finished = false;
 
-    function finishClosing() {
+    // Стрелочные функции, а не function: так TypeScript помнит, что dialog не null.
+    const finishClosing = () => {
       if (finished) return;
       finished = true;
-      dialog!.close();
-      dialog!.classList.remove("ui-modal--closing");
+      dialog.close();
+      dialog.classList.remove("ui-modal--closing");
       restorePage();
-    }
+    };
 
-    function handleAnimationEnd(event: AnimationEvent) {
+    const handleAnimationEnd = (event: AnimationEvent) => {
       if (event.target === dialog) finishClosing();
-    }
+    };
 
     dialog.addEventListener("animationend", handleAnimationEnd);
     // Таймер завершает закрытие даже без animationend, в том числе при reduced motion.
@@ -195,7 +152,7 @@ export function Modal({
       aria-labelledby={`${id}-title`}
       tabIndex={-1}
       onCancel={handleCancel}
-      onKeyDown={handleKeyDown}
+      onKeyDown={trapTab}
       onClick={handleBackdropClick}
     >
       <div className="ui-modal__handle" aria-hidden="true" />

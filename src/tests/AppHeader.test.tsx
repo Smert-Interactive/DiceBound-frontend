@@ -64,6 +64,22 @@ describe("AppHeader", () => {
     ).toHaveAttribute("href", "/profile");
   });
 
+  // Без почты подпись ссылки остаётся осмысленной, а не «Профиль: undefined».
+  test("names the profile link without an email", () => {
+    render(
+      <MemoryRouter>
+        <AuthProvider initialUser={null}>
+          <AppHeader />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    const links = screen.getAllByRole("link", { name: "Профиль" });
+
+    expect(links).toHaveLength(2);
+    links.forEach((link) => expect(link).toHaveAttribute("href", "/profile"));
+  });
+
   // Кнопка профиля на телефоне ведёт на страницу профиля.
   test("links the mobile profile button to /profile", () => {
     render(

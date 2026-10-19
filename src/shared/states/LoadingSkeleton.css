@@ -1,0 +1,90 @@
+.state-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.state-skeleton__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.state-skeleton__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.state-skeleton__lines--grow {
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+}
+
+.state-skeleton .state-skeleton__avatar {
+  border-radius: 12px;
+}
+
+.state-skeleton .state-skeleton__badge {
+  border-radius: var(--radius-system-list);
+}
+
+.state-skeleton__tabs {
+  display: flex;
+  gap: 22px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.state-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--padding-card);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-surface);
+}
+
+.state-skeleton__card--list {
+  gap: 14px;
+  padding: 14px 18px;
+}
+
+.state-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.state-skeleton__grid {
+  display: grid;
+  gap: 10px;
+}
+
+.state-skeleton__grid--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.state-skeleton__grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Сетка листа на планшете и телефоне идёт в 2 колонки (ui-ux, «Правила перестройки»). */
+@media (max-width: 1023px) {
+  .state-skeleton__grid--four,
+  .state-skeleton__grid--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .state-skeleton__card {
+    padding: 14px;
+  }
+
+  .state-skeleton__card--list {
+    padding: 14px;
+  }
+}

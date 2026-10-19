@@ -4,10 +4,13 @@ import type {
   SelectHTMLAttributes,
   ReactNode,
 } from "react";
+import { ChevronDownIcon } from "../icons";
 import {
   joinDescriptions,
   useFieldAccessibility,
 } from "./useFieldAccessibility";
+
+import "./Fields.css";
 
 interface FieldProps {
   label: string;
@@ -181,18 +184,7 @@ export function Select({
               </option>
             ))}
           </select>
-          <svg
-            className="ui-select__arrow"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDownIcon className="ui-select__arrow" />
         </div>
       </>
     );

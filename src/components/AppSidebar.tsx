@@ -8,7 +8,13 @@ import logoMark from "../assets/logo-mark.svg";
 
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
-import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "./icons";
+import { trapTab } from "../shared/ui";
+import {
+  CloseIcon,
+  UploadIcon,
+  UserIcon,
+  UsersIcon,
+} from "../shared/icons";
 
 interface Props {
   mobile?: boolean;
@@ -67,6 +73,8 @@ export default function AppSidebar({ mobile, closing, onClose }: Props) {
         role: "dialog",
         "aria-modal": true,
         "aria-label": "Меню",
+        // Tab ходит по кругу внутри меню и не уходит на страницу под затемнением.
+        onKeyDown: trapTab,
       })}
     >
       <div className="sidebar__top">

@@ -1,5 +1,15 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import {
+  AlertIcon,
+  CheckIcon,
+  ClockIcon,
+  CopyIcon,
+  EyeIcon,
+} from "../icons";
 import { Button } from "./Button";
+
+import "./animations.css";
+import "./Feedback.css";
 
 type Tone = "neutral" | "crimson" | "violet" | "ok";
 type ChipProps = HTMLAttributes<HTMLSpanElement> & { tone?: Tone };
@@ -60,32 +70,12 @@ export function SystemBadge({
 type BannerIcon = "eye" | "check" | "alert" | "copy" | "clock";
 type BannerVariant = "info" | "warning" | "success" | "error";
 
-const bannerIcons: Record<BannerIcon, ReactNode> = {
-  eye: (
-    <>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
-  check: <path d="m5 12 5 5 9-10" />,
-  alert: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7.5v5.5M12 16.5v.01" />
-    </>
-  ),
-  copy: (
-    <>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </>
-  ),
-  clock: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
+const bannerIcons: Record<BannerIcon, typeof EyeIcon> = {
+  eye: EyeIcon,
+  check: CheckIcon,
+  alert: AlertIcon,
+  copy: CopyIcon,
+  clock: ClockIcon,
 };
 
 const bannerAppearance: Record<
@@ -118,7 +108,7 @@ export function Banner({
   className = "",
 }: BannerProps) {
   const appearance = bannerAppearance[variant];
-  const selectedIcon = icon ?? appearance.icon;
+  const SelectedIcon = bannerIcons[icon ?? appearance.icon];
   let role: "alert" | "status" | undefined;
 
   if (variant === "error") {
@@ -132,17 +122,7 @@ export function Banner({
       className={`ui-banner ui-banner--${variant} ui-tone--${appearance.tone} ${className}`}
       role={role}
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {bannerIcons[selectedIcon]}
-      </svg>
+      <SelectedIcon />
       <div className="ui-banner__content">
         <div className="ui-banner__title">{title}</div>
         {children && <div className="ui-banner__description">{children}</div>}

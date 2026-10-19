@@ -1,7 +1,4 @@
-/* =====================
-   DESKTOP
-===================== */
-
+/* Desktop и планшет: верхняя панель с крошками и кнопкой аккаунта. */
 .desktop-header {
   height: var(--height-topbar);
   display: flex;
@@ -15,41 +12,41 @@
 
 /* Пилюля аккаунта по ui-ux: высота 36 px, граница #2a2a37, текст #b9b6c2.
    Hover: граница #3b3b4e и текст #ece8e2. Pressed: дополнительно фон #17171f. */
-.header__profile{
-    box-sizing:border-box;
-    height:36px;
-    border:1px solid var(--color-border-default);
-    border-radius:30px;
-    padding:0 18px;
-    display:flex;
-    gap:10px;
-    align-items:center;
-    color:var(--color-text-secondary);
-    text-decoration:none
-}
-/* Hover не применяется на устройствах без наведения. */
-@media (hover: hover) {
-    .header__profile:hover{
-        border-color:var(--color-border-strong);
-        color:var(--color-text-primary)
-    }
-}
-.header__profile:active{
-    border-color:var(--color-border-strong);
-    background:var(--color-bg-surface);
-    color:var(--color-text-primary)
-}
-.header__profile svg{
-    flex-shrink:0
+.desktop-header__profile {
+  box-sizing: border-box;
+  height: 36px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 30px;
+  padding: 0 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--color-text-secondary);
+  text-decoration: none;
 }
 
+/* Hover не применяется на устройствах без наведения. */
+@media (hover: hover) {
+  .desktop-header__profile:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+  }
+}
+
+.desktop-header__profile:active {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.desktop-header__profile svg {
+  flex-shrink: 0;
+}
+
+/* Телефон: вместо desktop-панели показывается мобильная. */
 .mobile-header {
   display: none;
 }
-
-/* =====================
-   MOBILE
-===================== */
 
 @media (max-width: 639px) {
   .desktop-header {
@@ -66,6 +63,11 @@
     background: var(--color-bg-sidebar);
   }
 
+  .mobile-header__start {
+    display: flex;
+    align-items: center;
+  }
+
   .mobile-header__logo {
     width: 130px;
     margin-left: 16px;
@@ -73,8 +75,7 @@
 
   /* Кнопки-иконки телефона 44 px по ui-ux: текст #b9b6c2, скругление 10 px.
      Hover: фон #1e1e28 и текст #ece8e2. Pressed: фон #17171f. */
-  .burger,
-  .mobile-profile {
+  .mobile-header__button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -89,21 +90,14 @@
   }
 
   @media (hover: hover) {
-    .burger:hover,
-    .mobile-profile:hover {
+    .mobile-header__button:hover {
       background: var(--color-bg-input);
       color: var(--color-text-primary);
     }
   }
 
-  .burger:active,
-  .mobile-profile:active {
+  .mobile-header__button:active {
     background: var(--color-bg-surface);
     color: var(--color-text-primary);
-  }
-
-  .flex-cont{
-    display: flex;
-    align-items: center;
   }
 }
