@@ -24,17 +24,23 @@ function getAnimationDuration(element: HTMLElement) {
   }, 0);
 }
 
-interface ModalProps {
+// Закрываемое окно требует onClose. Незакрываемое (dismissible: false) не реагирует на Esc и клик
+// по затемнению, поэтому onClose ему не нужен: окно убирает только родитель, меняя open.
+type CloseProps =
+  | { dismissible?: true; onClose: () => void }
+  | { dismissible: false; onClose?: undefined };
+
+type ModalProps = CloseProps & {
   open: boolean;
-  onClose: () => void;
   title: string;
   children: ReactNode;
   actions?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
-}
+};
 
 export function Modal({
   open,
+  dismissible = true,
   onClose,
   title,
   children,
@@ -46,13 +52,15 @@ export function Modal({
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const originalOverflowRef = useRef<string | null>(null);
 
+  // Esc: браузер сам закрыл бы окно, поэтому отмена всегда блокируется,
+  // а закрывает окно родитель через onClose (если окно закрываемое).
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
-    onClose();
+    if (dismissible) onClose?.();
   }
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target !== event.currentTarget) return;
+    if (!dismissible || event.target !== event.currentTarget) return;
 
     const bounds = event.currentTarget.getBoundingClientRect();
     const outsideHorizontal =
@@ -60,7 +68,7 @@ export function Modal({
     const outsideVertical =
       event.clientY < bounds.top || event.clientY > bounds.bottom;
 
-    if (outsideHorizontal || outsideVertical) onClose();
+    if (outsideHorizontal || outsideVertical) onClose?.();
   }
 
   useEffect(() => {

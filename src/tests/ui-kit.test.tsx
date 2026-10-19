@@ -427,6 +427,23 @@ describe("Modal lifecycle", () => {
     await waitFor(() => expect(dialog).not.toHaveAttribute("open"));
   });
 
+  test("a non-dismissible dialog ignores Escape and backdrop clicks", () => {
+    render(
+      <Modal open dismissible={false} title="Сессия завершилась">
+        <Button>Войти</Button>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog");
+
+    // Браузер при Escape отправляет cancel; окно должно отменить закрытие и остаться открытым.
+    const cancel = new Event("cancel", { cancelable: true });
+    fireEvent(dialog, cancel);
+    fireEvent.click(dialog, { clientX: -10, clientY: -10 });
+
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(dialog).toHaveAttribute("open");
+  });
+
   test("unmounting an open dialog restores scrolling and focus", async () => {
     const trigger = document.createElement("button");
     document.body.append(trigger);

@@ -8,17 +8,15 @@ interface Props {
   open: boolean;
 }
 
-// Окно нельзя закрыть Esc или кликом по затемнению: без сессии работать с данными нельзя,
-// остаётся единственный выход — войти снова.
-function ignoreClose() {}
-
 export default function SessionExpiredModal({ open }: Props) {
   const location = useLocation();
 
   return (
     <Modal
       open={open}
-      onClose={ignoreClose}
+      // Без сессии работать с данными нельзя: закрыть окно Esc или кликом по затемнению нельзя,
+      // остаётся единственный выход — войти снова.
+      dismissible={false}
       title="Сессия завершилась"
       actions={
         // from запоминает страницу, на которой оборвалась сессия: после входа человека вернёт на неё.
