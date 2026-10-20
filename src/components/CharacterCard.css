@@ -2,7 +2,7 @@
 .character-card {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 192px 162px 132px;
+  grid-template-columns: var(--columns-characters);
   align-items: center;
   column-gap: 12px;
   padding: 12px 14px;
@@ -103,7 +103,7 @@
 /* Планшет: колонка «Изменён» скрыта. */
 @media (max-width: 1023px) {
   .character-card {
-    grid-template-columns: auto minmax(0, 1fr) 142px 132px;
+    grid-template-columns: var(--columns-characters-tablet);
   }
 
   .character-card__date {

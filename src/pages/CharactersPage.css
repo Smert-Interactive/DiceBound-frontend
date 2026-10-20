@@ -4,18 +4,134 @@
   gap: var(--gap-content);
 }
 
-.characters-page__header h1 {
+/* Заголовок слева, кнопка справа; flex-строка с align-items: center, как .row на холсте. */
+.characters-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.characters-page__heading h1 {
   margin-bottom: var(--gap-page-heading);
 }
 
-.characters-page__header p {
+.characters-page__heading p {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-button);
 }
 
+/* Блок «Мои персонажи»: карточка с маленькими боковыми полями, строки лежат почти у краёв. */
+.characters-page__section {
+  padding: 18px 6px 6px;
+}
+
+.characters-page__section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 12px;
+}
+
+.characters-page__section-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Те же колонки, что у строки CharacterCard: подпись «Имя» начинается от метки системы. */
+.characters-page__columns {
+  display: grid;
+  grid-template-columns: var(--columns-characters);
+  column-gap: 12px;
+  padding: 0 14px 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.characters-page__column-name {
+  grid-column: 1 / 3;
+}
+
+.characters-page__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Планшет: колонка «Изменён» скрыта и в строках, и в заголовках. */
+@media (max-width: 1023px) {
+  .characters-page__columns {
+    grid-template-columns: var(--columns-characters-tablet);
+  }
+
+  .characters-page__column-date {
+    display: none;
+  }
+}
+
 @media (max-width: 639px) {
   .characters-page {
+    gap: var(--gap-content-touch);
+  }
+
+  /* Телефон по холсту: без подзаголовка, малая кнопка с короткой подписью «Создать». */
+  .characters-page__heading p,
+  .characters-page__label-rest {
+    display: none;
+  }
+
+  .characters-page__heading h1 {
+    margin-bottom: 0;
+  }
+
+  .characters-page__create {
+    height: var(--size-button-sm-touch);
+    border-radius: var(--radius-button-sm-touch);
+  }
+
+  /* Общей карточки нет: карточками стали сами персонажи, над ними подпись «Мои персонажи · 3». */
+  .characters-page__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-content-touch);
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .characters-page__section-head {
+    gap: 0;
+    padding: 0;
+    font: 12px/1.5 var(--mono);
+    color: var(--color-text-muted);
+  }
+
+  .characters-page__section-head h2 {
+    font: inherit;
+  }
+
+  .characters-page__section-head .ui-chip {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+  }
+
+  .characters-page__section-head .ui-chip::before {
+    content: "\00a0·\00a0";
+  }
+
+  .characters-page__columns {
+    display: none;
+  }
+
+  .characters-page__list {
+    display: flex;
+    flex-direction: column;
     gap: var(--gap-content-touch);
   }
 }

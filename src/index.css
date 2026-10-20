@@ -170,6 +170,11 @@
   --font-profile-email: 15px;
   --gap-profile-content: 16px;
 
+  /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
+     Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */
+  --columns-characters: auto minmax(0, 1fr) 192px 162px 132px;
+  --columns-characters-tablet: auto minmax(0, 1fr) 142px 132px;
+
   /* Пустой список персонажей по ui-ux. */
   --padding-empty-characters: 64px 40px;
   --size-empty-characters-icon: 56px;

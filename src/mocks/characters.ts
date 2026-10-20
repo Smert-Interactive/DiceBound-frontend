@@ -1,3 +1,5 @@
+import { MOCK_USER } from "../auth/authContext";
+
 // Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
 // Версии в CharacterSummary нет: количество версий понадобится только в модалке удаления.
 export interface CharacterSummary {
@@ -16,6 +18,14 @@ export interface CharacterSummary {
 export interface CharacterList {
   owned: CharacterSummary[];
   shared_view: CharacterSummary[];
+}
+
+// Данные принадлежат только демонстрационному пользователю. Свежий аккаунт получает
+// пустой список (так он совпадает со счётчиками профиля), как отдаст настоящий backend.
+export function getMockCharacterList(email: string): CharacterList {
+  if (email === MOCK_USER.email) return MOCK_CHARACTERS;
+
+  return { owned: [], shared_view: [] };
 }
 
 const DND_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000001";
