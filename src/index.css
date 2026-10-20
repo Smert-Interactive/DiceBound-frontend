@@ -12,6 +12,8 @@
   --color-bg-surface: #17171f;
   /* Read-only поля */
   --color-bg-readonly: #15151c;
+  /* Фон блока «Доступные мне» */
+  --color-bg-shared: #14141a;
   /* Поля ввода, кнопки, чипы */
   --color-bg-input: #1e1e28;
   /* Hover кнопок */

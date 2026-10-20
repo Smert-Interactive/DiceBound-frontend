@@ -27,11 +27,29 @@
   padding: 18px 6px 6px;
 }
 
+/* «Доступные мне»: чужие персонажи, поэтому карточка пунктирная и чуть темнее. */
+.characters-page__section--shared {
+  border-style: dashed;
+  background: var(--color-bg-shared);
+}
+
 .characters-page__section-head {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 14px 12px;
+}
+
+.characters-page__section-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-calculated-text);
+}
+
+/* Число без чипа нужно только телефону. */
+.characters-page__count-text {
+  display: none;
 }
 
 .characters-page__section-head h2 {
@@ -113,7 +131,7 @@
     font: inherit;
   }
 
-  .characters-page__section-head .ui-chip {
+  .characters-page__section-head .characters-page__count {
     padding: 0;
     border: 0;
     background: none;
@@ -121,8 +139,19 @@
     color: inherit;
   }
 
-  .characters-page__section-head .ui-chip::before {
+  .characters-page__section-head .characters-page__count-text {
+    display: inline;
+  }
+
+  .characters-page__section-head .characters-page__count::before,
+  .characters-page__section-head .characters-page__count-text::before {
     content: "\00a0·\00a0";
+  }
+
+  /* Иконка и метка «только просмотр» на телефоне не рисуются: там пунктир у самих карточек. */
+  .characters-page__section-head .characters-page__section-icon,
+  .characters-page__section-head .characters-page__badge {
+    display: none;
   }
 
   .characters-page__columns {
