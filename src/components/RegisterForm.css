@@ -1,0 +1,12 @@
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-form-fields);
+}
+
+/* Как и во входе, primary-действие занимает всю ширину и имеет высоту 44 px. */
+.register-form .register-form__submit {
+  width: 100%;
+  height: var(--size-button-touch);
+  margin-top: var(--margin-form-action);
+}

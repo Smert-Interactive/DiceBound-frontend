@@ -2,15 +2,16 @@ import { useState } from "react";
 
 import logo from "../assets/logo.svg";
 import LoginForm from "../components/LoginForm";
+import RegisterForm from "../components/RegisterForm";
 import { Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
 
 import "./LoginPage.css";
 
-// Вкладки монтируют только активную форму; регистрация добавляется отдельно.
+// Вкладки монтируют только активную форму с её собственными значениями и ошибками.
 const authTabs: readonly TabItem[] = [
   { id: "login", label: "Вход", content: <LoginForm /> },
-  { id: "register", label: "Регистрация", content: null },
+  { id: "register", label: "Регистрация", content: <RegisterForm /> },
 ];
 
 export default function LoginPage() {
