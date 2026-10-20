@@ -1,0 +1,71 @@
+// Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
+// Версии в CharacterSummary нет: количество версий понадобится только в модалке удаления.
+export interface CharacterSummary {
+  id: string;
+  name: string;
+  game_system_id: string;
+  game_system_name: string;
+  updated_at: string;
+  access: "OWNER" | "VIEW";
+  // В контракте это owner_username, а в ui-ux показывается почта; в моках лежит почта.
+  owner_username: string;
+  // Не null только у копий, полученных через EDIT.
+  copy_source_owner_name: string | null;
+}
+
+export interface CharacterList {
+  owned: CharacterSummary[];
+  shared_view: CharacterSummary[];
+}
+
+const DND_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000001";
+const COC_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000002";
+const CUSTOM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000003";
+
+// Данные доски Characters холста. Владелец списка — alex@example.com (MOCK_USER).
+export const MOCK_CHARACTERS: CharacterList = {
+  owned: [
+    {
+      id: "c1a00000-0000-4000-8000-000000000001",
+      name: "Aldric",
+      game_system_id: DND_ID,
+      game_system_name: "D&D 5e",
+      updated_at: "2026-09-24T18:42:00Z",
+      access: "OWNER",
+      owner_username: "alex@example.com",
+      copy_source_owner_name: null,
+    },
+    {
+      id: "c1a00000-0000-4000-8000-000000000002",
+      name: "Sarah Connor",
+      game_system_id: COC_ID,
+      game_system_name: "Call of Cthulhu",
+      updated_at: "2026-09-22T21:07:00Z",
+      access: "OWNER",
+      owner_username: "alex@example.com",
+      copy_source_owner_name: null,
+    },
+    {
+      id: "c1a00000-0000-4000-8000-000000000003",
+      name: "Viktor (копия)",
+      game_system_id: CUSTOM_ID,
+      game_system_name: "Custom System",
+      updated_at: "2026-09-20T16:30:00Z",
+      access: "OWNER",
+      owner_username: "alex@example.com",
+      copy_source_owner_name: "mira@example.com",
+    },
+  ],
+  shared_view: [
+    {
+      id: "c1a00000-0000-4000-8000-000000000004",
+      name: "Merlin",
+      game_system_id: DND_ID,
+      game_system_name: "D&D 5e",
+      updated_at: "2026-09-23T12:15:00Z",
+      access: "VIEW",
+      owner_username: "gm@example.com",
+      copy_source_owner_name: null,
+    },
+  ],
+};
