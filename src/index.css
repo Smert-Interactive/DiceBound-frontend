@@ -185,7 +185,7 @@
 
   /* Уникальные размеры экрана входа и переключателя форм по ui-ux. */
   --height-login-header: 72px;
-  --padding-login-header: 46px;
+  --padding-login-header: 40px;
   --height-login-logo: 34px;
   --height-login-logo-touch: 24px;
   --padding-login-top: 56px;
