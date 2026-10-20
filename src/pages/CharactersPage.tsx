@@ -124,8 +124,10 @@ export default function CharactersPage() {
           >
             <span className="ui-button__rest">
               <PlusIcon />
-              Создать
-              <span className="characters-page__label-rest"> персонажа</span>
+              <span>
+                Создать{" "}
+                <span className="characters-page__label-rest">персонажа</span>
+              </span>
             </span>
           </Link>
         )}
@@ -151,16 +153,19 @@ export default function CharactersPage() {
           title="Персонажей пока нет"
           variant="characters"
           icon={<UsersIcon />}
+          // Если есть доступные мне персонажи, кнопка создания уже в шапке: дубль не нужен.
           action={
-            <Link
-              to={ROUTES.newCharacter}
-              className={getButtonClassName({ variant: "primary" })}
-            >
-              <span className="ui-button__rest">
-                <PlusIcon />
-                Создать персонажа
-              </span>
-            </Link>
+            isEmpty && (
+              <Link
+                to={ROUTES.newCharacter}
+                className={getButtonClassName({ variant: "primary" })}
+              >
+                <span className="ui-button__rest">
+                  <PlusIcon />
+                  Создать персонажа
+                </span>
+              </Link>
+            )
           }
         >
           Выберите игровую систему, и лист соберётся автоматически. Персонажи,
