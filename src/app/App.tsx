@@ -5,7 +5,8 @@ import { router } from "./router";
 
 export default function App() {
   return (
-    <AuthProvider>
+    // После перезагрузки начинаем без сессии: mock-авторизация не сохраняется в браузере.
+    <AuthProvider initialUser={null}>
       <RouterProvider router={router} />
     </AuthProvider>
   );

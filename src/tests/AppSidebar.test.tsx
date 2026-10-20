@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import AppSidebar from "../components/AppSidebar";
 import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 
 // Link работает только внутри Router, поэтому оборачиваем Sidebar в MemoryRouter.
 // AuthProvider нужен мобильному меню: внизу оно показывает почту аккаунта.
@@ -13,7 +14,7 @@ function renderSidebar(
 ) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <AuthProvider initialUser={{ email: "bob@example.com" }}>
+      <AuthProvider initialUser={{ ...MOCK_USER, email: "bob@example.com" }}>
         {ui}
       </AuthProvider>
     </MemoryRouter>,

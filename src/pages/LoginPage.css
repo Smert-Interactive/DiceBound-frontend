@@ -1,0 +1,91 @@
+.login-page {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  background: var(--gradient-login), var(--color-bg-primary);
+}
+
+.login-page__header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: var(--height-login-header);
+  padding-inline: var(--padding-login-header);
+}
+
+.login-page__logo {
+  display: block;
+  width: auto;
+  height: var(--height-login-logo);
+}
+
+.login-page__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-content);
+  padding: var(--padding-login-top) var(--padding-content-touch);
+}
+
+.login-page__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-login-intro);
+  text-align: center;
+}
+
+.login-page__title {
+  margin: 0;
+  font-family: var(--heading);
+  font-size: var(--font-login-title);
+  font-weight: 600;
+  line-height: var(--line-login-title);
+  letter-spacing: var(--tracking-login-title);
+}
+
+.login-page__subtitle {
+  margin: 0;
+  font-size: var(--font-ui);
+  color: var(--color-text-secondary);
+}
+
+.login-page__card {
+  box-sizing: border-box;
+  width: var(--width-login-card);
+  max-width: 100%;
+  padding: var(--padding-login-card);
+}
+
+/* На телефоне каркас приложения отсутствует, карточка занимает ширину контента. */
+@media (max-width: 639px) {
+  .login-page {
+    background: var(--gradient-login-touch), var(--color-bg-primary);
+  }
+
+  .login-page__header {
+    height: var(--height-topbar);
+    padding-inline: var(--padding-content-touch);
+  }
+
+  .login-page__logo {
+    height: var(--height-login-logo-touch);
+  }
+
+  .login-page__content {
+    gap: var(--gap-login-content-touch);
+    padding: var(--gap-login-content-touch) var(--padding-content-touch);
+  }
+
+  .login-page__intro {
+    gap: var(--gap-login-intro-touch);
+  }
+
+  .login-page__title {
+    font-size: var(--font-login-title-touch);
+  }
+
+  .login-page__card {
+    width: 100%;
+    padding: var(--padding-card);
+  }
+}

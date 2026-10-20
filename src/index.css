@@ -156,6 +156,63 @@
   --height-topbar: 56px;
   --height-savebar: 68px;
 
+  /* Общие правила раскладки: шаг блоков страницы и отступы карточек. */
+  --gap-content: 22px;
+  --gap-content-touch: 14px;
+  --padding-content-touch: 16px;
+  --padding-card-touch: 14px;
+  --gap-page-heading: 4px;
+
+  /* Размеры карточки профиля по ui-ux; поверхность и шрифты берутся из общих токенов. */
+  --width-profile-card: 520px;
+  --size-profile-avatar: 48px;
+  --size-profile-icon: 22px;
+  --font-profile-email: 15px;
+  --gap-profile-content: 16px;
+
+  /* Пустой список персонажей по ui-ux. */
+  --padding-empty-characters: 64px 40px;
+  --size-empty-characters-icon: 56px;
+  --width-empty-description: 420px;
+  --font-empty-title: 18px;
+  --font-empty-description: 13.5px;
+  --margin-empty-action: 6px;
+
+  /* Отступы форм и блока ошибки по ui-ux. */
+  --gap-form-fields: 14px;
+  --padding-form-error: 10px 12px;
+  --margin-form-action: 4px;
+
+  /* Уникальные размеры экрана входа и переключателя форм по ui-ux. */
+  --height-login-header: 72px;
+  --padding-login-header: 46px;
+  --height-login-logo: 34px;
+  --height-login-logo-touch: 24px;
+  --padding-login-top: 56px;
+  --font-login-title: 40px;
+  --font-login-title-touch: 30px;
+  --line-login-title: 1.1;
+  --tracking-login-title: 0.2px;
+  --width-login-card: 400px;
+  --padding-login-card: 26px;
+  --radius-tabs-segmented: 11px;
+  --gap-login-content-touch: 20px;
+  --gap-login-intro: 8px;
+  --gap-login-intro-touch: 6px;
+  --spacing-tabs-segmented: 4px;
+  --gap-tabs-panel-segmented: 20px;
+  --gap-tabs-panel-segmented-touch: 18px;
+  --gradient-login: radial-gradient(
+    60% 50% at 50% 0%,
+    rgba(176, 42, 64, 0.1),
+    transparent 70%
+  );
+  --gradient-login-touch: radial-gradient(
+    90% 40% at 50% 0%,
+    rgba(176, 42, 64, 0.12),
+    transparent 70%
+  );
+
   /* Смысловые размеры и шрифты UI-kit из холста. */
   --size-button-sm-touch: 36px;
   --size-icon-button: 15px;
@@ -262,9 +319,24 @@ h1 {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 24px;
-  margin: 0 0 22px;
+  margin: 0 0 var(--gap-content);
   @media (max-width: 639px) {
     font-size: 20px;
-    margin: 0 0 14px;
+    margin: 0 0 var(--gap-content-touch);
+  }
+}
+
+/* Общая поверхность карточек. Компонент задаёт свою раскладку и особые отступы;
+   :where оставляет его правилам приоритет независимо от порядка подключения CSS. */
+:where(.ui-card) {
+  padding: var(--padding-card);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-surface);
+}
+
+@media (max-width: 639px) {
+  :where(.ui-card) {
+    padding: var(--padding-card-touch);
   }
 }
