@@ -9,12 +9,7 @@ import logoMark from "../assets/logo-mark.svg";
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import { trapTab } from "../shared/ui";
-import {
-  CloseIcon,
-  UploadIcon,
-  UserIcon,
-  UsersIcon,
-} from "../shared/icons";
+import { CloseIcon, UploadIcon, UserIcon, UsersIcon } from "../shared/icons";
 
 interface Props {
   mobile?: boolean;
@@ -105,7 +100,10 @@ export default function AppSidebar({ mobile, closing, onClose }: Props) {
 
       <nav className="sidebar__nav" aria-label="Основная навигация">
         {menuItems.map(({ path, activePath, title, Icon }) => {
-          const isActive = matchPath({ path: activePath, end: false }, pathname);
+          const isActive = matchPath(
+            { path: activePath, end: false },
+            pathname,
+          );
 
           return (
             <Link

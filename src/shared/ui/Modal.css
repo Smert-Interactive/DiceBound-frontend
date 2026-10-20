@@ -12,38 +12,47 @@
   box-shadow: var(--shadow-modal);
   overflow: auto;
 }
+
 .ui-modal[open] {
   animation: ui-modal-in var(--motion-base);
 }
+
 .ui-modal::backdrop {
   background: var(--color-backdrop);
   animation: ui-fade-in var(--motion-base);
 }
+
 .ui-modal h2 {
   margin: 0 0 6px;
   font-size: var(--font-modal-title);
   font-weight: 600;
 }
+
 .ui-modal__body {
   color: var(--color-text-secondary);
   font-size: 13px;
   line-height: 1.5;
 }
+
 .ui-modal__actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 20px;
 }
+
 .ui-modal__handle {
   display: none;
 }
+
 .ui-modal.ui-modal--closing {
   animation: ui-modal-out var(--motion-exit) forwards;
 }
+
 .ui-modal--closing::backdrop {
   animation: ui-fade-out var(--motion-exit) forwards;
 }
+
 @keyframes ui-fade-out {
   from {
     opacity: 1;
@@ -52,6 +61,7 @@
     opacity: 0;
   }
 }
+
 @keyframes ui-modal-in {
   from {
     opacity: 0;
@@ -62,6 +72,7 @@
     transform: scale(1);
   }
 }
+
 @keyframes ui-modal-out {
   from {
     opacity: 1;
@@ -72,6 +83,7 @@
     transform: scale(0.98);
   }
 }
+
 @keyframes ui-sheet-in {
   from {
     transform: translateY(100%);
@@ -80,6 +92,7 @@
     transform: translateY(0);
   }
 }
+
 @keyframes ui-sheet-out {
   from {
     transform: translateY(0);
@@ -99,12 +112,15 @@
     padding: 10px 16px 20px;
     border-radius: 18px 18px 0 0;
   }
+
   .ui-modal[open] {
     animation: ui-sheet-in var(--motion-slow);
   }
+
   .ui-modal.ui-modal--closing {
     animation: ui-sheet-out var(--motion-exit) forwards;
   }
+
   .ui-modal__handle {
     display: block;
     width: 36px;
@@ -113,15 +129,18 @@
     border-radius: 2px;
     background: var(--color-border-strong);
   }
+
   .ui-modal__body {
     font-size: var(--font-modal-body-touch);
   }
+
   /* Родитель передаёт отмену первой;
      на телефоне основное действие показывается сверху. */
   .ui-modal__actions {
     flex-direction: column-reverse;
     gap: 10px;
   }
+
   .ui-modal__actions .ui-button {
     width: 100%;
   }

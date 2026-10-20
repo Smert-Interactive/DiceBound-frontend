@@ -1,141 +1,206 @@
-# React + TypeScript + Vite
+# DiceBound Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Веб-приложение для листов персонажей настольных ролевых игр: D&D 5e, Call of Cthulhu и импортируемые системы.
+Игрок создаёт персонажа, заполняет лист, сохраняет версии и выдаёт доступ другим игрокам.
 
-Currently, two official plugins are available:
+Главная идея MVP: новая игровая система подключается JSON-схемой, без нового frontend-компонента.
+Любой лист строит один общий компонент (Dynamic Sheet Renderer) по схеме и данным персонажа.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Репозиторий содержит только frontend.
+Backend и база данных живут отдельно, frontend работает с ними через контракт API.
 
-## React Compiler
+## Ссылки
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Репозиторий документации](https://github.com/Smert-Interactive/DiceBound-docs): MVP, формат схемы листа, технические контракты, документ по оформлению `ui-ux.md`.
+- [Доска задач](https://github.com/orgs/Smert-Interactive/projects/1)
+- [Макет в Figma](https://www.figma.com/design/x7TCZBlTPGuzM1MxrPfq4g/DiceBound-Design): источник по внешнему виду.
 
-## Expanding the ESLint configuration
+## Технологии
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Что | Чем |
+| --- | --- |
+| Интерфейс | React 19, TypeScript |
+| Сборка и dev-сервер | Vite |
+| Маршрутизация | React Router 7 |
+| Тесты | Vitest, Testing Library, jsdom |
+| Линтер | ESLint (typescript-eslint, react-hooks, react-refresh) |
+| Форматирование | Prettier |
+| Стили | обычный CSS, дизайн-токены в `src/index.css` |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Быстрый старт
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Установить Node.js версии из файла `.nvmrc` (сейчас 24).
+2. Установить зависимости: `npm install`.
+3. Запустить dev-сервер: `npm run dev`.
+4. Открыть http://localhost:5173.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Сейчас приложение работает без backend: вход имитируется, пользователь всегда «вошёл» (`alex@example.com`).
 
-```
+## Команды
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+| Команда | Что делает |
+| --- | --- |
+| `npm run dev` | dev-сервер с автоперезагрузкой |
+| `npm run build` | проверка типов и сборка в `dist/` |
+| `npm run preview` | локальный просмотр собранной версии |
+| `npm run lint` | ESLint |
+| `npm test` | тесты Vitest в режиме наблюдения (`npx vitest run` для одного прогона) |
+| `npm run format` | форматирование всего проекта Prettier |
+| `npm run format:check` | проверка форматирования без изменений |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Структура проекта
 
 ```
+src/
+  app/            точка входа приложения и роутер
+  auth/           контекст авторизации (пока с mock-пользователем)
+  components/     каркас: боковая панель, шапка, хлебные крошки, защита маршрутов
+  constants/      адреса маршрутов (единственное место, где пишутся пути)
+  layouts/        общий каркас страниц после входа
+  pages/          страницы по маршрутам
+  shared/
+    ui/           базовые компоненты (кнопки, поля, баннеры, вкладки, модальное окно)
+    states/       системные состояния (загрузка, ошибки, 404, конец сессии, панель сохранения)
+    icons.tsx     все иконки проекта
+  tests/          тесты
+  index.css       дизайн-токены и глобальные стили
+```
 
-## UI-kit
+Стили компонента лежат рядом с ним: `Button.tsx` и `Button.css`.
 
-Импортировать компоненты через `src/shared/ui/index.ts`: он подключает общий CSS.
-Токены и глобальный фокус находятся в `src/index.css`.
+## Маршруты
+
+| Адрес | Страница |
+| --- | --- |
+| `/login` | вход и регистрация |
+| `/characters` | список персонажей |
+| `/characters/new` | создание персонажа |
+| `/characters/:id` | лист персонажа (вкладки «Лист», «История», «Доступ») |
+| `/characters/:id/versions/:version` | просмотр версии |
+| `/systems` | игровые системы |
+| `/systems/import` | импорт системы из JSON |
+| `/profile` | профиль |
+
+Все маршруты, кроме `/login`, доступны только после входа.
+Неизвестный адрес показывает экран «Персонаж не найден или доступ закрыт».
+Часть страниц пока заглушки, они заменяются по мере реализации.
+
+## Принципы разработки
+
+- **Оформление** берётся из макета в Figma и документа `ui-ux.md`, а не придумывается.
+  Если значения нет ни там, ни там, нужно спросить, а не подбирать на глаз.
+- **Токены**: цвета, размеры, шрифты и движение живут в `src/index.css` (`--color-*`, `--size-*`, `--motion-*`).
+  В стилях компонентов использовать токены, а не числа и hex-коды.
+- **Лист строит один компонент.**
+  Он выбирает компонент поля по `field.type`: `text`, `number`, `select`, `checkbox`, `resource`, `calculated`.
+  Ветвлений вида `if (system === ...)` нет, новые типы полей импорт схемы не добавляет.
+- **Формулы** считает ограниченный разбор выражений на клиенте.
+  `eval()` и `new Function` запрещены.
+- **Доступность**: настоящие `button`, `a`, `input` с `label`; у иконок-кнопок `aria-label`; ошибки через `aria-invalid` и `aria-describedby`; фокус виден (2 px, `#9a8fe6`); цвет не единственный носитель смысла.
+- **Hover** применяется только на устройствах с наведением (`@media (hover: hover)`).
+- **Анимации** отключаются при `prefers-reduced-motion: reduce`.
+- **Иконки** только inline SVG из `src/shared/icons.tsx`, без emoji.
+- **Адреса** страниц писать через объект `ROUTES`, а не строками.
+
+## Общие компоненты (`src/shared`)
+
+Базовые компоненты импортируются из одной точки:
 
 ```tsx
-import { Button, Input, Modal } from "./shared/ui";
-
-<Input label="Имя персонажа" value={name} onChange={event => setName(event.target.value)}
-  error={errors.name} hint="Например, Aldric" changed={name !== savedName} />
-
-<Button variant="primary" type="submit" loading={saving} loadingText="Сохранение…">
-  Сохранить
-</Button>
-
-<Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Удалить персонажа?"
-  actions={<>
-    <Button onClick={() => setConfirmOpen(false)}>Отмена</Button>
-    <Button variant="danger" onClick={remove}>Удалить персонажа</Button>
-  </>}>
-  Лист, история версий и выданные доступы будут удалены.
-</Modal>
+import { Button, Input, Modal } from "../shared/ui";
+import { LoadingSkeleton, SaveBar } from "../shared/states";
 ```
 
-- `Button`: варианты `primary`, `default`, `ghost`, `danger`; размер `normal` / `sm`.
-  У `iconOnly` обязателен `aria-label`. В загрузке кнопка недоступна, показывает
-  `loadingText` и сохраняет ширину обычного состояния. У `ghost` загрузки нет.
-  Форма сама блокирует остальные действия на время своего запроса.
-- `ButtonLink`: настоящий `<a href>`; при `disabled` заменяется на неинтерактивный
-  `<span aria-disabled>`, без `href` и обработчиков навигации.
-- `Input`, `Select`, `Checkbox`: `label`, `hint`, `error`, `changed`, `disabled`,
-  `readOnly`; нативные props передаются контролу. Read-only выводит значение плашкой.
-  `Select` принимает `options: { value, label }[]`.
-- `RadioCard`: нативная радиокнопка; объединять варианты одинаковым `name`,
-  передавать `label`, `description`, `value`, `checked` / `onChange`.
-- `Chip`: `neutral`, `crimson`, `violet`, `ok`. `SystemBadge`: `name`,
-  `system` (`dnd`, `coc`, `imported`), `size` (`list`, `sheet`), `viewOnly`.
-- `Banner`: `info`, `warning`, `success`, `error`. Ошибка получает `role="alert"`,
-  уведомление после действия — `notification` и `role="status"`.
-  `onClose` добавляет кнопку «Закрыть»; родитель убирает баннер из состояния.
-  Автоматического скрытия нет; при навигации и новом уведомлении состоянием управляет страница.
-  Иконка задаётся через `icon`: `eye`, `check`, `alert`, `copy`, `clock`.
-  По умолчанию: глаз у info, галочка без окружности у success, предупреждение у warning/error.
-- `Tabs`: управляемый компонент (`value`, `onChange`), уникальные `id` элементов,
-  `label` для tablist, `content` для панелей. Стрелки, Home/End сразу выбирают
-  вкладку; недоступные пропускаются. Для маршрутов использовать ссылки отдельно.
-  Монтируется только активная панель. При переключении локальное состояние её
-  содержимого сбрасывается; несохранённые данные листа следует хранить выше `Tabs`.
-- `Modal`: управляемый `open`; `onClose` запрашивает закрытие, родитель меняет
-  `open`. Нативный `dialog` блокирует фон; возврат фокуса происходит после
-  анимации закрытия. Для начального фокуса доступен `initialFocusRef`.
-  Держать компонент смонтированным при `open=false` для анимации выхода.
-  В `actions` сначала передавать отмену, затем основное действие: на телефоне
-  визуальный порядок меняется, основное действие оказывается сверху.
-- `Skeleton`: статичный декоративный блок, `width` / `height`; объявление статуса
-  загрузки задаёт использующая его страница. `EmptyState`: `title`, пояснение
-  в `children`, необязательные `icon` и `action`.
+`shared/ui`:
 
-При расхождении ревью и макета основной источник требований — документ ui-ux.
-Поля имеют шрифт 13.5 px на desktop и 16 px на телефоне; малая кнопка —
-радиус 8 px и 9 px соответственно.
+| Компонент | Назначение |
+| --- | --- |
+| `Button`, `ButtonLink` | кнопки: `primary`, `default`, `ghost`, `danger`; размеры `normal` и `sm`; состояние загрузки (`loading`, `loadingText`); `iconOnly` требует `aria-label` |
+| `Input`, `Select`, `Checkbox`, `RadioCard` | поля с подписью, подсказкой, ошибкой, пометкой «изменено» и режимом `readOnly` |
+| `Chip`, `SystemBadge` | чипы и метки систем (D&D красная, CoC зелёная, импортированные фиолетовые) |
+| `Banner` | информация, предупреждение, успех и ошибка; ошибка получает `role="alert"` |
+| `Tabs` | вкладки с управлением с клавиатуры; монтируется только активная панель |
+| `Modal` | модальное окно, на телефоне лист снизу; `dismissible={false}` отключает закрытие по Esc и клику |
+| `Skeleton`, `EmptyState` | заглушка загрузки и пустое состояние |
 
-Reduced motion задаёт длительность `0ms`. Закрытие `Modal` поддерживает таймер
-и не зависит от события `animationend`, которое может не произойти при отключённой анимации.
+`shared/states`:
 
+| Компонент | Назначение |
+| --- | --- |
+| `LoadingSkeleton` | скелет листа (`variant="sheet"`) и списка (`variant="list"`) |
+| `LoadErrorState` | ошибка загрузки с кнопкой «Повторить» |
+| `NotFoundOrForbidden` | один экран для 404 и 403 |
+| `SessionExpiredModal` | окно «Сессия завершилась» при ответе 401 |
+| `SaveBar` | панель сохранения листа: шесть статусов, режим копии, версия для телефона |
+
+Правила использования:
+- В `Modal` сначала передавать кнопку отмены, затем основное действие: на телефоне порядок меняется, основное действие оказывается сверху.
+- Кнопка модального окна называет последствие («Удалить персонажа»), а не «ОК».
+- Скелет статичен, без анимации. `LoadingSkeleton` сам объявляет «идёт загрузка» для программ экрана (`role="status"`); отдельный `Skeleton` декоративный, статус для него задаёт страница.
+
+## Тесты
+
+Тесты лежат в `src/tests` и проверяют логику и сценарии: редиректы, фокус и Escape, статусы панели сохранения, функции вроде `getBreadcrumbs`.
+Тесты на статичную разметку не пишутся.
+
+```
+npx vitest run          # один прогон
+npm test                # режим наблюдения
+```
+
+## Форматирование кода (Prettier)
+
+Весь код форматирует Prettier, правила лежат в репозитории (`.prettierrc`), настраивать ничего не нужно.
+
+**Настройка с нуля.**
+1. После `npm install` Prettier уже установлен.
+2. Установить в VS Code расширение **Prettier - Code formatter** (`esbenp.prettier-vscode`).
+   При открытии проекта редактор сам предложит его в окне «Рекомендуемые расширения».
+3. Включить форматирование при сохранении.
+   Создать `.vscode/settings.json` (git его не отслеживает):
+
+   ```json
+   {
+     "editor.formatOnSave": true,
+     "editor.defaultFormatter": "esbenp.prettier-vscode",
+     "[markdown]": { "editor.formatOnSave": false }
+   }
+   ```
+
+4. Перезагрузить окно (Ctrl+Shift+P → `Developer: Reload Window`) и проверить: добавить лишние пробелы в `.tsx` и нажать Ctrl+S.
+
+**Каждый день.**
+Достаточно сохранять файл, редактор отформатирует его сам.
+Перед коммитом запускать `npm run format:check`, `npm run lint` и `npm test`; если `format:check` ругается, выполнить `npm run format`.
+
+**Стиль**: строка до 80 символов, отступ 2 пробела, двойные кавычки, точка с запятой, запятая после последнего элемента многострочного списка, окончания строк LF.
+
+**Prettier не делает:**
+- не переносит длинные комментарии и длинные тексты в кавычках, их длину держать в пределах 100 символов вручную;
+- не ставит пустые строки между CSS-правилами, их оставлять самим;
+- не форматирует документы `*.md`.
+
+**Если не работает.**
+Проверить, что расширение включено, указан `editor.defaultFormatter` и окно перезагружено.
+Prettier не форматирует файлы из `.prettierignore` и код с синтаксической ошибкой (подробности в панели Output → Prettier).
+Если после обновления ветки с `main` много конфликтов форматирования, выполнить `git rebase origin/main`, затем `npm run format` и закоммитить результат отдельным коммитом `style:`.
+Менять правила Prettier можно только отдельным PR.
+
+## Рабочий процесс
+
+- Новая ветка создаётся от свежего `origin/main`; имя вида `feat/название`, `fix/название`, `chore/название`.
+- Коммиты и название PR по Conventional Commits: `feat: …`, `fix: …`, `refactor: …`, `test: …`, `docs: …`, `chore: …`, `style: …`.
+  В описании коммита сказать, что изменилось, а не как писали код.
+- Один PR решает одну задачу; зависимые ветки открывать цепочкой не длиннее двух-трёх PR.
+- Перед PR: `npm run format:check`, `npm run lint`, `npm test`, `npm run build`.
+- В комментариях и описаниях документ по оформлению называть просто `ui-ux`.
+- Секреты и файлы `.env` в репозиторий не добавлять.
+
+CI (GitHub Actions) на каждом PR и пуше в `main` выполняет `npm ci`, `npm run lint`, `npm run test` и `npm run build`.
+Проверку форматирования CI пока не выполняет, поэтому её нужно запускать локально.
+
+## Что пока не реализовано
+
+Реализованы каркас приложения, маршруты, защита маршрутов с mock-пользователем, базовые компоненты и системные состояния.
+Страницы входа, списка персонажей, создания, листа, истории, доступа и импорта систем, а также работа с API ещё впереди.
+Не входят в MVP: OAuth, 2FA, восстановление пароля, редактор схем, кампании, чат, публичные ссылки, инвентарь и заклинания, мобильное приложение.

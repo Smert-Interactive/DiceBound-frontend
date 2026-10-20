@@ -40,7 +40,6 @@ type ButtonLinkProps = Appearance &
   AccessibleIcon &
   AnchorHTMLAttributes<HTMLAnchorElement> & { disabled?: boolean };
 
-
 export function Button({
   variant = "default",
   size,
