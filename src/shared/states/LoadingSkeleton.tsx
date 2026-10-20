@@ -40,7 +40,7 @@ function SheetSkeleton() {
       </div>
 
       {/* Число полей до ответа схемы неизвестно, поэтому скелет повторяет только сетку секций. */}
-      <div className="state-skeleton__card">
+      <div className="ui-card state-skeleton__card">
         <Skeleton width={90} height={10} />
         <div className="state-skeleton__grid state-skeleton__grid--four">
           <Skeleton height={36} />
@@ -50,7 +50,7 @@ function SheetSkeleton() {
         </div>
       </div>
 
-      <div className="state-skeleton__card">
+      <div className="ui-card state-skeleton__card">
         <Skeleton width={120} height={10} />
         <div className="state-skeleton__grid state-skeleton__grid--three">
           <Skeleton height={52} />
@@ -64,7 +64,7 @@ function SheetSkeleton() {
 
 function ListSkeleton() {
   return (
-    <div className="state-skeleton__card state-skeleton__card--list">
+    <div className="ui-card state-skeleton__card state-skeleton__card--list">
       {LIST_ROWS.map((row) => (
         <div key={row.title} className="state-skeleton__row">
           <Skeleton className="state-skeleton__badge" width={38} height={38} />

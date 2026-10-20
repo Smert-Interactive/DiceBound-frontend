@@ -28,7 +28,9 @@ export default function StateMessage({
 
   return (
     <div
-      className={card ? "state-message state-message--card" : "state-message"}
+      className={
+        card ? "ui-card state-message state-message--card" : "state-message"
+      }
       role={role}
     >
       <span className="state-message__icon" aria-hidden="true">

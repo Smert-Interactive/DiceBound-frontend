@@ -53,7 +53,7 @@ describe("routes", () => {
     renderAt("/characters", null);
 
     expect(
-      screen.getByRole("heading", { name: "Login page" }),
+      screen.getByRole("heading", { name: "Листы персонажей для любой НРИ" }),
     ).toBeInTheDocument();
   });
 
@@ -70,7 +70,7 @@ describe("routes", () => {
     renderAt("/login", null);
 
     expect(
-      screen.getByRole("heading", { name: "Login page" }),
+      screen.getByRole("heading", { name: "Листы персонажей для любой НРИ" }),
     ).toBeInTheDocument();
   });
 

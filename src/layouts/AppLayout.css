@@ -33,7 +33,7 @@
 
 @media (max-width: 639px) {
   .app-layout__content {
-    padding: 16px;
+    padding: var(--padding-content-touch);
   }
 
   .sidebar-overlay {

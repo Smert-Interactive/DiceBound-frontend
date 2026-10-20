@@ -15,9 +15,16 @@ interface TabsProps {
   value: string;
   onChange: (id: string) => void;
   label: string;
+  variant?: "default" | "segmented";
 }
 
-export function Tabs({ items, value, onChange, label }: TabsProps) {
+export function Tabs({
+  items,
+  value,
+  onChange,
+  label,
+  variant = "default",
+}: TabsProps) {
   const prefix = useId();
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const enabledTabs = items.filter((item) => !item.disabled);
@@ -66,7 +73,7 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
   }
 
   return (
-    <div className="ui-tabs">
+    <div className={`ui-tabs ui-tabs--${variant}`}>
       <div className="ui-tabs__list" role="tablist" aria-label={label}>
         {items.map((item) => {
           const selected = activeTab?.id === item.id;

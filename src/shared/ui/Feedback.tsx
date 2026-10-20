@@ -164,7 +164,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, children, icon, action }: EmptyStateProps) {
   return (
-    <div className="ui-empty">
+    <div className="ui-card ui-empty">
       {icon && (
         <span className="ui-empty__icon" aria-hidden="true">
           {icon}
