@@ -1,14 +1,15 @@
 import { useState } from "react";
 
 import logo from "../assets/logo.svg";
+import LoginForm from "../components/LoginForm";
 import { Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
 
 import "./LoginPage.css";
 
-// Содержимое форм добавляется отдельно; переключение вкладок уже доступно с клавиатуры.
+// Вкладки монтируют только активную форму; регистрация добавляется отдельно.
 const authTabs: readonly TabItem[] = [
-  { id: "login", label: "Вход", content: null },
+  { id: "login", label: "Вход", content: <LoginForm /> },
   { id: "register", label: "Регистрация", content: null },
 ];
 

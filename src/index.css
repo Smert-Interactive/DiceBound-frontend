@@ -162,6 +162,11 @@
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
 
+  /* Отступы форм и блока ошибки по ui-ux. */
+  --gap-form-fields: 14px;
+  --padding-form-error: 10px 12px;
+  --margin-form-action: 4px;
+
   /* Уникальные размеры экрана входа и переключателя форм по ui-ux. */
   --height-login-header: 72px;
   --padding-login-header: 46px;
