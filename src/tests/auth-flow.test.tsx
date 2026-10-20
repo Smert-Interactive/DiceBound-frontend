@@ -1,26 +1,19 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER, useAuth } from "../auth/authContext";
+import { MOCK_USER } from "../auth/authContext";
 import type { User } from "../auth/authContext";
 import { MOCK_PASSWORD } from "../auth/mockAuth";
 import { ROUTES } from "../constants/routes";
-
-// Тестовая кнопка вызывает настоящий signOut провайдера; кнопка выхода в профиле будет добавлена отдельно.
-function SessionControl() {
-  const { signOut } = useAuth();
-  return <button onClick={signOut}>Завершить тестовую сессию</button>;
-}
 
 function renderAt(path: string, initialUser: User | null = null) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <AuthProvider initialUser={initialUser}>
-      <SessionControl />
       <RouterProvider router={router} />
     </AuthProvider>,
   );
@@ -100,6 +93,37 @@ describe("authentication redirects with the real mock service", () => {
     ).not.toBeInTheDocument();
   });
 
+  test("signs out from the profile and prevents history from restoring the session", async () => {
+    const { user, router } = renderAt(ROUTES.characters, MOCK_USER);
+    await user.click(
+      screen.getByRole("link", { name: `Профиль: ${MOCK_USER.email}` }),
+    );
+    await user.click(screen.getByRole("button", { name: "Выйти" }));
+
+    expect(router.state.location.pathname).toBe(ROUTES.login);
+    expect(router.state.location.state).toBeNull();
+    expect(router.state.historyAction).toBe("REPLACE");
+    expect(screen.getByRole("form", { name: "Вход" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Почта")).toHaveValue("");
+    expect(screen.getByLabelText("Пароль", { exact: true })).toHaveValue("");
+    expect(
+      screen.queryByRole("region", { name: "Данные аккаунта" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Основная навигация" }),
+    ).not.toBeInTheDocument();
+
+    // В истории остался список персонажей, но без сессии он тоже недоступен.
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    expect(router.state.location.pathname).toBe(ROUTES.login);
+    expect(screen.getByRole("form", { name: "Вход" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Профиль:/u }),
+    ).not.toBeInTheDocument();
+  });
+
   test("registers into an empty list and allows signing in with the new account", async () => {
     const { user, router } = renderAt(ROUTES.profile);
     // Каждый запуск получает отдельную почту: аккаунты mock-сервиса живут до перезагрузки модуля.
@@ -135,13 +159,13 @@ describe("authentication redirects with the real mock service", () => {
       screen.getAllByRole("definition").map((item) => item.textContent),
     ).toEqual(["0", "0"]);
 
-    await user.click(
-      screen.getByRole("button", { name: "Завершить тестовую сессию" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Выйти" }));
     expect(router.state.location.pathname).toBe(ROUTES.login);
     await signIn(user, email, password);
-    // Вход из защищённого профиля возвращает туда же и не создаёт новую дату аккаунта.
-    await screen.findByRole("heading", { name: "Профиль" });
+    // После явного выхода новый вход открывает список; дата в профиле остаётся прежней.
+    await screen.findByRole("heading", { name: "Персонажей пока нет" });
+    expect(router.state.location.pathname).toBe(ROUTES.characters);
+    await user.click(screen.getByRole("link", { name: `Профиль: ${email}` }));
     expect(
       screen
         .getByRole("region", { name: "Данные аккаунта" })

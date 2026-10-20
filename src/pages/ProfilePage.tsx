@@ -1,5 +1,10 @@
+import { startTransition } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../auth/authContext";
-import { UserIcon } from "../shared/icons";
+import { ROUTES } from "../constants/routes";
+import { LogoutIcon, UserIcon } from "../shared/icons";
+import { Button } from "../shared/ui";
 
 import "./ProfilePage.css";
 
@@ -12,9 +17,19 @@ const accountDateFormat = new Intl.DateTimeFormat("ru-RU", {
 });
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  // Маршрут защищён RequireAuth; проверка также сужает тип user для TypeScript.
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  // Маршрут защищён ProtectedRoute; проверка также сужает тип user для TypeScript.
   if (!user) return null;
+
+  function handleSignOut() {
+    // Обновляем сессию и маршрут одним переходом: ProtectedRoute не запомнит старый профиль.
+    // replace убирает текущий профиль из истории; остальные адреса остаются защищёнными.
+    startTransition(() => {
+      signOut();
+      navigate(ROUTES.login, { replace: true });
+    });
+  }
 
   return (
     <div className="profile-page">
@@ -48,6 +63,11 @@ export default function ProfilePage() {
             <dd>{user.shared_characters_count}</dd>
           </div>
         </dl>
+        <div className="profile-page__actions">
+          <Button icon={<LogoutIcon />} onClick={handleSignOut}>
+            Выйти
+          </Button>
+        </div>
       </section>
     </div>
   );
