@@ -181,3 +181,41 @@
     height: var(--size-system-sheet-touch);
   }
 }
+
+/* Пустой список — вариант общего EmptyState; остальные пустые состояния не меняются. */
+.ui-empty--characters {
+  gap: var(--gap-content-touch);
+  padding: var(--padding-empty-characters);
+  border-style: dashed;
+}
+
+.ui-empty--characters .ui-empty__icon {
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-empty-characters-icon);
+  height: var(--size-empty-characters-icon);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-input);
+}
+
+.ui-empty--characters h2 {
+  font-size: var(--font-empty-title);
+}
+
+.ui-empty--characters p {
+  max-width: var(--width-empty-description);
+  font-size: var(--font-empty-description);
+  color: var(--color-text-secondary);
+}
+
+.ui-empty--characters > .ui-button {
+  margin-top: var(--margin-empty-action);
+}
+
+@media (max-width: 639px) {
+  .ui-empty--characters {
+    padding: var(--padding-card-touch);
+  }
+}

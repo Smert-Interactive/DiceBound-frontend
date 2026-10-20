@@ -26,7 +26,7 @@ describe("routes", () => {
     renderAt("/");
 
     expect(
-      screen.getByRole("heading", { name: "Characters page" }),
+      screen.getByRole("heading", { name: "Персонажи" }),
     ).toBeInTheDocument();
   });
 

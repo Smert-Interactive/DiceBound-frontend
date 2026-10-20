@@ -16,6 +16,7 @@ interface TabsProps {
   onChange: (id: string) => void;
   label: string;
   variant?: "default" | "segmented";
+  disabled?: boolean;
 }
 
 export function Tabs({
@@ -24,10 +25,13 @@ export function Tabs({
   onChange,
   label,
   variant = "default",
+  disabled = false,
 }: TabsProps) {
   const prefix = useId();
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const enabledTabs = items.filter((item) => !item.disabled);
+  // Общий disabled блокирует кнопки, но оставляет активную панель смонтированной.
+  // Иначе запрос формы потерял бы свой интерфейс загрузки и ошибки.
   const activeTab = enabledTabs.find((item) => item.id === value);
   // В Tab-порядке всегда одна вкладка. Если выбранной нет (value не совпал ни с чем),
   // это первая доступная, иначе список вкладок нельзя было бы достичь с клавиатуры.
@@ -90,8 +94,8 @@ export function Tabs({
                 selected ? `${prefix}-panel-${item.id}` : undefined
               }
               aria-selected={selected}
-              tabIndex={item.id === focusableId ? 0 : -1}
-              disabled={item.disabled}
+              tabIndex={!disabled && item.id === focusableId ? 0 : -1}
+              disabled={disabled || item.disabled}
               onClick={() => onChange(item.id)}
               onKeyDown={(event) => handleKeyDown(event, item.id)}
             >

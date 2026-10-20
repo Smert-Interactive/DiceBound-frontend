@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { useAuth } from "../auth/authContext";
 import { Button, Input } from "../shared/ui";
 
 import "./RegisterForm.css";
@@ -19,6 +20,7 @@ interface FormErrors {
 }
 
 export default function RegisterForm() {
+  const { register, pending } = useAuth();
   // Значения полей не очищаются после проверки или отказа в регистрации.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,9 +35,11 @@ export default function RegisterForm() {
   const passwordMissing = submitted && password.length === 0;
   const confirmationMissing = submitted && passwordConfirmation.length === 0;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Отменяем обычную отправку HTML-формы, чтобы не перезагружать страницу.
     event.preventDefault();
+    // Повторную отправку игнорируем; AuthProvider дополнительно защищает запрос через ref.
+    if (pending) return;
     setSubmitted(true);
 
     // currentTarget — форма; по name находим настоящий input для браузерной проверки email.
@@ -70,15 +74,21 @@ export default function RegisterForm() {
       return;
     }
 
-    // Пока показываем демонстрационный отказ. Успешная регистрация подключается отдельно.
-    // Нейтральный текст не подтверждает, что аккаунт с такой почтой существует.
-    setErrors({ email: REGISTRATION_ERROR });
+    try {
+      await register({ email, password, passwordConfirmation });
+      // Новая сессия откроет список персонажей; он пока пустой.
+    } catch {
+      // Отказ не раскрывает существование аккаунта. Поля не очищаются.
+      setErrors({ email: REGISTRATION_ERROR });
+    }
   }
 
   return (
     <form
       className="register-form"
       aria-label="Регистрация"
+      // Сообщаем программам экранного доступа, что форма ожидает завершения запроса.
+      aria-busy={pending || undefined}
       // Проверки запускает handleSubmit; всплывающие сообщения браузера отключены.
       noValidate
       onSubmit={handleSubmit}
@@ -91,6 +101,7 @@ export default function RegisterForm() {
         inputMode="email"
         placeholder="you@example.com"
         required
+        disabled={pending}
         // value и onChange связывают поле с состоянием React.
         value={email}
         onChange={(event) => {
@@ -109,6 +120,7 @@ export default function RegisterForm() {
         type="password"
         autoComplete="new-password"
         required
+        disabled={pending}
         value={password}
         onChange={(event) => {
           // При смене пароля прежняя проверка его подтверждения тоже становится неактуальной.
@@ -130,6 +142,7 @@ export default function RegisterForm() {
         type="password"
         autoComplete="new-password"
         required
+        disabled={pending}
         value={passwordConfirmation}
         onChange={(event) => {
           // Новое подтверждение проверится при следующей отправке, остальные ошибки остаются.
@@ -143,7 +156,13 @@ export default function RegisterForm() {
         aria-invalid={confirmationMissing || undefined}
       />
       {/* submit вызывает handleSubmit по нажатию кнопки или Enter внутри формы. */}
-      <Button type="submit" variant="primary" className="register-form__submit">
+      <Button
+        type="submit"
+        variant="primary"
+        className="register-form__submit"
+        loading={pending}
+        loadingText="Создание…"
+      >
         Создать аккаунт
       </Button>
     </form>

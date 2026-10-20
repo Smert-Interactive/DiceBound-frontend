@@ -161,6 +161,15 @@
   --gap-content-touch: 14px;
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
+  --gap-page-heading: 4px;
+
+  /* Пустой список персонажей по ui-ux. */
+  --padding-empty-characters: 64px 40px;
+  --size-empty-characters-icon: 56px;
+  --width-empty-description: 420px;
+  --font-empty-title: 18px;
+  --font-empty-description: 13.5px;
+  --margin-empty-action: 6px;
 
   /* Отступы форм и блока ошибки по ui-ux. */
   --gap-form-fields: 14px;

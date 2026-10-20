@@ -157,14 +157,21 @@ export function Skeleton({
 
 interface EmptyStateProps {
   title: string;
+  variant?: "default" | "characters";
   children?: ReactNode;
   icon?: ReactNode;
   action?: ReactNode;
 }
 
-export function EmptyState({ title, children, icon, action }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  children,
+  icon,
+  action,
+  variant = "default",
+}: EmptyStateProps) {
   return (
-    <div className="ui-card ui-empty">
+    <div className={`ui-card ui-empty ui-empty--${variant}`}>
       {icon && (
         <span className="ui-empty__icon" aria-hidden="true">
           {icon}

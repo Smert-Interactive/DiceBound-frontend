@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { useAuth } from "../auth/authContext";
 import { Button, Input } from "../shared/ui";
 
 import "./LoginForm.css";
@@ -8,6 +9,7 @@ import "./LoginForm.css";
 const LOGIN_ERROR = "Неверная почта или пароль";
 
 export default function LoginForm() {
+  const { signIn, pending } = useAuth();
   // Значения контролируемых полей хранятся в React и сохраняются после ошибки отправки.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +22,11 @@ export default function LoginForm() {
   const emailMissing = submitted && email.trim().length === 0;
   const passwordMissing = submitted && password.length === 0;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Обрабатываем отправку сами: страница не перезагружается, введённые значения остаются.
     event.preventDefault();
+    // Повторную отправку игнорируем; AuthProvider дополнительно защищает запрос через ref.
+    if (pending) return;
     setSubmitted(true);
 
     // Пустые поля получают состояние ошибки без дополнительного текста.
@@ -32,15 +36,22 @@ export default function LoginForm() {
       return;
     }
 
-    // Пока демонстрируется отказ во входе. Подключение успешного входа — отдельный этап.
-    // Значения полей сохраняются; сообщение не уточняет, неверна почта или пароль.
-    setLoginError(true);
+    setLoginError(false);
+    try {
+      await signIn({ email, password });
+      // После создания сессии LoginPage выполнит переход с учётом state.from.
+    } catch {
+      // Не уточняем, что именно неверно; значения остаются в полях для новой попытки.
+      setLoginError(true);
+    }
   }
 
   return (
     <form
       className="login-form"
       aria-label="Вход"
+      // Сообщаем программам экранного доступа, что форма ожидает завершения запроса.
+      aria-busy={pending || undefined}
       // Отключаем браузерные подсказки валидации: ошибки показываются средствами UI-kit.
       noValidate
       onSubmit={handleSubmit}
@@ -53,6 +64,7 @@ export default function LoginForm() {
         inputMode="email"
         placeholder="you@example.com"
         required
+        disabled={pending}
         value={email}
         onChange={(event) => {
           // При изменении данных старая общая ошибка больше не относится к новой попытке.
@@ -68,6 +80,7 @@ export default function LoginForm() {
         type="password"
         autoComplete="current-password"
         required
+        disabled={pending}
         value={password}
         onChange={(event) => {
           setPassword(event.target.value);
@@ -82,7 +95,13 @@ export default function LoginForm() {
         </div>
       )}
       {/* submit запускает handleSubmit как по клику, так и при отправке формы клавишей Enter. */}
-      <Button type="submit" variant="primary" className="login-form__submit">
+      <Button
+        type="submit"
+        variant="primary"
+        className="login-form__submit"
+        loading={pending}
+        loadingText="Вход…"
+      >
         Войти
       </Button>
     </form>
