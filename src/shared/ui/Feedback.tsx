@@ -1,11 +1,5 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
-import {
-  AlertIcon,
-  CheckIcon,
-  ClockIcon,
-  CopyIcon,
-  EyeIcon,
-} from "../icons";
+import { AlertIcon, CheckIcon, ClockIcon, CopyIcon, EyeIcon } from "../icons";
 import { Button } from "./Button";
 
 import "./animations.css";

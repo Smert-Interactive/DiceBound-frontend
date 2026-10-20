@@ -55,9 +55,9 @@
     ):hover {
     border-color: var(--color-code-gutter);
   }
-  .ui-check:not(.ui-readonly):not([data-disabled]):not([data-error]):not([data-changed]):not(
-      :focus-within
-    ):hover {
+  .ui-check:not(.ui-readonly):not([data-disabled]):not([data-error]):not(
+      [data-changed]
+    ):not(:focus-within):hover {
     border-color: var(--color-code-gutter);
   }
   .ui-radio:not(:has(input:disabled)):not(:has(input:checked)):hover {

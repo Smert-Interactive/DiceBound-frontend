@@ -28,9 +28,9 @@
   --color-default-pressed: #23232e;
   --color-row-hover: #1a1a23;
   --color-skeleton: #1a1a22;
-  --color-border-changed: rgba(234, 106, 126, .55);
-  --color-border-pair-changed: rgba(234, 106, 126, .35);
-  --color-border-pair-error: rgba(234, 106, 126, .6);
+  --color-border-changed: rgba(234, 106, 126, 0.55);
+  --color-border-pair-changed: rgba(234, 106, 126, 0.35);
+  --color-border-pair-error: rgba(234, 106, 126, 0.6);
   --color-resource-dnd: var(--color-system-dnd);
   --color-resource-coc: var(--color-system-coc);
   --color-resource-imported: var(--color-system-imported);
@@ -112,19 +112,19 @@
 
   /* Подложки UI-kit: у меток, чипов и баннеров разные значения по ui-ux и холсту. */
   --color-white: #fff;
-  --tint-crimson-mark-bg: rgba(176, 42, 64, .16);
-  --tint-crimson-border: rgba(234, 106, 126, .36);
-  --tint-violet-mark-bg: rgba(154, 143, 230, .13);
-  --tint-violet-border: rgba(154, 143, 230, .34);
-  --tint-green-mark-bg: rgba(109, 191, 149, .10);
-  --tint-green-mark-border: rgba(109, 191, 149, .30);
-  --tint-green-chip-bg: rgba(109, 191, 149, .12);
-  --tint-green-border: rgba(109, 191, 149, .34);
-  --tint-banner-info-bg: rgba(154, 143, 230, .09);
-  --tint-banner-warning-bg: rgba(176, 42, 64, .10);
-  --tint-banner-success-bg: rgba(109, 191, 149, .08);
-  --tint-radio-bg: rgba(176, 42, 64, .12);
-  --tint-radio-border: rgba(234, 106, 126, .45);
+  --tint-crimson-mark-bg: rgba(176, 42, 64, 0.16);
+  --tint-crimson-border: rgba(234, 106, 126, 0.36);
+  --tint-violet-mark-bg: rgba(154, 143, 230, 0.13);
+  --tint-violet-border: rgba(154, 143, 230, 0.34);
+  --tint-green-mark-bg: rgba(109, 191, 149, 0.1);
+  --tint-green-mark-border: rgba(109, 191, 149, 0.3);
+  --tint-green-chip-bg: rgba(109, 191, 149, 0.12);
+  --tint-green-border: rgba(109, 191, 149, 0.34);
+  --tint-banner-info-bg: rgba(154, 143, 230, 0.09);
+  --tint-banner-warning-bg: rgba(176, 42, 64, 0.1);
+  --tint-banner-success-bg: rgba(109, 191, 149, 0.08);
+  --tint-radio-bg: rgba(176, 42, 64, 0.12);
+  --tint-radio-border: rgba(234, 106, 126, 0.45);
 
   /* =========================
      Typography
@@ -196,7 +196,7 @@
   --font-system-list: 10.5px;
   --font-system-sheet: 12px;
   --line-field-label: 17px;
-  --shadow-modal: 0 30px 60px -20px rgba(0, 0, 0, .7);
+  --shadow-modal: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
 
   /* =========================
      Breakpoints

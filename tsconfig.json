@@ -6,13 +6,6 @@
   ],
 
   "compilerOptions": {
-    "types": [
-      "vitest/globals"
-    ]
+    "types": ["vitest/globals"]
   }
 }
-
-
-
-
-

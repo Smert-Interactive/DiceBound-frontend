@@ -5,7 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 
 import AppLayout from "../layouts/AppLayout";
 
-
 type SidebarProps = {
   mobile?: boolean;
   onClose?: () => void;
@@ -23,7 +22,6 @@ vi.mock("../components/AppSidebar", () => ({
     </div>
   ),
 }));
-
 
 type HeaderProps = {
   onMenuClick?: () => void;

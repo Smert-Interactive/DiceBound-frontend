@@ -17,7 +17,9 @@
   color: var(--color-text-muted);
   font: var(--font-tab)/1.5 var(--sans);
   cursor: pointer;
-  transition: color var(--motion-fast), border-color var(--motion-fast);
+  transition:
+    color var(--motion-fast),
+    border-color var(--motion-fast);
 }
 .ui-tabs__label,
 .ui-tabs__width {

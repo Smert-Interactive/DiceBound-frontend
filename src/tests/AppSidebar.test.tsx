@@ -13,13 +13,15 @@ function renderSidebar(
 ) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <AuthProvider initialUser={{ email: "bob@example.com" }}>{ui}</AuthProvider>
+      <AuthProvider initialUser={{ email: "bob@example.com" }}>
+        {ui}
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
 
 describe("AppSidebar", () => {
-    //Проверяет, что боковая панель правильно отображает основные пункты навигации.
+  //Проверяет, что боковая панель правильно отображает основные пункты навигации.
   test("renders navigation items", () => {
     // Отображаем компонент Sidebar.
     renderSidebar(<AppSidebar />);
@@ -74,9 +76,9 @@ describe("AppSidebar", () => {
       "aria-current",
       "page",
     );
-    expect(
-      screen.getByRole("link", { name: "Профиль" }),
-    ).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Профиль" })).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 
   // По холсту на странице /systems в меню активен «Импорт системы».

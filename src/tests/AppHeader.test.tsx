@@ -5,14 +5,13 @@ import { MemoryRouter } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 import AuthProvider from "../auth/AuthProvider";
 
-
 vi.mock("../components/AppBreadcrumbs", () => ({
   default: () => <div>Breadcrumbs</div>,
 }));
 
 describe("AppHeader", () => {
-    //Проверяет, что при клике на кнопку меню (burger)вызывается переданный callback onMenuClick.
-  
+  //Проверяет, что при клике на кнопку меню (burger)вызывается переданный callback onMenuClick.
+
   test("calls menu callback", () => {
     // Создаём mock-функцию. Она позволяет проверить, была ли она вызвана и сколько раз.
     const onMenuClick = vi.fn();

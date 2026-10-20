@@ -35,7 +35,10 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
         nextTab = enabledTabs[(currentIndex + 1) % enabledTabs.length];
         break;
       case "ArrowLeft":
-        nextTab = enabledTabs[(currentIndex - 1 + enabledTabs.length) % enabledTabs.length];
+        nextTab =
+          enabledTabs[
+            (currentIndex - 1 + enabledTabs.length) % enabledTabs.length
+          ];
         break;
       case "Home":
         nextTab = enabledTabs[0];
@@ -76,7 +79,9 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
               role="tab"
               className="ui-tabs__tab"
               id={`${prefix}-tab-${item.id}`}
-              aria-controls={selected ? `${prefix}-panel-${item.id}` : undefined}
+              aria-controls={
+                selected ? `${prefix}-panel-${item.id}` : undefined
+              }
               aria-selected={selected}
               tabIndex={item.id === focusableId ? 0 : -1}
               disabled={item.disabled}
@@ -84,7 +89,9 @@ export function Tabs({ items, value, onChange, label }: TabsProps) {
               onKeyDown={(event) => handleKeyDown(event, item.id)}
             >
               <span className="ui-tabs__label">{item.label}</span>
-              <span className="ui-tabs__width" aria-hidden="true">{item.label}</span>
+              <span className="ui-tabs__width" aria-hidden="true">
+                {item.label}
+              </span>
             </button>
           );
         })}
