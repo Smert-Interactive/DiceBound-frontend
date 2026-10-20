@@ -1,0 +1,145 @@
+import { afterEach, describe, expect, test } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+
+import { routes } from "../app/router";
+import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER, useAuth } from "../auth/authContext";
+import type { User } from "../auth/authContext";
+import { MOCK_PASSWORD } from "../auth/mockAuth";
+import { ROUTES } from "../constants/routes";
+
+// Тестовая кнопка вызывает настоящий signOut провайдера; UI профиля будет добавлен отдельно.
+function SessionControl() {
+  const { signOut } = useAuth();
+  return <button onClick={signOut}>Завершить тестовую сессию</button>;
+}
+
+function renderAt(path: string, initialUser: User | null = null) {
+  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  render(
+    <AuthProvider initialUser={initialUser}>
+      <SessionControl />
+      <RouterProvider router={router} />
+    </AuthProvider>,
+  );
+  return { router, user: userEvent.setup() };
+}
+
+async function signIn(
+  user: ReturnType<typeof userEvent.setup>,
+  email = MOCK_USER.email,
+  password = MOCK_PASSWORD,
+) {
+  await user.type(screen.getByLabelText("Почта"), email);
+  await user.type(screen.getByLabelText("Пароль", { exact: true }), password);
+  await user.click(screen.getByRole("button", { name: "Войти" }));
+}
+
+afterEach(cleanup);
+
+describe("authentication redirects with the real mock service", () => {
+  test("signs in and replaces the login page with the character list", async () => {
+    const { user, router } = renderAt(ROUTES.login);
+    await signIn(user);
+
+    await screen.findByRole("heading", { name: "Персонажи" });
+    expect(router.state.location.pathname).toBe(ROUTES.characters);
+    expect(router.state.historyAction).toBe("REPLACE");
+    expect(
+      screen.getByRole("link", { name: `Профиль: ${MOCK_USER.email}` }),
+    ).toBeInTheDocument();
+  });
+
+  test("returns to the protected page including its search and hash", async () => {
+    const { user, router } = renderAt(`${ROUTES.profile}?source=test#details`);
+    expect(router.state.location.pathname).toBe(ROUTES.login);
+    await signIn(user);
+
+    await screen.findByRole("heading", { name: "Profile page" });
+    expect(router.state.location).toMatchObject({
+      pathname: ROUTES.profile,
+      search: "?source=test",
+      hash: "#details",
+    });
+  });
+
+  test.each([
+    { email: MOCK_USER.email, password: "wrong-password" },
+    { email: "missing@example.com", password: MOCK_PASSWORD },
+  ])(
+    "does not create a session for rejected credentials: $email",
+    async (credentials) => {
+      const { user, router } = renderAt(ROUTES.login);
+      await signIn(user, credentials.email, credentials.password);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Неверная почта или пароль",
+      );
+      expect(router.state.location.pathname).toBe(ROUTES.login);
+      expect(
+        screen.queryByRole("link", { name: /Профиль:/u }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  test("sends a signed-in visitor away from /login", async () => {
+    const { router } = renderAt(ROUTES.login, MOCK_USER);
+    await screen.findByRole("heading", { name: "Персонажи" });
+    expect(router.state.location.pathname).toBe(ROUTES.characters);
+    expect(router.state.historyAction).toBe("REPLACE");
+    expect(
+      screen.queryByRole("form", { name: "Вход" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("registers into an empty list and allows signing in with the new account", async () => {
+    const { user, router } = renderAt(ROUTES.profile);
+    // Каждый запуск получает отдельную почту: аккаунты mock-сервиса живут до перезагрузки модуля.
+    const email = `new-${crypto.randomUUID()}@example.com`;
+    const password = "12345678";
+    await user.click(screen.getByRole("tab", { name: "Регистрация" }));
+    await user.type(screen.getByLabelText("Почта"), email);
+    await user.type(screen.getByLabelText("Пароль", { exact: true }), password);
+    await user.type(screen.getByLabelText("Повторите пароль"), password);
+    await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+
+    await screen.findByRole("heading", { name: "Персонажей пока нет" });
+    expect(router.state.location.pathname).toBe(ROUTES.characters);
+    expect(
+      screen.getByRole("link", { name: `Профиль: ${email}` }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Создать персонажа" }),
+    ).toHaveAttribute("href", ROUTES.newCharacter);
+
+    await user.click(
+      screen.getByRole("button", { name: "Завершить тестовую сессию" }),
+    );
+    expect(router.state.location.pathname).toBe(ROUTES.login);
+    await signIn(user, email, password);
+    await screen.findByRole("heading", { name: "Персонажей пока нет" });
+    expect(
+      screen.getByRole("link", { name: `Профиль: ${email}` }),
+    ).toBeInTheDocument();
+  });
+
+  test("shows a neutral email error for an existing account without creating a session", async () => {
+    const { user, router } = renderAt(ROUTES.login);
+    await user.click(screen.getByRole("tab", { name: "Регистрация" }));
+    await user.type(screen.getByLabelText("Почта"), MOCK_USER.email);
+    await user.type(
+      screen.getByLabelText("Пароль", { exact: true }),
+      MOCK_PASSWORD,
+    );
+    await user.type(screen.getByLabelText("Повторите пароль"), MOCK_PASSWORD);
+    await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+
+    const message =
+      "Не удалось создать аккаунт с этой почтой. Если он у вас уже есть — войдите";
+    await screen.findByText(message);
+    expect(screen.getByLabelText("Почта")).toHaveAccessibleDescription(message);
+    expect(router.state.location.pathname).toBe(ROUTES.login);
+  });
+});
