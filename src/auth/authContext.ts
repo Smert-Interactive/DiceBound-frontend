@@ -4,6 +4,10 @@ import type { LoginCredentials, RegisterCredentials } from "./mockAuth";
 
 export interface User {
   email: string;
+  // Данные профиля из контракта CurrentUser; до подключения API их отдаёт mock-сервис.
+  created_at: string;
+  owned_characters_count: number;
+  shared_characters_count: number;
 }
 
 export interface AuthState {
@@ -18,7 +22,12 @@ export interface AuthState {
 }
 
 // Демонстрационный пользователь для начальной сессии в тестах каркаса.
-export const MOCK_USER: User = { email: "alex@example.com" };
+export const MOCK_USER: User = {
+  email: "alex@example.com",
+  created_at: "2026-01-01T12:00:00Z",
+  owned_characters_count: 0,
+  shared_characters_count: 0,
+};
 
 // null вместо значения по умолчанию: так хук поймёт, что провайдера нет.
 export const AuthContext = createContext<AuthState | null>(null);

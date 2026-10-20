@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
@@ -10,7 +10,7 @@ import type { User } from "../auth/authContext";
 import { MOCK_PASSWORD } from "../auth/mockAuth";
 import { ROUTES } from "../constants/routes";
 
-// Тестовая кнопка вызывает настоящий signOut провайдера; UI профиля будет добавлен отдельно.
+// Тестовая кнопка вызывает настоящий signOut провайдера; кнопка выхода в профиле будет добавлена отдельно.
 function SessionControl() {
   const { signOut } = useAuth();
   return <button onClick={signOut}>Завершить тестовую сессию</button>;
@@ -57,7 +57,13 @@ describe("authentication redirects with the real mock service", () => {
     expect(router.state.location.pathname).toBe(ROUTES.login);
     await signIn(user);
 
-    await screen.findByRole("heading", { name: "Profile page" });
+    await screen.findByRole("heading", { name: "Профиль" });
+    const profile = screen.getByRole("region", { name: "Данные аккаунта" });
+    expect(within(profile).getByText(MOCK_USER.email)).toBeInTheDocument();
+    const [year, month, day] = MOCK_USER.created_at.slice(0, 10).split("-");
+    expect(
+      within(profile).getByText(`${day}.${month}.${year}`),
+    ).toHaveAttribute("datetime", MOCK_USER.created_at);
     expect(router.state.location).toMatchObject({
       pathname: ROUTES.profile,
       search: "?source=test",
@@ -103,6 +109,7 @@ describe("authentication redirects with the real mock service", () => {
     await user.type(screen.getByLabelText("Почта"), email);
     await user.type(screen.getByLabelText("Пароль", { exact: true }), password);
     await user.type(screen.getByLabelText("Повторите пароль"), password);
+    const registeredAfter = Date.now();
     await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
 
     await screen.findByRole("heading", { name: "Персонажей пока нет" });
@@ -114,12 +121,32 @@ describe("authentication redirects with the real mock service", () => {
       screen.getByRole("link", { name: "Создать персонажа" }),
     ).toHaveAttribute("href", ROUTES.newCharacter);
 
+    await user.click(screen.getByRole("link", { name: `Профиль: ${email}` }));
+    const createdAt = screen
+      .getByRole("region", { name: "Данные аккаунта" })
+      .querySelector("time")!.dateTime;
+    // Дата создаётся при регистрации, а оба счётчика нового аккаунта равны нулю.
+    expect(Date.parse(createdAt)).not.toBeNaN();
+    expect(new Date(createdAt).getTime()).toBeGreaterThanOrEqual(
+      registeredAfter,
+    );
+    expect(new Date(createdAt).getTime()).toBeLessThanOrEqual(Date.now());
+    expect(
+      screen.getAllByRole("definition").map((item) => item.textContent),
+    ).toEqual(["0", "0"]);
+
     await user.click(
       screen.getByRole("button", { name: "Завершить тестовую сессию" }),
     );
     expect(router.state.location.pathname).toBe(ROUTES.login);
     await signIn(user, email, password);
-    await screen.findByRole("heading", { name: "Персонажей пока нет" });
+    // Вход из защищённого профиля возвращает туда же и не создаёт новую дату аккаунта.
+    await screen.findByRole("heading", { name: "Профиль" });
+    expect(
+      screen
+        .getByRole("region", { name: "Данные аккаунта" })
+        .querySelector("time"),
+    ).toHaveAttribute("datetime", createdAt);
     expect(
       screen.getByRole("link", { name: `Профиль: ${email}` }),
     ).toBeInTheDocument();
@@ -131,9 +158,12 @@ describe("authentication redirects with the real mock service", () => {
     await user.type(screen.getByLabelText("Почта"), MOCK_USER.email);
     await user.type(
       screen.getByLabelText("Пароль", { exact: true }),
-      MOCK_PASSWORD,
+      "safe-password-123",
     );
-    await user.type(screen.getByLabelText("Повторите пароль"), MOCK_PASSWORD);
+    await user.type(
+      screen.getByLabelText("Повторите пароль"),
+      "safe-password-123",
+    );
     await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
 
     const message =

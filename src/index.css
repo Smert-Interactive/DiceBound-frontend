@@ -163,6 +163,13 @@
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
 
+  /* Размеры карточки профиля по ui-ux; поверхность и шрифты берутся из общих токенов. */
+  --width-profile-card: 520px;
+  --size-profile-avatar: 48px;
+  --size-profile-icon: 22px;
+  --font-profile-email: 15px;
+  --gap-profile-content: 16px;
+
   /* Пустой список персонажей по ui-ux. */
   --padding-empty-characters: 64px 40px;
   --size-empty-characters-icon: 56px;

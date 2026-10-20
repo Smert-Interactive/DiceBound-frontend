@@ -11,6 +11,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 import type { User } from "../auth/authContext";
 import * as mockAuth from "../auth/mockAuth";
 import { ROUTES } from "../constants/routes";
@@ -257,6 +258,7 @@ describe("registration validation", () => {
 
   test("accepts an eight-character password without trimming its spaces", async () => {
     vi.mocked(mockAuth.mockRegister).mockResolvedValueOnce({
+      ...MOCK_USER,
       email: "player@example.com",
     });
     const { user } = renderLogin();

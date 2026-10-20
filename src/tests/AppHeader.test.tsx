@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import AppHeader from "../components/AppHeader";
 import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 
 vi.mock("../components/AppBreadcrumbs", () => ({
   default: () => <div>Breadcrumbs</div>,
@@ -39,7 +40,7 @@ describe("AppHeader", () => {
   test("shows the email of the signed-in user", () => {
     render(
       <MemoryRouter>
-        <AuthProvider initialUser={{ email: "bob@example.com" }}>
+        <AuthProvider initialUser={{ ...MOCK_USER, email: "bob@example.com" }}>
           <AppHeader />
         </AuthProvider>
       </MemoryRouter>,
@@ -52,7 +53,7 @@ describe("AppHeader", () => {
   test("links the desktop profile block to /profile", () => {
     render(
       <MemoryRouter>
-        <AuthProvider initialUser={{ email: "bob@example.com" }}>
+        <AuthProvider initialUser={{ ...MOCK_USER, email: "bob@example.com" }}>
           <AppHeader />
         </AuthProvider>
       </MemoryRouter>,
