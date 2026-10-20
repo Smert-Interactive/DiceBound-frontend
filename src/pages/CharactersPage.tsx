@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterCard from "../components/CharacterCard";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import { ROUTES } from "../constants/routes";
-import { getMockCharacterList } from "../mocks/characters";
+import { getMockCharacterList, getMockVersionCount } from "../mocks/characters";
 import type { CharacterSummary } from "../mocks/characters";
 import { EyeIcon, PlusIcon, UsersIcon } from "../shared/icons";
-import { Chip, EmptyState, getButtonClassName } from "../shared/ui";
+import { Banner, Chip, EmptyState, getButtonClassName } from "../shared/ui";
 
 import "./CharactersPage.css";
 
@@ -15,10 +17,17 @@ interface SectionProps {
   characters: CharacterSummary[];
   // owned: свои персонажи и копии, shared: чужие по VIEW (пунктирная карточка).
   variant: "owned" | "shared";
+  // Передаётся карточкам; у VIEW-персонажей кнопка удаления всё равно не рисуется.
+  onDelete?: (character: CharacterSummary) => void;
 }
 
 // Блок списка: заголовок, подписи колонок и строки CharacterCard.
-function CharacterSection({ title, characters, variant }: SectionProps) {
+function CharacterSection({
+  title,
+  characters,
+  variant,
+  onDelete,
+}: SectionProps) {
   const isShared = variant === "shared";
 
   return (
@@ -51,7 +60,11 @@ function CharacterSection({ title, characters, variant }: SectionProps) {
       </div>
       <ul className="characters-page__list">
         {characters.map((character) => (
-          <CharacterCard key={character.id} character={character} />
+          <CharacterCard
+            key={character.id}
+            character={character}
+            onDelete={onDelete}
+          />
         ))}
       </ul>
     </section>
@@ -61,10 +74,36 @@ function CharacterSection({ title, characters, variant }: SectionProps) {
 // Список берётся из моков по почте пользователя; у нового аккаунта он пуст.
 export default function CharactersPage() {
   const { user } = useAuth();
+  // Пока нет API, удаление локальное: моки не меняются, удалённые id помним на странице.
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  // Цель и open хранятся отдельно: при закрытии окно доигрывает анимацию,
+  // и ему до конца нужны имя и число версий.
+  const [deleteTarget, setDeleteTarget] = useState<CharacterSummary | null>(
+    null,
+  );
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   // Маршрут защищён ProtectedRoute; проверка сужает тип user для TypeScript.
   if (!user) return null;
 
-  const { owned, shared_view } = getMockCharacterList(user.email);
+  const list = getMockCharacterList(user.email);
+  const owned = list.owned.filter(
+    (character) => !deletedIds.includes(character.id),
+  );
+  const { shared_view } = list;
+
+  function handleDeleteRequest(character: CharacterSummary) {
+    setDeleteTarget(character);
+    setIsDeleteOpen(true);
+  }
+
+  function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeletedIds([...deletedIds, deleteTarget.id]);
+    // Новый баннер заменяет предыдущий (ui-ux).
+    setNotice(`Персонаж «${deleteTarget.name}» удалён`);
+    setIsDeleteOpen(false);
+  }
   // Когда нет ни своих, ни чужих персонажей, кнопка создания живёт только в пустой карточке.
   const isEmpty = owned.length === 0 && shared_view.length === 0;
 
@@ -91,11 +130,21 @@ export default function CharactersPage() {
           </Link>
         )}
       </header>
+      {/* Баннер не исчезает сам: закрывается кнопкой (ui-ux). */}
+      {notice && (
+        <Banner
+          variant="success"
+          notification
+          title={notice}
+          onClose={() => setNotice(null)}
+        />
+      )}
       {owned.length > 0 ? (
         <CharacterSection
           title="Мои персонажи"
           characters={owned}
           variant="owned"
+          onDelete={handleDeleteRequest}
         />
       ) : (
         <EmptyState
@@ -124,6 +173,15 @@ export default function CharactersPage() {
           title="Доступные мне"
           characters={shared_view}
           variant="shared"
+        />
+      )}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          open={isDeleteOpen}
+          characterName={deleteTarget.name}
+          versionCount={getMockVersionCount(deleteTarget.id)}
+          onCancel={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
         />
       )}
     </div>

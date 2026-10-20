@@ -20,6 +20,19 @@ export interface CharacterList {
   shared_view: CharacterSummary[];
 }
 
+// Числа версий для окна удаления. В CharacterSummary поля нет (см. открытые вопросы в плане),
+// поэтому пока это демонстрационные значения; у Aldric 7, как на холсте.
+const MOCK_VERSION_COUNTS: Record<string, number> = {
+  "c1a00000-0000-4000-8000-000000000001": 7,
+  "c1a00000-0000-4000-8000-000000000002": 4,
+  "c1a00000-0000-4000-8000-000000000003": 2,
+};
+
+// У любого персонажа есть минимум версия 1, она создаётся вместе с ним.
+export function getMockVersionCount(characterId: string): number {
+  return MOCK_VERSION_COUNTS[characterId] ?? 1;
+}
+
 // Данные принадлежат только демонстрационному пользователю. Свежий аккаунт получает
 // пустой список (так он совпадает со счётчиками профиля), как отдаст настоящий backend.
 export function getMockCharacterList(email: string): CharacterList {
