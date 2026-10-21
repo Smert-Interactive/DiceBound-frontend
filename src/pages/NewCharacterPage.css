@@ -4,29 +4,30 @@
   gap: 16px;
 }
 
-/* Desktop: заголовок слева, действия справа, содержимое на всю ширину ниже. */
+/* Строка с переносом: заголовок и действия стоят рядом, а если вместе не помещаются,
+   браузер сам переносит действия строкой ниже. Содержимое (body) всегда на своей строке
+   после них. Порога ширины нет: решает реальный размер текста и кнопок. */
 .new-character__step {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "head actions"
-    "body body";
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  column-gap: 10px;
-  row-gap: 14px;
+  gap: 14px 10px;
 }
 
 .new-character__step-head {
-  grid-area: head;
+  flex: 1 1 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 4px 10px;
 }
 
+/* Название не переносится внутри себя, иначе оно оказывается под цифрой. */
 .new-character__step-head h2 {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .new-character__step-number {
@@ -43,42 +44,183 @@
   color: var(--color-text-secondary);
 }
 
+/* Во всю ширину и после действий (order), даже если те перенеслись на вторую строку. */
 .new-character__step-body {
-  grid-area: body;
+  flex: 0 0 100%;
+  order: 2;
 }
 
 .new-character__step-actions {
-  grid-area: actions;
+  flex: 0 0 auto;
+  display: flex;
+  /* Если карточка уже самих кнопок, они переносятся, а не вылезают за край. */
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 8px;
+}
+
+.new-character__step-hint {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+/* Столько колонок, сколько помещается: 3 при ширине от 560 px, затем 2, затем 1.
+   Ширину карточки в 180 px на холсте не задана, взята так, чтобы три карточки помещались в 588 px. */
+.new-character__systems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.new-character__schemas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Desktop: шаги слева, «Сводка» шириной 340 px справа и липкая при прокрутке. */
+.new-character__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.new-character__summary {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.new-character__summary-title {
+  margin: 0;
+  font: 400 12px/1.5 var(--mono);
+  color: var(--color-text-muted);
+}
+
+.new-character__summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  font-size: var(--font-button);
+}
+
+.new-character__summary-list > div {
   display: flex;
   gap: 8px;
 }
 
-.new-character__systems {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+.new-character__summary-list dt {
+  flex: 1;
+  color: var(--color-text-muted);
 }
 
-/* Телефон: действия уходят под содержимое, карточки систем идут колонкой. */
+.new-character__summary-list dd {
+  min-width: 0;
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* Линия над пояснением: граница вместо отдельного элемента-разделителя. */
+.new-character__summary-note {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border-default);
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+/* В разметке «Отмена» идёт первой (как в модальных окнах), на desktop сверху основная кнопка. */
+.new-character__actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 14px;
+}
+
+.new-character__actions .ui-button {
+  width: 100%;
+}
+
+.new-character__actions .ui-button--primary {
+  height: var(--size-button-touch);
+}
+
+/* Планшет: «Сводка» уходит под шаги, «Отмена» и «Создать» в ряд справа. */
+@media (max-width: 1023px) {
+  .new-character__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .new-character__summary {
+    position: static;
+  }
+
+  .new-character__actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .new-character__actions .ui-button {
+    width: auto;
+  }
+
+  .new-character__actions .ui-button--primary {
+    min-width: 220px;
+  }
+}
+
+/* Телефон: действия под содержимым, подсказка под заголовком, карточки систем колонкой. */
 @media (max-width: 639px) {
   .new-character__step {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "head"
-      "body"
-      "actions";
-    align-items: start;
-    row-gap: 12px;
+    gap: 12px;
+  }
+
+  /* Под заголовком, с отступом под кружок номера (24 px + зазор 10 px). */
+  .new-character__step-hint {
+    flex-basis: 100%;
+    margin-left: 34px;
   }
 
   .new-character__step-actions {
+    order: 3;
+    flex: 0 0 100%;
     flex-wrap: wrap;
     gap: 4px;
     margin-top: -2px;
   }
 
   .new-character__systems {
-    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
+  }
+
+  /* Запас под закреплённую панель: на холсте 120 px для одной кнопки, с «Отменой» выше. */
+  .new-character {
+    padding-bottom: 140px;
+  }
+
+  /* Кнопки выходят из «Сводки» в панель у нижнего края экрана (fixed не зависит от родителя). */
+  .new-character__actions {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 16px 14px;
+    border-top: 1px solid var(--color-border-default);
+    background: var(--color-bg-savebar);
+  }
+
+  .new-character__actions .ui-button,
+  .new-character__actions .ui-button--primary {
+    width: 100%;
+    min-width: 0;
   }
 }
