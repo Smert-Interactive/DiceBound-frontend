@@ -75,6 +75,12 @@
   animation: ui-fade-in var(--motion-base);
 }
 
+/* Баннер из одного заголовка (без пояснения) центрируем: иначе текст прижат вверх,
+   а иконка и кнопка «Закрыть» выше самой строки. */
+.ui-banner--single {
+  align-items: center;
+}
+
 .ui-banner--info {
   --ui-tint: var(--tint-banner-info-bg);
 }
@@ -118,6 +124,11 @@
   width: var(--size-icon-feedback);
   height: var(--size-icon-feedback);
   margin-top: 2px;
+}
+
+/* Отступ сверху нужен, чтобы иконка стояла у первой строки; при центрировании он сдвигает её вниз. */
+.ui-banner--single > svg {
+  margin-top: 0;
 }
 
 .ui-banner__title {

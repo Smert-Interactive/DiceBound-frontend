@@ -12,6 +12,8 @@
   --color-bg-surface: #17171f;
   /* Read-only поля */
   --color-bg-readonly: #15151c;
+  /* Фон блока «Доступные мне» */
+  --color-bg-shared: #14141a;
   /* Поля ввода, кнопки, чипы */
   --color-bg-input: #1e1e28;
   /* Hover кнопок */
@@ -124,6 +126,7 @@
   --tint-banner-warning-bg: rgba(176, 42, 64, 0.1);
   --tint-banner-success-bg: rgba(109, 191, 149, 0.08);
   --tint-radio-bg: rgba(176, 42, 64, 0.12);
+  --tint-system-card-bg: rgba(176, 42, 64, 0.1);
   --tint-radio-border: rgba(234, 106, 126, 0.45);
 
   /* =========================
@@ -170,6 +173,11 @@
   --font-profile-email: 15px;
   --gap-profile-content: 16px;
 
+  /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
+     Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */
+  --columns-characters: auto minmax(0, 1fr) 192px 162px 132px;
+  --columns-characters-tablet: auto minmax(0, 1fr) 142px 132px;
+
   /* Пустой список персонажей по ui-ux. */
   --padding-empty-characters: 64px 40px;
   --size-empty-characters-icon: 56px;
@@ -185,7 +193,7 @@
 
   /* Уникальные размеры экрана входа и переключателя форм по ui-ux. */
   --height-login-header: 72px;
-  --padding-login-header: 46px;
+  --padding-login-header: 40px;
   --height-login-logo: 34px;
   --height-login-logo-touch: 24px;
   --padding-login-top: 56px;

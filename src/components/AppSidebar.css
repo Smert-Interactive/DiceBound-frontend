@@ -5,7 +5,10 @@
   height: 100dvh;
   background: var(--color-bg-sidebar);
   border-right: 1px solid var(--color-border-default);
-  position: relative;
+  /* Липкая: на длинной странице документ прокручивается, а панель остаётся на экране.
+     Без этого она высотой в один экран уезжала вверх, а под ней оставалась пустота. */
+  position: sticky;
+  top: 0;
   z-index: 1000;
 }
 

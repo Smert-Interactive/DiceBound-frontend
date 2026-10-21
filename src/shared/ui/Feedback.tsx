@@ -113,7 +113,7 @@ export function Banner({
 
   return (
     <div
-      className={`ui-banner ui-banner--${variant} ui-tone--${appearance.tone} ${className}`}
+      className={`ui-banner ui-banner--${variant} ui-tone--${appearance.tone} ${children ? "" : "ui-banner--single"} ${className}`}
       role={role}
     >
       <SelectedIcon />
