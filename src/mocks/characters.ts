@@ -1,4 +1,9 @@
 import { MOCK_USER } from "../auth/authContext";
+import {
+  COC_SYSTEM_ID as COC_ID,
+  CUSTOM_SYSTEM_ID as CUSTOM_ID,
+  DND_SYSTEM_ID as DND_ID,
+} from "./systems";
 
 // Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
 // Версии в CharacterSummary нет: количество версий понадобится только в модалке удаления.
@@ -40,10 +45,6 @@ export function getMockCharacterList(email: string): CharacterList {
 
   return { owned: [], shared_view: [] };
 }
-
-const DND_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000001";
-const COC_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000002";
-const CUSTOM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000003";
 
 // Данные доски Characters холста. Владелец списка — alex@example.com (MOCK_USER).
 export const MOCK_CHARACTERS: CharacterList = {

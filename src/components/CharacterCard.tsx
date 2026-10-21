@@ -4,20 +4,12 @@ import { ROUTES } from "../constants/routes";
 import type { CharacterSummary } from "../mocks/characters";
 import { formatDateTime } from "../shared/formatDateTime";
 import { EyeIcon, TrashIcon } from "../shared/icons";
+import { getSystemKind } from "../shared/systemKind";
 import { Button, Chip, SystemBadge, getButtonClassName } from "../shared/ui";
 
 import "./CharacterCard.css";
 
-type SystemKind = "dnd" | "coc" | "imported";
-
 const SYSTEM_TONES = { dnd: "crimson", coc: "ok", imported: "violet" } as const;
-
-// TODO: в CharacterSummary нет признака встроенной системы, пока определяем по названию.
-function getSystemKind(systemName: string): SystemKind {
-  if (systemName.startsWith("D&D")) return "dnd";
-  if (systemName === "Call of Cthulhu") return "coc";
-  return "imported";
-}
 
 interface Props {
   character: CharacterSummary;

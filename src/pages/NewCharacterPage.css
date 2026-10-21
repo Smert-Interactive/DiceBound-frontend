@@ -1,0 +1,84 @@
+.new-character__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Desktop: заголовок слева, действия справа, содержимое на всю ширину ниже. */
+.new-character__step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head actions"
+    "body body";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 14px;
+}
+
+.new-character__step-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.new-character__step-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.new-character__step-number {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  font: 11.5px/1 var(--mono);
+  color: var(--color-text-secondary);
+}
+
+.new-character__step-body {
+  grid-area: body;
+}
+
+.new-character__step-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 8px;
+}
+
+.new-character__systems {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Телефон: действия уходят под содержимое, карточки систем идут колонкой. */
+@media (max-width: 639px) {
+  .new-character__step {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "body"
+      "actions";
+    align-items: start;
+    row-gap: 12px;
+  }
+
+  .new-character__step-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: -2px;
+  }
+
+  .new-character__systems {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
