@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, generatePath, useNavigate } from "react-router-dom";
 
+import { useAuth } from "../auth/authContext";
 import SystemCard from "../components/SystemCard";
 import { ROUTES } from "../constants/routes";
+import { createMockCharacter } from "../mocks/characters";
 import { MOCK_SYSTEMS, getMockSchemas } from "../mocks/systems";
 import { UploadIcon } from "../shared/icons";
-import { Button, Input, RadioCard, getButtonClassName } from "../shared/ui";
+import {
+  Button,
+  ButtonLink,
+  Input,
+  RadioCard,
+  getButtonClassName,
+} from "../shared/ui";
 
 import "./NewCharacterPage.css";
+
+const NAME_HINT = "Введите имя, чтобы создать персонажа";
 
 interface StepProps {
   number: number;
@@ -48,6 +58,31 @@ export default function NewCharacterPage() {
   const [name, setName] = useState("");
   const system =
     MOCK_SYSTEMS.find((item) => item.id === systemId) ?? MOCK_SYSTEMS[0];
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const hintId = useId();
+  const [pending, setPending] = useState(false);
+  const isNameEmpty = name.trim().length === 0;
+
+  async function handleCreate() {
+    // Кнопка недоступна через aria-disabled, а не disabled, поэтому клик по ней всё равно
+    // приходит: отсекаем его здесь, как и повторное нажатие во время запроса.
+    if (isNameEmpty || pending || !user) return;
+    setPending(true);
+    try {
+      const character = await createMockCharacter(
+        {
+          name,
+          game_system_id: system.id,
+          sheet_schema_id: schema.id,
+        },
+        user.email,
+      );
+      navigate(generatePath(ROUTES.character, { id: character.id }));
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="new-character">
@@ -132,8 +167,11 @@ export default function NewCharacterPage() {
               name="character-name"
               placeholder="Например, Aldric"
               autoComplete="off"
+              disabled={pending}
               value={name}
               onChange={(event) => setName(event.target.value)}
+              // На телефоне эту подсказку CSS скрывает: там она стоит над кнопкой в нижней панели.
+              hint={isNameEmpty ? NAME_HINT : undefined}
             />
           </StepCard>
         </div>
@@ -159,13 +197,35 @@ export default function NewCharacterPage() {
             сразу сохранится как версия&nbsp;1.
           </p>
           <div className="new-character__actions">
-            <Link
-              to={ROUTES.characters}
-              className={getButtonClassName({ variant: "ghost" })}
+            {/* Пока создаётся персонаж, остальные кнопки недоступны (ui-ux). */}
+            {pending ? (
+              <ButtonLink variant="ghost" disabled>
+                Отмена
+              </ButtonLink>
+            ) : (
+              <Link
+                to={ROUTES.characters}
+                className={getButtonClassName({ variant: "ghost" })}
+              >
+                <span className="ui-button__rest">Отмена</span>
+              </Link>
+            )}
+            <Button
+              variant="primary"
+              loading={pending}
+              loadingText="Создание…"
+              aria-disabled={isNameEmpty || undefined}
+              aria-describedby={isNameEmpty ? hintId : undefined}
+              onClick={handleCreate}
             >
-              <span className="ui-button__rest">Отмена</span>
-            </Link>
-            <Button variant="primary">Создать персонажа</Button>
+              Создать персонажа
+            </Button>
+            {/* Подсказка на телефоне: под полем её нет, а над кнопкой в нижней панели есть. */}
+            {isNameEmpty && (
+              <p id={hintId} className="new-character__bar-hint">
+                {NAME_HINT}
+              </p>
+            )}
           </div>
         </aside>
       </div>

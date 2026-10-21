@@ -149,6 +149,11 @@
   height: var(--size-button-touch);
 }
 
+/* Подсказка в панели с кнопками нужна только на телефоне; выше она стоит под полем имени. */
+.new-character__bar-hint {
+  display: none;
+}
+
 /* Планшет: «Сводка» уходит под шаги, «Отмена» и «Создать» в ряд справа. */
 @media (max-width: 1023px) {
   .new-character__layout {
@@ -198,9 +203,10 @@
     gap: 8px;
   }
 
-  /* Запас под закреплённую панель: на холсте 120 px для одной кнопки, с «Отменой» выше. */
+  /* Запас под закреплённую панель: на холсте 120 px для подсказки и одной кнопки.
+     С «Отменой» панель выше (≈146 px), поэтому 160 px. */
   .new-character {
-    padding-bottom: 140px;
+    padding-bottom: 160px;
   }
 
   /* Кнопки выходят из «Сводки» в панель у нижнего края экрана (fixed не зависит от родителя). */
@@ -222,5 +228,17 @@
   .new-character__actions .ui-button--primary {
     width: 100%;
     min-width: 0;
+  }
+
+  /* Над кнопкой в панели (холст MCreate: 12 px, приглушённая); под полем её не дублируем. */
+  .new-character__bar-hint {
+    display: block;
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .new-character__steps .ui-field__hint {
+    display: none;
   }
 }

@@ -3,6 +3,7 @@ import {
   COC_SYSTEM_ID as COC_ID,
   CUSTOM_SYSTEM_ID as CUSTOM_ID,
   DND_SYSTEM_ID as DND_ID,
+  MOCK_SYSTEMS,
 } from "./systems";
 
 // Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
@@ -23,6 +24,41 @@ export interface CharacterSummary {
 export interface CharacterList {
   owned: CharacterSummary[];
   shared_view: CharacterSummary[];
+}
+
+// Поля повторяют CreateCharacterRequest из контракта POST /characters.
+export interface CreateCharacterRequest {
+  name: string;
+  game_system_id: string;
+  sheet_schema_id: string;
+}
+
+const MOCK_REQUEST_DELAY = 500;
+
+// Имитирует создание: ответ приходит с задержкой, чтобы была видна загрузка кнопки.
+// Персонаж нигде не сохраняется (как и удаление, пока нет API).
+export async function createMockCharacter(
+  request: CreateCharacterRequest,
+  ownerEmail: string,
+): Promise<CharacterSummary> {
+  await new Promise<void>((resolve) =>
+    window.setTimeout(resolve, MOCK_REQUEST_DELAY),
+  );
+  const system = MOCK_SYSTEMS.find(
+    (item) => item.id === request.game_system_id,
+  );
+  if (!system) throw new Error("UNKNOWN_SYSTEM");
+
+  return {
+    id: crypto.randomUUID(),
+    name: request.name.trim(),
+    game_system_id: system.id,
+    game_system_name: system.name,
+    updated_at: new Date().toISOString(),
+    access: "OWNER",
+    owner_username: ownerEmail,
+    copy_source_owner_name: null,
+  };
 }
 
 // Числа версий для окна удаления. В CharacterSummary поля нет (см. открытые вопросы в плане),
