@@ -87,6 +87,9 @@
   --tint-primary-border: rgba(201, 52, 80, 0.4);
   --tint-calculated-bg: rgba(154, 143, 230, 0.12);
   --tint-calculated-border: rgba(154, 143, 230, 0.4);
+  /* Поле calculated на листе: фон 8 %, пунктирная рамка 45 % (ui-ux) */
+  --tint-calculated-field-bg: rgba(154, 143, 230, 0.08);
+  --tint-calculated-field-border: rgba(154, 143, 230, 0.45);
   --tint-success-bg: rgba(109, 191, 149, 0.12);
   --tint-success-border: rgba(109, 191, 149, 0.4);
 

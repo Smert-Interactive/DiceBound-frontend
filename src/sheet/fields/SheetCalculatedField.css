@@ -1,0 +1,49 @@
+.sheet-calculated__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sheet-calculated__label svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--color-calculated);
+}
+
+/* Плашка: пунктирная фиолетовая рамка, значение слева, формула справа (ui-ux). */
+.sheet-calculated__box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--size-field);
+  padding: 0 12px;
+  border: 1px dashed var(--tint-calculated-field-border);
+  border-radius: var(--radius-field);
+  background: var(--tint-calculated-field-bg);
+  color: var(--color-calculated-highlight);
+  font: 500 15px/1 var(--mono);
+}
+
+.sheet-calculated__formula {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--color-calculated);
+  font-size: 10.5px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ошибка зависимости: вместо числа «—» приглушённым цветом. */
+.sheet-calculated__box[data-error] .sheet-calculated__value {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 639px) {
+  .sheet-calculated__box {
+    min-height: 44px;
+  }
+}
