@@ -4,12 +4,10 @@ import { ROUTES } from "../constants/routes";
 import type { CharacterSummary } from "../mocks/characters";
 import { formatDateTime } from "../shared/formatDateTime";
 import { EyeIcon, TrashIcon } from "../shared/icons";
-import { getSystemKind } from "../shared/systemKind";
+import { SYSTEM_TONES, getSystemKind } from "../shared/systemKind";
 import { Button, Chip, SystemBadge, getButtonClassName } from "../shared/ui";
 
 import "./CharacterCard.css";
-
-const SYSTEM_TONES = { dnd: "crimson", coc: "ok", imported: "violet" } as const;
 
 interface Props {
   character: CharacterSummary;

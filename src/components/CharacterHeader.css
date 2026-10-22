@@ -1,0 +1,63 @@
+.character-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.character-header__main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.character-header__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Cormorant только у имени персонажа (ui-ux); общий стиль h1 здесь не нужен. */
+.character-header__name {
+  margin: 0;
+  font-family: var(--heading);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+  overflow-wrap: anywhere;
+}
+
+.character-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-explanation);
+}
+
+/* Телефон: метка 44 px у верхнего края, имя 26 px, строка подписей без даты (как MSheetDnD). */
+@media (max-width: 639px) {
+  .character-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .character-header__title {
+    gap: 8px;
+  }
+
+  .character-header__name {
+    font-size: 26px;
+  }
+
+  .character-header__meta {
+    font-size: 12px;
+  }
+
+  .character-header__date {
+    display: none;
+  }
+}
