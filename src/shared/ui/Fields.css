@@ -110,6 +110,40 @@
   overflow-wrap: anywhere;
 }
 
+/* Поле со слотами: кнопки по бокам (счётчик) и подпись справа внутри (диапазон). */
+.ui-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ui-input__control {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-input__suffix {
+  position: absolute;
+  top: 50%;
+  right: 11px;
+  transform: translateY(-50%);
+  font: 11px/1 var(--mono);
+  color: var(--color-text-faint);
+  pointer-events: none;
+}
+
+/* Место под подпись, чтобы длинное значение не залезало под диапазон. */
+.ui-input__control:has(.ui-input__suffix) .ui-control {
+  padding-right: 56px;
+}
+
+@media (max-width: 639px) {
+  .ui-input {
+    gap: 6px;
+  }
+}
+
 .ui-select {
   position: relative;
 }
