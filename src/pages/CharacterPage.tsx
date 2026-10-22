@@ -6,6 +6,7 @@ import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import { NotFoundOrForbidden } from "../shared/states";
+import { getSystemKind } from "../shared/systemKind";
 import { Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
 
@@ -35,7 +36,8 @@ export default function CharacterPage() {
   }
 
   return (
-    <div className="character-page">
+    // data-system задаёт цвет полос resource через CSS, без ветвлений в renderer.
+    <div className="character-page" data-system={getSystemKind(system.name)}>
       <CharacterHeader
         name={character.name}
         systemName={system.name}

@@ -36,6 +36,10 @@
   --color-resource-dnd: var(--color-system-dnd);
   --color-resource-coc: var(--color-system-coc);
   --color-resource-imported: var(--color-system-imported);
+  /* Заливка полосы resource по метке системы (ui-ux); трек — --color-bg-hover */
+  --gradient-resource-dnd: linear-gradient(90deg, #b02a40, #ea6a7e);
+  --gradient-resource-coc: linear-gradient(90deg, #3f8f68, #8fd4b0);
+  --gradient-resource-imported: linear-gradient(90deg, #6f63c9, #b3aaf0);
 
   /* =========================
      Border colors

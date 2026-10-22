@@ -1,11 +1,14 @@
 import { getRangeMessage, parseNumber } from "./numberField";
+import { getResourceError } from "./resourceField";
+import type { ResourceDraft } from "./resourceField";
 import type { FieldValue, SheetField } from "./sheetTypes";
 
 // Возвращает текст ошибки по ui-ux (Dynamic Character Sheet → Типы полей) или undefined.
-// Типы resource и calculated добавляются вместе с их компонентами.
+// Тип calculated добавляется вместе с его компонентом.
+// Значение — как в данных персонажа или как набрано в поле (строки, у resource черновик).
 export function validateField(
   field: SheetField,
-  value: FieldValue | undefined,
+  value: FieldValue | ResourceDraft | undefined,
 ): string | undefined {
   switch (field.type) {
     case "text": {
@@ -19,14 +22,25 @@ export function validateField(
 
     case "number": {
       // Из данных приходит число, из поля ввода строка (пустая, пока человек стёр значение).
-      const number =
-        typeof value === "number" ? value : parseNumber(`${value}`);
+      let number: number | undefined;
+      if (typeof value === "number") {
+        number = value;
+      } else if (typeof value === "string") {
+        number = parseNumber(value);
+      }
       // Нет границ — в ui-ux нет и текста для пустого поля; TODO: утвердить формулировку.
       const rangeMessage = getRangeMessage(field);
       if (number === undefined) return rangeMessage ?? "Нужно число";
       if (field.min !== undefined && number < field.min) return rangeMessage;
       if (field.max !== undefined && number > field.max) return rangeMessage;
       return undefined;
+    }
+
+    case "resource": {
+      // Не объект (значения нет или тип не тот) — то же, что пустые current и max.
+      const input =
+        typeof value === "object" ? value : { current: "", max: "" };
+      return getResourceError(field, input)?.message;
     }
 
     case "select": {
