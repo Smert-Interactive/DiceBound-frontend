@@ -1,0 +1,62 @@
+/* Цвет заливки по метке системы: data-system ставит страница на предка листа (ui-ux).
+   По умолчанию красный, как у D&D. */
+[data-system="coc"] {
+  --sheet-resource-fill: var(--gradient-resource-coc);
+}
+
+[data-system="imported"] {
+  --sheet-resource-fill: var(--gradient-resource-imported);
+}
+
+.sheet-resource__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sheet-resource__caption {
+  color: var(--color-text-muted);
+  font: 11px/1.5 var(--mono);
+}
+
+.sheet-resource__inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet-resource .ui-control {
+  text-align: center;
+  font-family: var(--mono);
+}
+
+.sheet-resource__slash {
+  color: var(--color-text-muted);
+  font-family: var(--mono);
+}
+
+.sheet-resource .ui-readonly {
+  font-family: var(--mono);
+}
+
+/* Трек и заливка: 6 px, доля current / max. Меняется сразу, без анимации (ui-ux). */
+.sheet-resource__bar {
+  height: 6px;
+  margin-top: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-hover);
+  overflow: hidden;
+}
+
+.sheet-resource__bar i {
+  display: block;
+  height: 100%;
+  background: var(--sheet-resource-fill, var(--gradient-resource-dnd));
+}
+
+/* Read-only: полоса серая, без цвета системы. */
+.sheet-resource[data-readonly] .sheet-resource__bar i {
+  background: var(--color-code-gutter);
+}

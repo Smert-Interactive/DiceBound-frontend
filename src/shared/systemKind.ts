@@ -1,5 +1,12 @@
 export type SystemKind = "dnd" | "coc" | "imported";
 
+// Тон чипа и метки системы: D&D красная, CoC зелёная, импортированные фиолетовые.
+export const SYSTEM_TONES = {
+  dnd: "crimson",
+  coc: "ok",
+  imported: "violet",
+} as const satisfies Record<SystemKind, string>;
+
 // TODO: цвет метки зависит от системы, а в данных от API его нет: source даёт только
 // BUILT_IN или IMPORTED. Пока определяем вид по названию.
 export function getSystemKind(systemName: string): SystemKind {

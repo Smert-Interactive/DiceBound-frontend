@@ -36,6 +36,10 @@
   --color-resource-dnd: var(--color-system-dnd);
   --color-resource-coc: var(--color-system-coc);
   --color-resource-imported: var(--color-system-imported);
+  /* Заливка полосы resource по метке системы (ui-ux); трек — --color-bg-hover */
+  --gradient-resource-dnd: linear-gradient(90deg, #b02a40, #ea6a7e);
+  --gradient-resource-coc: linear-gradient(90deg, #3f8f68, #8fd4b0);
+  --gradient-resource-imported: linear-gradient(90deg, #6f63c9, #b3aaf0);
 
   /* =========================
      Border colors
@@ -83,6 +87,9 @@
   --tint-primary-border: rgba(201, 52, 80, 0.4);
   --tint-calculated-bg: rgba(154, 143, 230, 0.12);
   --tint-calculated-border: rgba(154, 143, 230, 0.4);
+  /* Поле calculated на листе: фон 8 %, пунктирная рамка 45 % (ui-ux) */
+  --tint-calculated-field-bg: rgba(154, 143, 230, 0.08);
+  --tint-calculated-field-border: rgba(154, 143, 230, 0.45);
   --tint-success-bg: rgba(109, 191, 149, 0.12);
   --tint-success-border: rgba(109, 191, 149, 0.4);
 

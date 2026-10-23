@@ -1,0 +1,11 @@
+.character-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+@media (max-width: 639px) {
+  .character-page {
+    gap: var(--gap-content-touch);
+  }
+}

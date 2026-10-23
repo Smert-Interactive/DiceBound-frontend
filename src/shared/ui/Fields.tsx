@@ -46,7 +46,13 @@ function FieldNotes({ hintId, errorId, hint, error }: FieldNotesProps) {
 }
 
 type InputProps = FieldProps &
-  Omit<InputHTMLAttributes<HTMLInputElement>, "className">;
+  Omit<InputHTMLAttributes<HTMLInputElement>, "className"> & {
+    // Кнопки по бокам поля (счётчик −/+).
+    before?: ReactNode;
+    after?: ReactNode;
+    // Подпись внутри поля справа (диапазон «1–20»); не доступна скринридеру как текст поля.
+    suffix?: ReactNode;
+  };
 
 export function Input({
   label,
@@ -54,6 +60,9 @@ export function Input({
   error,
   changed,
   readOnly,
+  before,
+  after,
+  suffix,
   className = "",
   id,
   "aria-describedby": describedBy,
@@ -87,19 +96,38 @@ export function Input({
       </>
     );
   } else {
+    const input = (
+      <input
+        {...inputProps}
+        id={accessibility.id}
+        className="ui-control"
+        data-changed={changed || undefined}
+        aria-invalid={accessibility.invalid}
+        aria-describedby={accessibility.describedBy}
+      />
+    );
+
     control = (
       <>
         <label className="ui-field__label" htmlFor={accessibility.id}>
           {label}
         </label>
-        <input
-          {...inputProps}
-          id={accessibility.id}
-          className="ui-control"
-          data-changed={changed || undefined}
-          aria-invalid={accessibility.invalid}
-          aria-describedby={accessibility.describedBy}
-        />
+        {before || after || suffix ? (
+          <div className="ui-input">
+            {before}
+            <div className="ui-input__control">
+              {input}
+              {suffix && (
+                <span className="ui-input__suffix" aria-hidden="true">
+                  {suffix}
+                </span>
+              )}
+            </div>
+            {after}
+          </div>
+        ) : (
+          input
+        )}
       </>
     );
   }

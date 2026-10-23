@@ -1,0 +1,20 @@
+/* Числа набираются Geist Mono, и в поле, и в плашке read-only. */
+.sheet-number .ui-control,
+.sheet-number .ui-readonly {
+  font-family: var(--mono);
+}
+
+/* Счётчик пары: поле высотой с малую кнопку, значение по центру. */
+.sheet-number--counter .ui-control {
+  min-height: var(--size-button-sm);
+  height: var(--size-button-sm);
+  padding: 0 4px;
+  text-align: center;
+}
+
+@media (max-width: 639px) {
+  .sheet-number--counter .ui-control {
+    min-height: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
+  }
+}

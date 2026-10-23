@@ -150,6 +150,24 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+// Значок ƒ у подписи calculated-поля.
+export function FunctionIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 20c2 0 2.5-2 3-5l1.5-8c.5-2.5 1.5-3 3-3" />
+      <path d="M8 11h7" />
+    </Icon>
+  );
+}
+
+export function MinusIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12h14" />
+    </Icon>
+  );
+}
+
 export function TrashIcon(props: IconProps) {
   return (
     <Icon {...props}>
