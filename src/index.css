@@ -173,19 +173,23 @@
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
   --gap-card-content: 16px;
+  --gap-actions: 8px;
 
   /* Размеры карточки профиля по ui-ux; поверхность и шрифты берутся из общих токенов. */
   --width-profile-card: 520px;
   --size-profile-avatar: 48px;
   --size-profile-icon: 22px;
   --font-profile-email: 15px;
-  --gap-profile-content: var(--gap-card-content);
+  --gap-profile-content: 16px;
 
   /* История версий: размеры списка и справки из ui-ux и макета. */
   --width-history-help: 340px;
   --gap-history-columns: 20px;
   --padding-history-row: 14px 18px;
   --size-history-number: 34px;
+  --size-history-number-touch: 36px;
+  --padding-history-card: 12px 14px;
+  --gap-history-cards: 12px;
   --gap-history-inline: 8px;
   --gap-history-help: 10px;
   --gap-history-metadata: 2px;

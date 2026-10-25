@@ -101,3 +101,15 @@
     color: var(--color-text-primary);
   }
 }
+
+@media (max-width: 639px) {
+  .mobile-header--back {
+    padding-inline: var(--padding-content-touch);
+  }
+
+  .mobile-header__title {
+    margin-left: var(--gap-actions);
+    font-size: var(--font-ui);
+    font-weight: 500;
+  }
+}

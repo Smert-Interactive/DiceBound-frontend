@@ -12,6 +12,8 @@
 }
 
 .character-history__list-card {
+  container-name: history-versions;
+  container-type: inline-size;
   min-width: 0;
   padding: 0;
 }
@@ -25,7 +27,8 @@
 .character-history__row {
   display: flex;
   align-items: center;
-  gap: var(--gap-card-content);
+  column-gap: var(--gap-card-content);
+  row-gap: var(--gap-actions);
   padding: var(--padding-history-row);
   border-top: 1px solid var(--color-border-divider);
 }
@@ -72,6 +75,7 @@
 
 .character-history__title .ui-chip {
   line-height: 1.5;
+  white-space: nowrap;
 }
 
 .character-history__title b {
@@ -86,6 +90,7 @@
 }
 
 .character-history__actions {
+  margin-left: auto;
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -119,6 +124,25 @@
   flex-shrink: 0;
 }
 
+/* Ориентируемся на ширину списка, а не окна: рядом со справкой места меньше.
+   560 px оставляют место номеру, метаданным и двум кнопкам в одну линию.
+   В более узком списке кнопки остаются справа, но располагаются друг под другом. */
+@container history-versions (max-width: 560px) {
+  .character-history__row {
+    column-gap: var(--gap-actions);
+  }
+
+  .character-history__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .character-history__title .ui-chip {
+    box-sizing: border-box;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
 /* На планшете справка уходит под основной блок, как остальные боковые подсказки. */
 @media (max-width: 1023px) {
   .character-history__layout {
@@ -126,17 +150,63 @@
   }
 }
 
-/* Пока сохраняем общий список: отдельные карточки истории на телефоне — следующий шаг. */
+/* На телефоне каждая версия — отдельная карточка по MHistory.
+   Кнопки занимают вторую строку; у текущей версии единственное действие на всю ширину. */
 @media (max-width: 639px) {
   .character-history {
     gap: var(--gap-content-touch);
   }
 
-  .character-history__row {
-    flex-wrap: wrap;
+  .character-history__list-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .character-history__list {
+    display: grid;
+    gap: var(--gap-history-cards);
+  }
+
+  .character-history__row,
+  .character-history__row:first-child {
+    display: grid;
+    grid-template-columns: var(--size-history-number-touch) minmax(0, 1fr);
+    column-gap: var(--gap-history-cards);
+    row-gap: var(--gap-history-help);
+    padding: var(--padding-history-card);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-card);
+    background: var(--color-bg-surface);
+  }
+
+  .character-history__number {
+    width: var(--size-history-number-touch);
+    min-width: var(--size-history-number-touch);
+    height: var(--size-history-number-touch);
+    font-size: var(--font-metadata);
   }
 
   .character-history__actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
     width: 100%;
+    margin-left: 0;
+  }
+
+  .character-history__actions .ui-button {
+    min-width: 0;
+    flex: 1;
+    font-size: var(--font-button);
+  }
+
+  .character-history__actions .ui-button__rest > svg {
+    display: none;
+  }
+
+  .character-history__help {
+    display: none;
   }
 }

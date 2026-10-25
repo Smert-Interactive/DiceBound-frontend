@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
@@ -19,8 +19,18 @@ import "./CharacterPage.css";
 export default function CharacterPage() {
   const { id = "" } = useParams();
   const { user } = useAuth();
+  const location = useLocation();
   // Вкладки меняют состояние страницы, отдельного адреса у них нет (ui-ux).
-  const [tabId, setTabId] = useState("sheet");
+  const [tabId, setTabId] = useState(() => {
+    const state: unknown = location.state;
+    // Кнопка из снимка открывает именно историю; отдельного URL у вкладки нет.
+    return state &&
+      typeof state === "object" &&
+      "activeTab" in state &&
+      state.activeTab === "history"
+      ? "history"
+      : "sheet";
+  });
 
   // Одной сессии недостаточно: прямой адрес не должен открывать чужого mock-персонажа.
   const list = user && getMockCharacterList(user.email);

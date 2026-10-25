@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { Link } from "react-router-dom";
+import { generatePath, Link, useMatch } from "react-router-dom";
 
 import "./AppHeader.css";
 
@@ -7,7 +7,7 @@ import logo from "../assets/logo.svg";
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import AppBreadcrumbs from "./AppBreadcrumbs";
-import { MenuIcon, UserIcon } from "../shared/icons";
+import { ChevronLeftIcon, MenuIcon, UserIcon } from "../shared/icons";
 
 interface Props {
   onMenuClick?: () => void;
@@ -22,6 +22,20 @@ export default function AppHeader({
 }: Props) {
   // Берём вошедшего пользователя из AuthProvider, а не пишем email в коде.
   const { user } = useAuth();
+  const versionMatch = useMatch(ROUTES.characterVersion);
+  const characterMatch = useMatch(ROUTES.character);
+  const historyPath =
+    versionMatch &&
+    generatePath(ROUTES.character, {
+      id: versionMatch.params.id!,
+    });
+  // Лист и его история возвращают к списку; снимок — к истории этого персонажа.
+  // /characters/new тоже совпадает с :id, но не является страницей существующего листа.
+  const backPath =
+    historyPath ??
+    (characterMatch && characterMatch.params.id !== "new"
+      ? ROUTES.characters
+      : undefined);
   // Без почты подпись остаётся осмысленной: «Профиль», а не «Профиль: undefined».
   const profileLabel = user?.email ? `Профиль: ${user.email}` : "Профиль";
 
@@ -40,21 +54,41 @@ export default function AppHeader({
         </Link>
       </header>
 
-      <header className="mobile-header">
+      <header
+        className={`mobile-header${backPath ? " mobile-header--back" : ""}`}
+      >
         <div className="mobile-header__start">
-          <button
-            ref={menuButtonRef}
-            type="button"
-            className="mobile-header__button"
-            aria-label="Открыть меню"
-            aria-haspopup="dialog"
-            aria-expanded={menuOpen}
-            onClick={onMenuClick}
-          >
-            <MenuIcon />
-          </button>
-
-          <img src={logo} alt="DiceBound" className="mobile-header__logo" />
+          {backPath ? (
+            <>
+              {/* Назад — ссылка с явной целью, работает и при открытии страницы по прямому URL. */}
+              <Link
+                to={backPath}
+                state={historyPath ? { activeTab: "history" } : undefined}
+                className="mobile-header__button"
+                aria-label={historyPath ? "К истории" : "К персонажам"}
+              >
+                <ChevronLeftIcon />
+              </Link>
+              <span className="mobile-header__title">
+                {historyPath ? "История" : "Персонажи"}
+              </span>
+            </>
+          ) : (
+            <>
+              <button
+                ref={menuButtonRef}
+                type="button"
+                className="mobile-header__button"
+                aria-label="Открыть меню"
+                aria-haspopup="dialog"
+                aria-expanded={menuOpen}
+                onClick={onMenuClick}
+              >
+                <MenuIcon />
+              </button>
+              <img src={logo} alt="DiceBound" className="mobile-header__logo" />
+            </>
+          )}
         </div>
 
         <Link

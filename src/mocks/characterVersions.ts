@@ -1,8 +1,72 @@
-import type { CharacterVersionSummary } from "../history/historyTypes";
+import type { CharacterData } from "../sheet/sheetTypes";
+import type {
+  CharacterVersion,
+  CharacterVersionSummary,
+} from "../history/historyTypes";
 import { getMockCharacterDetails } from "./characterDetails";
 import { getMockCharacterList, MOCK_CHARACTERS } from "./characters";
 
-// Список версий живёт в памяти, как остальные моки. Снимки листа здесь не создаём.
+// Демонстрационные правки ранних версий. Ни одна формула при чтении истории не исполняется:
+// str_modifier уже записан в снимок, как в ответе backend. Текущая версия берётся без правок.
+const VERSION_CHANGES: Record<string, Record<number, CharacterData>> = {
+  [MOCK_CHARACTERS.owned[0].id]: {
+    1: {
+      level: 1,
+      str: 12,
+      str_modifier: 1,
+      hp: { current: 12, max: 12 },
+      ac: 14,
+    },
+    2: {
+      level: 1,
+      str: 13,
+      str_modifier: 1,
+      hp: { current: 9, max: 12 },
+      ac: 14,
+    },
+    3: {
+      level: 2,
+      str: 14,
+      str_modifier: 2,
+      hp: { current: 15, max: 20 },
+      ac: 15,
+    },
+    // Значения v4 соответствуют примеру страницы версии в макете.
+    4: {
+      level: 2,
+      str: 15,
+      str_modifier: 2,
+      hp: { current: 20, max: 20 },
+      ac: 16,
+    },
+    5: {
+      level: 3,
+      str: 16,
+      str_modifier: 3,
+      hp: { current: 21, max: 28 },
+      ac: 17,
+    },
+    6: {
+      level: 3,
+      str: 16,
+      str_modifier: 3,
+      hp: { current: 16, max: 28 },
+      ac: 17,
+    },
+  },
+  [MOCK_CHARACTERS.owned[1].id]: {
+    1: {
+      age: 33,
+      hp: { current: 11, max: 11 },
+      sanity: { current: 55, max: 55 },
+    },
+    2: { hp: { current: 10, max: 11 }, sanity: { current: 53, max: 55 } },
+    3: { hp: { current: 8, max: 11 }, sanity: { current: 50, max: 55 } },
+  },
+};
+
+// Списки и снимки создаются один раз, чтобы переходы между страницами не меняли историю.
+const snapshotsByCharacter = new Map<string, CharacterVersion[]>();
 // Используем число версий и даты самого персонажа, чтобы список не расходился с его шапкой.
 const versionsByCharacter = new Map<string, CharacterVersionSummary[]>();
 for (const summary of MOCK_CHARACTERS.owned) {
@@ -27,6 +91,20 @@ for (const summary of MOCK_CHARACTERS.owned) {
     };
   });
   versionsByCharacter.set(summary.id, versions.reverse());
+  snapshotsByCharacter.set(
+    summary.id,
+    versions.map(({ id, version_number, created_at }) => ({
+      id,
+      character_id: summary.id,
+      version_number,
+      created_at,
+      // Разворачиваем полный снимок и копируем вложенные ресурсы, отделяя его от текущего листа.
+      data: structuredClone({
+        ...character.data,
+        ...VERSION_CHANGES[summary.id]?.[version_number],
+      }),
+    })),
+  );
 }
 
 // Повторяет доступ к GET /characters/{id}/versions: нет доступа — тот же результат, что и у 404.
@@ -45,4 +123,23 @@ export function getMockCharacterVersions(
   return versionsByCharacter
     .get(characterId)
     ?.map((version) => ({ ...version }));
+}
+
+export function getMockCharacterVersion(
+  characterId: string,
+  versionNumber: number,
+  email: string,
+): CharacterVersion | undefined {
+  if (!Number.isSafeInteger(versionNumber) || versionNumber < 1)
+    return undefined;
+  // Та же проверка доступа, что у списка: чужой и отсутствующий снимки не различаются.
+  const versions = getMockCharacterVersions(characterId, email);
+  if (!versions?.some((version) => version.version_number === versionNumber))
+    return undefined;
+
+  const snapshot = snapshotsByCharacter
+    .get(characterId)
+    ?.find((version) => version.version_number === versionNumber);
+  // Копия не даёт будущему renderer или восстановлению изменить сохранённый снимок.
+  return snapshot && structuredClone(snapshot);
 }

@@ -116,6 +116,16 @@ describe("character history tab", () => {
     ).toHaveTextContent("Удалённые версии вернуть нельзя");
   });
 
+  test("returns from the character history to the character list", async () => {
+    const { user, router } = renderCharacter();
+    await user.click(screen.getByRole("tab", { name: "История" }));
+    await user.click(screen.getByRole("link", { name: "К персонажам" }));
+    expect(router.state.location.pathname).toBe(ROUTES.characters);
+    expect(
+      screen.getByRole("heading", { name: "Персонажи", level: 1 }),
+    ).toBeInTheDocument();
+  });
+
   test("opens the selected version route", async () => {
     const { user, router } = renderCharacter();
     await user.click(screen.getByRole("tab", { name: "История" }));
