@@ -74,6 +74,11 @@ export function getMockVersionCount(characterId: string): number {
   return MOCK_VERSION_COUNTS[characterId] ?? 1;
 }
 
+// Обновляет число после восстановления, чтобы шапка и окно удаления не расходились с историей.
+export function setMockVersionCount(characterId: string, count: number) {
+  MOCK_VERSION_COUNTS[characterId] = count;
+}
+
 // Данные принадлежат только демонстрационному пользователю. Свежий аккаунт получает
 // пустой список (так он совпадает со счётчиками профиля), как отдаст настоящий backend.
 export function getMockCharacterList(email: string): CharacterList {

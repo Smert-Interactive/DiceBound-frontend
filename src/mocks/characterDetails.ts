@@ -1,6 +1,7 @@
 import type { CharacterData, CharacterDetails } from "../sheet/sheetTypes";
 import {
   getMockVersionCount,
+  setMockVersionCount,
   MOCK_CHARACTERS,
   type CharacterSummary,
 } from "./characters";
@@ -86,7 +87,7 @@ export function getMockCharacterDetails(
     game_system_id: summary.game_system_id,
     sheet_schema_id: sheet.schemaId,
     name: summary.name,
-    data: sheet.data,
+    data: structuredClone(sheet.data),
     created_at: "2026-09-01T10:00:00Z",
     updated_at: summary.updated_at,
     current_version_number: getMockVersionCount(summary.id),
@@ -95,4 +96,22 @@ export function getMockCharacterDetails(
     can_view_history: summary.access === "OWNER",
     owner_username: summary.owner_username,
   };
+}
+
+// Вызывается mock-сервисом после проверки доступа и наличия выбранной версии.
+// Меняем и лист, и метаданные списка: переход на другую страницу не отменит восстановление.
+export function applyMockCharacterVersion(
+  characterId: string,
+  data: CharacterData,
+  versionNumber: number,
+  updatedAt: string,
+): CharacterDetails {
+  const summary = findSummary(characterId);
+  const sheet = MOCK_SHEETS[characterId];
+  if (!summary || !sheet) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+
+  sheet.data = structuredClone(data);
+  summary.updated_at = updatedAt;
+  setMockVersionCount(characterId, versionNumber);
+  return getMockCharacterDetails(characterId)!;
 }

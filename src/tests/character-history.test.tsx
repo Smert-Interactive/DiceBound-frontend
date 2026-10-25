@@ -181,10 +181,10 @@ describe("character history tab", () => {
     expect(
       within(dialog).getByRole("button", { name: "Отмена" }),
     ).toHaveFocus();
-    // Подтверждение появилось, но обработчик изменения данных ещё не подключён.
+    // Пока пользователь не подтвердил действие, история остаётся прежней.
     expect(
       within(dialog).getByRole("button", { name: /Восстановить и удалить/u }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(trigger).toHaveFocus();

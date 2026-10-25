@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { generatePath, Link, useParams } from "react-router-dom";
+import { generatePath, Link, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
@@ -9,6 +9,7 @@ import { getMockCharacterDetails } from "../mocks/characterDetails";
 import {
   getMockCharacterVersion,
   getMockCharacterVersions,
+  restoreMockCharacterVersion,
 } from "../mocks/characterVersions";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
@@ -24,6 +25,7 @@ export default function CharacterVersionPage() {
   const { id = "", version = "" } = useParams();
   const { user } = useAuth();
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const navigate = useNavigate();
   // Принимаем только положительный целый номер. Неизвестный снимок и запрет выглядят как 404.
   const snapshot =
     user && /^[1-9]\d*$/u.test(version)
@@ -45,6 +47,21 @@ export default function CharacterVersionPage() {
   const canRestore =
     character.access === "OWNER" &&
     snapshot.version_number !== character.current_version_number;
+
+  async function handleRestoreConfirm() {
+    if (!user || !snapshot) return;
+    const result = await restoreMockCharacterVersion(
+      id,
+      snapshot.version_number,
+      user.email,
+    );
+    // Новый адрес открывает вкладку «Лист»; баннер берёт числа из ответа сервиса.
+    navigate(historyPath, {
+      state: {
+        restoreNotice: `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
+      },
+    });
+  }
 
   return (
     <div
@@ -102,6 +119,7 @@ export default function CharacterVersionPage() {
           open={isRestoreOpen}
           version={restoreTarget}
           versions={versions}
+          onConfirm={handleRestoreConfirm}
           onCancel={() => setIsRestoreOpen(false)}
         />
       )}

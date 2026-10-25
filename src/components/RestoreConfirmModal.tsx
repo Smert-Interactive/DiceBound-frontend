@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatDateTime } from "../shared/formatDateTime";
 import { RestoreIcon } from "../shared/icons";
@@ -11,8 +12,8 @@ interface Props {
   version: CharacterVersionSummary;
   versions: readonly CharacterVersionSummary[];
   onCancel: () => void;
-  // Само восстановление подключается отдельно: без обработчика подтверждение недоступно.
-  onConfirm?: () => void;
+  // Родитель меняет данные и выполняет переход; окно управляет ожиданием и ошибкой.
+  onConfirm?: () => Promise<void>;
 }
 
 const listFormatter = new Intl.ListFormat("ru", {
@@ -27,6 +28,33 @@ export default function RestoreConfirmModal({
   onCancel,
   onConfirm,
 }: Props) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Ref блокирует повторное подтверждение сразу, ещё до следующей отрисовки React.
+  const pendingRef = useRef(false);
+
+  function handleCancel() {
+    if (pendingRef.current) return;
+    setError(null);
+    onCancel();
+  }
+
+  async function handleConfirm() {
+    if (!onConfirm || pendingRef.current) return;
+    pendingRef.current = true;
+    setPending(true);
+    setError(null);
+    try {
+      await onConfirm();
+    } catch {
+      // При ошибке цель и таймлайн остаются на экране, действие можно повторить.
+      setError("Не удалось выполнить действие. Попробуйте ещё раз.");
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
+  }
+
   // История приходит от новых к старым, а таймлайн читается слева направо: v1 … vM.
   // Сортируем копию, чтобы не менять порядок списка на странице персонажа.
   const timeline = [...versions].sort(
@@ -47,18 +75,24 @@ export default function RestoreConfirmModal({
   return (
     <Modal
       open={open}
-      onClose={onCancel}
+      {...(pending
+        ? { dismissible: false as const }
+        : { onClose: handleCancel })}
       title={`Восстановить версию ${version.version_number}?`}
       className="restore-confirm-modal"
       // Как в окне удаления, сначала фокусируем отмену. На телефоне Modal меняет порядок.
       actions={
         <>
-          <Button onClick={onCancel}>Отмена</Button>
+          <Button onClick={handleCancel} disabled={pending}>
+            Отмена
+          </Button>
           <Button
             variant="danger"
             icon={<RestoreIcon />}
-            disabled={!onConfirm}
-            onClick={onConfirm}
+            disabled={!onConfirm || deletedVersions.length === 0}
+            loading={pending}
+            loadingText="Восстановление…"
+            onClick={handleConfirm}
           >
             Восстановить и удалить {deletedVersions.length} {versionsWord}
           </Button>
@@ -120,6 +154,11 @@ export default function RestoreConfirmModal({
           будут удалены
         </span>
       </div>
+      {error && (
+        <div className="restore-confirm-modal__error" role="alert">
+          {error}
+        </div>
+      )}
     </Modal>
   );
 }

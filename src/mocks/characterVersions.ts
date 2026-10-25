@@ -2,8 +2,12 @@ import type { CharacterData } from "../sheet/sheetTypes";
 import type {
   CharacterVersion,
   CharacterVersionSummary,
+  RestoreResult,
 } from "../history/historyTypes";
-import { getMockCharacterDetails } from "./characterDetails";
+import {
+  applyMockCharacterVersion,
+  getMockCharacterDetails,
+} from "./characterDetails";
 import { getMockCharacterList, MOCK_CHARACTERS } from "./characters";
 
 // Демонстрационные правки ранних версий. Ни одна формула при чтении истории не исполняется:
@@ -142,4 +146,51 @@ export function getMockCharacterVersion(
     ?.find((version) => version.version_number === versionNumber);
   // Копия не даёт будущему renderer или восстановлению изменить сохранённый снимок.
   return snapshot && structuredClone(snapshot);
+}
+
+// Повторяет POST restore. Как остальные mock-запросы, хранит результат только в памяти.
+export async function restoreMockCharacterVersion(
+  characterId: string,
+  versionNumber: number,
+  email: string,
+): Promise<RestoreResult> {
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+
+  // Право на восстановление проверяется в сервисе, а не только видимостью кнопки.
+  const owned = getMockCharacterList(email).owned.some(
+    (item) => item.id === characterId,
+  );
+  const snapshot =
+    owned && getMockCharacterVersion(characterId, versionNumber, email);
+  if (!snapshot) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+  const versions = versionsByCharacter.get(characterId)!;
+  const deletedVersions = versions.filter(
+    (item) => item.version_number > versionNumber,
+  );
+  if (deletedVersions.length === 0) throw new Error("RESTORE_NOT_ALLOWED");
+
+  // После задержки все изменения выполняются вместе, без промежуточного await.
+  // Копируем сохранённые calculated как обычные данные, не пересчитывая формулы.
+  const character = applyMockCharacterVersion(
+    characterId,
+    snapshot.data,
+    versionNumber,
+    new Date().toISOString(),
+  );
+  versionsByCharacter.set(
+    characterId,
+    versions
+      .filter((item) => item.version_number <= versionNumber)
+      .map((item) => ({
+        ...item,
+        is_current: item.version_number === versionNumber,
+      })),
+  );
+  snapshotsByCharacter.set(
+    characterId,
+    snapshotsByCharacter
+      .get(characterId)!
+      .filter((item) => item.version_number <= versionNumber),
+  );
+  return { character, deleted_versions_count: deletedVersions.length };
 }
