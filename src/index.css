@@ -372,6 +372,11 @@ h1 {
 }
 
 @media (max-width: 639px) {
+  :root {
+    /* В мобильной карточке истории подписи разделяет 1 px; на desktop остаётся 2 px. */
+    --gap-history-metadata: 1px;
+  }
+
   :where(.ui-card) {
     padding: var(--padding-card-touch);
   }
