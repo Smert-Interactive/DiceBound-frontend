@@ -1,4 +1,7 @@
 :root {
+  /* Сохраняем место под полосу прокрутки, когда Modal блокирует прокрутку страницы. */
+  scrollbar-gutter: stable;
+
   /* =========================
      Background colors
      ========================= */
@@ -133,6 +136,7 @@
   --tint-banner-warning-bg: rgba(176, 42, 64, 0.1);
   --tint-banner-success-bg: rgba(109, 191, 149, 0.08);
   --tint-radio-bg: rgba(176, 42, 64, 0.12);
+  --tint-restore-bg: rgba(176, 42, 64, 0.2);
   --tint-system-card-bg: rgba(176, 42, 64, 0.1);
   --tint-radio-border: rgba(234, 106, 126, 0.45);
 
@@ -158,6 +162,7 @@
   --radius-card: 14px;
   --padding-card: 18px;
   --width-modal: 460px;
+  --width-modal-restore: 500px;
   --radius-modal: 18px;
   --padding-modal: 24px;
   --width-layout: 1280px;
@@ -190,6 +195,7 @@
   --size-history-number-touch: 36px;
   --padding-history-card: 12px 14px;
   --gap-history-cards: 12px;
+  --gap-history-timeline-touch: 6px;
   --gap-history-inline: 8px;
   --gap-history-help: 10px;
   --gap-history-metadata: 2px;

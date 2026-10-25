@@ -3,6 +3,8 @@ import { useLocation, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
+import RestoreConfirmModal from "../components/RestoreConfirmModal";
+import type { CharacterVersionSummary } from "../history/historyTypes";
 import { getMockCharacterList } from "../mocks/characters";
 import { getMockCharacterVersions } from "../mocks/characterVersions";
 import CharacterHeader from "../components/CharacterHeader";
@@ -20,6 +22,10 @@ export default function CharacterPage() {
   const { id = "" } = useParams();
   const { user } = useAuth();
   const location = useLocation();
+  // Цель оставляем при закрытии, чтобы Modal закончил анимацию с тем же содержимым.
+  const [restoreTarget, setRestoreTarget] =
+    useState<CharacterVersionSummary | null>(null);
+  const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   // Вкладки меняют состояние страницы, отдельного адреса у них нет (ui-ux).
   const [tabId, setTabId] = useState(() => {
     const state: unknown = location.state;
@@ -46,22 +52,29 @@ export default function CharacterPage() {
 
   // Лист подключит renderer, «Доступ» — отдельная задача; история уже имеет свой список.
   const tabs: TabItem[] = [{ id: "sheet", label: "Лист", content: null }];
-  if (character.can_view_history) {
-    const versions = getMockCharacterVersions(id, user.email);
-    if (versions) {
-      tabs.push({
-        id: "history",
-        label: "История",
-        content: (
-          <CharacterHistory
-            characterId={id}
-            versions={versions}
-            ownerEmail={character.owner_username}
-            canRestore={character.access === "OWNER"}
-          />
-        ),
-      });
-    }
+  function handleRestoreRequest(version: CharacterVersionSummary) {
+    if (character?.access !== "OWNER" || version.is_current) return;
+    setRestoreTarget(version);
+    setIsRestoreOpen(true);
+  }
+
+  const versions = character.can_view_history
+    ? getMockCharacterVersions(id, user.email)
+    : undefined;
+  if (versions) {
+    tabs.push({
+      id: "history",
+      label: "История",
+      content: (
+        <CharacterHistory
+          characterId={id}
+          versions={versions}
+          ownerEmail={character.owner_username}
+          canRestore={character.access === "OWNER"}
+          onRestore={handleRestoreRequest}
+        />
+      ),
+    });
   }
   // Вкладку «Доступ» видит только владелец, в том числе владелец EDIT-копии.
   if (character.access === "OWNER") {
@@ -84,6 +97,14 @@ export default function CharacterPage() {
         onChange={setTabId}
         label="Разделы персонажа"
       />
+      {restoreTarget && versions && character.access === "OWNER" && (
+        <RestoreConfirmModal
+          open={isRestoreOpen}
+          version={restoreTarget}
+          versions={versions}
+          onCancel={() => setIsRestoreOpen(false)}
+        />
+      )}
     </div>
   );
 }

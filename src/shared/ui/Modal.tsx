@@ -36,6 +36,7 @@ type ModalProps = CloseProps & {
   children: ReactNode;
   actions?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
+  className?: string;
 };
 
 export function Modal({
@@ -46,6 +47,7 @@ export function Modal({
   children,
   actions,
   initialFocusRef,
+  className = "",
 }: ModalProps) {
   const id = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -147,7 +149,7 @@ export function Modal({
   return createPortal(
     <dialog
       ref={dialogRef}
-      className="ui-modal"
+      className={`ui-modal ${className}`}
       aria-modal="true"
       aria-labelledby={`${id}-title`}
       tabIndex={-1}

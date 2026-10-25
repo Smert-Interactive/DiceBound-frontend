@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { generatePath, Link, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
+import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import { ROUTES } from "../constants/routes";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
-import { getMockCharacterVersion } from "../mocks/characterVersions";
+import {
+  getMockCharacterVersion,
+  getMockCharacterVersions,
+} from "../mocks/characterVersions";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import { formatDateTime } from "../shared/formatDateTime";
@@ -18,6 +23,7 @@ import "./CharacterVersionPage.css";
 export default function CharacterVersionPage() {
   const { id = "", version = "" } = useParams();
   const { user } = useAuth();
+  const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   // Принимаем только положительный целый номер. Неизвестный снимок и запрет выглядят как 404.
   const snapshot =
     user && /^[1-9]\d*$/u.test(version)
@@ -28,9 +34,13 @@ export default function CharacterVersionPage() {
   const system = MOCK_SYSTEMS.find(
     (item) => item.id === character?.game_system_id,
   );
-  if (!snapshot || !character || !schema || !system)
+  if (!user || !snapshot || !character || !schema || !system)
     return <NotFoundOrForbidden />;
 
+  const versions = getMockCharacterVersions(id, user.email)!;
+  const restoreTarget = versions.find(
+    (item) => item.version_number === snapshot.version_number,
+  )!;
   const historyPath = generatePath(ROUTES.character, { id });
   const canRestore =
     character.access === "OWNER" &&
@@ -57,12 +67,12 @@ export default function CharacterVersionPage() {
               </span>
             </Link>
             {canRestore && (
-              // Подтверждение и обработчик восстановления подключаются в пунктах 3–4.
+              // Открываем то же подтверждение, что и из списка истории.
               <Button
                 variant="primary"
                 size="sm"
                 icon={<RestoreIcon />}
-                disabled
+                onClick={() => setIsRestoreOpen(true)}
               >
                 <span className="character-version-page__restore-desktop">
                   Восстановить эту версию
@@ -87,6 +97,14 @@ export default function CharacterVersionPage() {
       {/* Зависимость от ветки 7: здесь должен быть общий DynamicSheetRenderer с readOnly.
           Передавать нужно schema и snapshot.data, включая сохранённые calculated.
           Пока renderer отсутствует, не создаём второй и не пересчитываем формулы снимка. */}
+      {canRestore && (
+        <RestoreConfirmModal
+          open={isRestoreOpen}
+          version={restoreTarget}
+          versions={versions}
+          onCancel={() => setIsRestoreOpen(false)}
+        />
+      )}
     </div>
   );
 }

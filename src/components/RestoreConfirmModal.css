@@ -1,0 +1,132 @@
+.restore-confirm-modal {
+  width: var(--width-modal-restore);
+}
+
+.restore-confirm-modal__description {
+  margin: 0;
+}
+
+.restore-confirm-modal__description--mobile {
+  display: none;
+}
+
+.restore-confirm-modal__timeline-scroll {
+  margin-top: var(--gap-history-columns);
+  overflow-x: auto;
+}
+
+.restore-confirm-modal__timeline {
+  display: flex;
+  gap: var(--gap-form-fields);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.restore-confirm-modal__version {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Соединитель относится к следующей версии: после выбранной линии тоже пунктирные. */
+.restore-confirm-modal__version + .restore-confirm-modal__version::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: var(--gap-form-fields);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.restore-confirm-modal__number {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-field);
+  height: var(--size-field);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font: var(--font-metadata) / 1.5 var(--mono);
+}
+
+.restore-confirm-modal__version--selected .restore-confirm-modal__number {
+  border-color: var(--color-primary);
+  background: var(--tint-restore-bg);
+}
+
+.restore-confirm-modal__version--deleted .restore-confirm-modal__number {
+  border-style: dashed;
+  border-color: var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+.restore-confirm-modal__version--deleted
+  + .restore-confirm-modal__version--deleted::before,
+.restore-confirm-modal__version--selected
+  + .restore-confirm-modal__version--deleted::before {
+  border-top-style: dashed;
+  border-color: var(--color-border-default);
+}
+
+.restore-confirm-modal__legend {
+  display: flex;
+  gap: var(--gap-card-content);
+  margin-top: var(--gap-actions);
+  color: var(--color-text-muted);
+  font-size: var(--font-explanation);
+}
+
+.restore-confirm-modal__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-history-inline);
+}
+
+.restore-confirm-modal__legend span::before {
+  box-sizing: border-box;
+  content: "";
+  width: var(--gap-actions);
+  height: var(--gap-actions);
+  border-radius: 50%;
+}
+
+.restore-confirm-modal__legend-selected::before {
+  background: var(--color-primary);
+}
+
+.restore-confirm-modal__legend-deleted::before {
+  border: 1px dashed var(--color-text-faint);
+}
+
+@media (max-width: 639px) {
+  .restore-confirm-modal__description--desktop,
+  .restore-confirm-modal__legend {
+    display: none;
+  }
+
+  .restore-confirm-modal__description--mobile {
+    display: block;
+  }
+
+  .restore-confirm-modal__timeline-scroll {
+    margin-top: var(--gap-history-help);
+  }
+
+  .restore-confirm-modal__timeline {
+    gap: var(--gap-history-timeline-touch);
+  }
+
+  .restore-confirm-modal__version + .restore-confirm-modal__version::before {
+    width: var(--gap-history-timeline-touch);
+  }
+
+  .restore-confirm-modal__number {
+    width: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
+  }
+}

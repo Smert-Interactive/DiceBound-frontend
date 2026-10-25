@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -23,7 +23,26 @@ import { formatDateTime } from "../shared/formatDateTime";
 const aldricId = MOCK_CHARACTERS.owned[0].id;
 const sarahId = MOCK_CHARACTERS.owned[1].id;
 
-afterEach(cleanup);
+// В jsdom нет методов нативного dialog; подмена такая же, как в тестах других окон.
+beforeEach(() => {
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+    },
+  });
+});
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
+  Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
+});
 
 function renderVersion(
   version: string,
@@ -143,6 +162,26 @@ describe("character version page", () => {
         screen.getByRole("region", { name: "История версий" }),
       ).getAllByRole("listitem"),
     ).toHaveLength(7);
+  });
+
+  test("opens the same restoration confirmation from a historical version", async () => {
+    const { user, router } = renderVersion("4");
+    await user.click(
+      screen.getByRole("button", { name: /Восстановить эту версию/u }),
+    );
+    const dialog = screen.getByRole("dialog", {
+      name: "Восстановить версию 4?",
+    });
+    expect(
+      within(dialog).getByRole("listitem", {
+        name: "Версия 4 — станет текущей",
+      }),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
+    expect(router.state.location.pathname).toBe(
+      generatePath(ROUTES.characterVersion, { id: aldricId, version: "4" }),
+    );
+    expect(getMockCharacterVersion(aldricId, 7, MOCK_USER.email)).toBeDefined();
   });
 
   test("does not offer to restore the current version", () => {

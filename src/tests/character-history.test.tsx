@@ -1,5 +1,12 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   createMemoryRouter,
@@ -70,7 +77,26 @@ describe("mock version history", () => {
   });
 });
 
-afterEach(cleanup);
+// В jsdom нет методов нативного dialog; подмена такая же, как в тестах других окон.
+beforeEach(() => {
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, "close", {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+    },
+  });
+});
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
+  Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
+});
 
 function renderCharacter(email = MOCK_USER.email) {
   const router = createMemoryRouter(routes, {
@@ -124,6 +150,63 @@ describe("character history tab", () => {
     expect(
       screen.getByRole("heading", { name: "Персонажи", level: 1 }),
     ).toBeInTheDocument();
+  });
+
+  test("opens restoration from history and cancels without changing versions", async () => {
+    const { user } = renderCharacter();
+    await user.click(screen.getByRole("tab", { name: "История" }));
+    const trigger = screen.getByRole("button", {
+      name: "Восстановить версию 4",
+    });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", {
+      name: "Восстановить версию 4?",
+    });
+    const timeline = within(dialog).getByRole("list", {
+      name: "Последствия восстановления версий",
+    });
+    expect(
+      within(timeline)
+        .getAllByRole("listitem")
+        .map((item) => item.getAttribute("aria-label")),
+    ).toEqual([
+      "Версия 1 — сохранится",
+      "Версия 2 — сохранится",
+      "Версия 3 — сохранится",
+      "Версия 4 — станет текущей",
+      "Версия 5 — будет удалена",
+      "Версия 6 — будет удалена",
+      "Версия 7 — будет удалена",
+    ]);
+    expect(
+      within(dialog).getByRole("button", { name: "Отмена" }),
+    ).toHaveFocus();
+    // Подтверждение появилось, но обработчик изменения данных ещё не подключён.
+    expect(
+      within(dialog).getByRole("button", { name: /Восстановить и удалить/u }),
+    ).toBeDisabled();
+    await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(trigger).toHaveFocus();
+    expect(
+      within(
+        screen.getByRole("region", { name: "История версий" }),
+      ).getAllByRole("listitem"),
+    ).toHaveLength(7);
+
+    // Повторное открытие выбирает другую цель, Escape также только отменяет действие.
+    await user.click(
+      screen.getByRole("button", { name: "Восстановить версию 2" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Восстановить версию 2?" }),
+    ).toBeInTheDocument();
+    fireEvent(
+      screen.getByRole("dialog"),
+      new Event("cancel", { cancelable: true }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(getMockCharacterVersions(aldricId, MOCK_USER.email)).toHaveLength(7);
   });
 
   test("opens the selected version route", async () => {
