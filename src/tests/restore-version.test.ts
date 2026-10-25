@@ -8,7 +8,10 @@ beforeEach(() => {
   vi.resetModules();
   vi.useFakeTimers();
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 describe("mock character restoration", () => {
   test("restores stored data without recalculating or creating a new version", async () => {
@@ -54,6 +57,101 @@ describe("mock character restoration", () => {
     result.character.data.str = 30;
     expect(getMockCharacterDetails(characterId)?.data.str).toBe(15);
     expect(getMockCharacterVersion(characterId, 4, email)?.data.str).toBe(15);
+  });
+
+  test.each([
+    [1, 6],
+    [6, 1],
+  ])(
+    "restoring v%s deletes exactly %s newer versions",
+    async (target, deletedCount) => {
+      const {
+        getMockCharacterVersion,
+        getMockCharacterVersions,
+        restoreMockCharacterVersion,
+      } = await import("../mocks/characterVersions");
+      const before = getMockCharacterVersions(characterId, email)!;
+      const request = restoreMockCharacterVersion(characterId, target, email);
+      await vi.runAllTimersAsync();
+      const result = await request;
+      const remaining = getMockCharacterVersions(characterId, email)!;
+
+      expect(result.deleted_versions_count).toBe(deletedCount);
+      expect(before.length - remaining.length).toBe(deletedCount);
+      expect(
+        remaining
+          .filter((item) => item.is_current)
+          .map((item) => item.version_number),
+      ).toEqual([target]);
+      // Старые версии сохраняют id и данные: восстановление не создаёт новую запись истории.
+      expect(remaining.map((item) => item.id)).toEqual(
+        before
+          .filter((item) => item.version_number <= target)
+          .map((item) => item.id),
+      );
+      for (const deleted of before.filter(
+        (item) => item.version_number > target,
+      )) {
+        expect(
+          getMockCharacterVersion(characterId, deleted.version_number, email),
+        ).toBeUndefined();
+      }
+    },
+  );
+
+  test("counts only remaining history when restoring twice", async () => {
+    const { getMockCharacterVersions, restoreMockCharacterVersion } =
+      await import("../mocks/characterVersions");
+    const firstRequest = restoreMockCharacterVersion(characterId, 4, email);
+    await vi.runAllTimersAsync();
+    expect((await firstRequest).deleted_versions_count).toBe(3);
+
+    const secondRequest = restoreMockCharacterVersion(characterId, 2, email);
+    await vi.runAllTimersAsync();
+    const result = await secondRequest;
+    expect(result.deleted_versions_count).toBe(2);
+    expect(result.character.current_version_number).toBe(2);
+    expect(
+      getMockCharacterVersions(characterId, email)?.map(
+        (item) => item.version_number,
+      ),
+    ).toEqual([2, 1]);
+  });
+
+  test("allows VIEW to read shared history but rejects a direct restoration request", async () => {
+    const versions = await import("../mocks/characterVersions");
+    const characters = await import("../mocks/characters");
+    const details = await import("../mocks/characterDetails");
+    const originalDetails = details.getMockCharacterDetails(characterId)!;
+    const summary = characters.getMockCharacterList(email).owned[0];
+    // Только тестовая выдача VIEW с историей, без добавления функционала управления доступом.
+    vi.spyOn(characters, "getMockCharacterList").mockReturnValue({
+      owned: [],
+      shared_view: [{ ...summary, access: "VIEW" }],
+    });
+    vi.spyOn(details, "getMockCharacterDetails").mockReturnValue({
+      ...originalDetails,
+      access: "VIEW",
+      can_edit: false,
+      can_view_history: true,
+    });
+    const before = versions.getMockCharacterVersions(characterId, email);
+    expect(
+      versions.getMockCharacterVersion(characterId, 4, email),
+    ).toBeDefined();
+
+    const request = expect(
+      versions.restoreMockCharacterVersion(characterId, 4, email),
+    ).rejects.toThrow("NOT_FOUND_OR_FORBIDDEN");
+    await vi.runAllTimersAsync();
+    await request;
+    expect(versions.getMockCharacterVersions(characterId, email)).toEqual(
+      before,
+    );
+    expect(details.getMockCharacterDetails(characterId)?.data).toEqual(
+      originalDetails.data,
+    );
+    expect(characters.getMockVersionCount(characterId)).toBe(7);
   });
 
   test.each([

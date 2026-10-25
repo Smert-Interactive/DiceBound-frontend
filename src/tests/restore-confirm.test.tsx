@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -39,6 +40,40 @@ afterEach(() => {
 });
 
 describe("restoration confirmation", () => {
+  test.each([
+    [6, 1, "версию"],
+    [4, 3, "версии"],
+    [1, 6, "версий"],
+  ])(
+    "v%s confirmation names the actual deletion count: %s %s",
+    async (target, count, word) => {
+      const onConfirm = vi
+        .fn<() => Promise<void>>()
+        .mockResolvedValue(undefined);
+      const user = userEvent.setup();
+      render(
+        <RestoreConfirmModal
+          open
+          version={versions.find((item) => item.version_number === target)!}
+          versions={versions}
+          onCancel={vi.fn()}
+          onConfirm={onConfirm}
+        />,
+      );
+      const button = screen.getByRole("button", {
+        name: `Восстановить и удалить ${count} ${word}`,
+      });
+      const timeline = screen.getByRole("list", {
+        name: "Последствия восстановления версий",
+      });
+      expect(
+        within(timeline).getAllByRole("listitem", { name: /будет удалена/u }),
+      ).toHaveLength(count);
+      await user.click(button);
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    },
+  );
+
   test("blocks repeated confirmation and cancellation while the request is pending", async () => {
     let finish!: () => void;
     const onConfirm = vi.fn(
