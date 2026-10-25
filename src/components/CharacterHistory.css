@@ -1,0 +1,142 @@
+.character-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.character-history__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--width-history-help);
+  align-items: start;
+  gap: var(--gap-history-columns);
+}
+
+.character-history__list-card {
+  min-width: 0;
+  padding: 0;
+}
+
+.character-history__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.character-history__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-card-content);
+  padding: var(--padding-history-row);
+  border-top: 1px solid var(--color-border-divider);
+}
+
+.character-history__row:first-child {
+  border-top: 0;
+}
+
+.character-history__number {
+  box-sizing: border-box;
+  width: var(--size-history-number);
+  min-width: var(--size-history-number);
+  height: var(--size-history-number);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-field);
+  background: var(--color-bg-input);
+  color: var(--color-text-secondary);
+  font: var(--font-button) / 1 var(--mono);
+}
+
+.character-history__number--current {
+  border-color: var(--tint-radio-border);
+  background: var(--tint-radio-bg);
+  color: var(--color-error);
+}
+
+.character-history__metadata {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-history-metadata);
+}
+
+.character-history__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-history-inline);
+}
+
+.character-history__title .ui-chip {
+  line-height: 1.5;
+}
+
+.character-history__title b {
+  font-size: var(--font-ui);
+  font-weight: 500;
+}
+
+.character-history__metadata time {
+  display: block;
+  color: var(--color-text-muted);
+  font: var(--font-metadata) / 1.5 var(--mono);
+}
+
+.character-history__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gap-history-inline);
+}
+
+.character-history__help h2 {
+  margin: 0 0 var(--gap-form-fields);
+  color: var(--color-text-muted);
+  font: 400 var(--font-metadata) / 1.5 var(--mono);
+}
+
+.character-history__help p {
+  margin: 0 0 var(--gap-history-help);
+  color: var(--color-text-secondary);
+  font-size: var(--font-button);
+}
+
+.character-history__help .character-history__warning {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-history-inline);
+  margin-bottom: 0;
+  color: var(--color-error);
+  font-size: var(--font-explanation);
+}
+
+.character-history__warning svg {
+  width: var(--size-icon-button);
+  height: var(--size-icon-button);
+  flex-shrink: 0;
+}
+
+/* На планшете справка уходит под основной блок, как остальные боковые подсказки. */
+@media (max-width: 1023px) {
+  .character-history__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Пока сохраняем общий список: отдельные карточки истории на телефоне — следующий шаг. */
+@media (max-width: 639px) {
+  .character-history {
+    gap: var(--gap-content-touch);
+  }
+
+  .character-history__row {
+    flex-wrap: wrap;
+  }
+
+  .character-history__actions {
+    width: 100%;
+  }
+}

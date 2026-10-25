@@ -172,13 +172,24 @@
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
+  --gap-card-content: 16px;
 
   /* Размеры карточки профиля по ui-ux; поверхность и шрифты берутся из общих токенов. */
   --width-profile-card: 520px;
   --size-profile-avatar: 48px;
   --size-profile-icon: 22px;
   --font-profile-email: 15px;
-  --gap-profile-content: 16px;
+  --gap-profile-content: var(--gap-card-content);
+
+  /* История версий: размеры списка и справки из ui-ux и макета. */
+  --width-history-help: 340px;
+  --gap-history-columns: 20px;
+  --padding-history-row: 14px 18px;
+  --size-history-number: 34px;
+  --gap-history-inline: 8px;
+  --gap-history-help: 10px;
+  --gap-history-metadata: 2px;
+  --font-metadata: 12px;
 
   /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
      Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */

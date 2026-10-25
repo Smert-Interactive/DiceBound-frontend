@@ -187,3 +187,12 @@ export function LogoutIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function RestoreIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 11a9 9 0 1 1 2.4 6.1" />
+      <path d="M3 4v7h7" />
+    </Icon>
+  );
+}
