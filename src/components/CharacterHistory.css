@@ -1,4 +1,6 @@
 .character-history {
+  container-name: character-history;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--gap-content);
@@ -12,8 +14,6 @@
 }
 
 .character-history__list-card {
-  container-name: history-versions;
-  container-type: inline-size;
   min-width: 0;
   padding: 0;
 }
@@ -49,7 +49,7 @@
   border-radius: var(--radius-field);
   background: var(--color-bg-input);
   color: var(--color-text-secondary);
-  font: var(--font-button) / 1 var(--mono);
+  font: var(--font-button) / 1.5 var(--mono);
 }
 
 .character-history__number--current {
@@ -94,17 +94,23 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--gap-history-inline);
+  gap: var(--gap-inline-compact);
+}
+
+.character-history__help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-history-cards);
 }
 
 .character-history__help h2 {
-  margin: 0 0 var(--gap-form-fields);
+  margin: 0;
   color: var(--color-text-muted);
   font: 400 var(--font-metadata) / 1.5 var(--mono);
 }
 
 .character-history__help p {
-  margin: 0 0 var(--gap-history-help);
+  margin: 0;
   color: var(--color-text-secondary);
   font-size: var(--font-button);
 }
@@ -124,25 +130,14 @@
   flex-shrink: 0;
 }
 
-/* Ориентируемся на ширину списка, а не окна: рядом со справкой места меньше.
-   560 px оставляют место номеру, метаданным и двум кнопкам в одну линию.
-   В более узком списке кнопки остаются справа, но располагаются друг под другом. */
-@container history-versions (max-width: 560px) {
-  .character-history__row {
-    column-gap: var(--gap-actions);
-  }
-
-  .character-history__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .character-history__title .ui-chip {
-    box-sizing: border-box;
-    max-width: 100%;
-    white-space: normal;
+/* Двум колонкам нужно место для списка от 480 px, справки 340 px и промежутка 20 px.
+   Если места меньше, справка уходит вниз, а кнопки остаются рядом, как в макете. */
+@container character-history (max-width: 840px) {
+  .character-history__layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
+
 /* На планшете справка уходит под основной блок, как остальные боковые подсказки. */
 @media (max-width: 1023px) {
   .character-history__layout {
@@ -185,7 +180,11 @@
     width: var(--size-history-number-touch);
     min-width: var(--size-history-number-touch);
     height: var(--size-history-number-touch);
-    font-size: var(--font-metadata);
+    font-size: var(--font-button);
+  }
+
+  .character-history__number:not(.character-history__number--current) {
+    color: var(--color-text-primary);
   }
 
   .character-history__actions {
@@ -194,6 +193,7 @@
     align-items: center;
     width: 100%;
     margin-left: 0;
+    gap: var(--gap-actions);
   }
 
   .character-history__actions .ui-button {

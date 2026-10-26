@@ -1,5 +1,18 @@
 .restore-confirm-modal {
   width: var(--width-modal-restore);
+  max-width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+}
+
+/* Центрируем относительно всего экрана, включая место скрытой полосы прокрутки.
+   translate не конфликтует с transform в анимации открытия общего Modal. */
+@media (min-width: 501px) {
+  .ui-modal.restore-confirm-modal {
+    position: fixed;
+    left: calc(50vw + var(--ui-modal-scrollbar-width, 0px) / 2);
+    right: auto;
+    margin-inline: 0;
+    translate: -50% 0;
+  }
 }
 
 .restore-confirm-modal__description {
@@ -11,7 +24,7 @@
 }
 
 .restore-confirm-modal__timeline-scroll {
-  margin-top: var(--gap-history-columns);
+  margin-top: var(--gap-modal-content);
   overflow-x: auto;
 }
 
@@ -49,7 +62,7 @@
   border-radius: var(--radius-button);
   background: var(--color-bg-input);
   color: var(--color-text-primary);
-  font: var(--font-metadata) / 1.5 var(--mono);
+  font: var(--font-button-sm) / 1.5 var(--mono);
 }
 
 .restore-confirm-modal__version--selected .restore-confirm-modal__number {
@@ -76,15 +89,15 @@
 .restore-confirm-modal__legend {
   display: flex;
   gap: var(--gap-card-content);
-  margin-top: var(--gap-actions);
+  margin-top: var(--gap-history-help);
   color: var(--color-text-muted);
-  font-size: var(--font-explanation);
+  font-size: var(--font-metadata);
 }
 
 .restore-confirm-modal__legend span {
   display: inline-flex;
   align-items: center;
-  gap: var(--gap-history-inline);
+  gap: var(--gap-inline-compact);
 }
 
 .restore-confirm-modal__legend span::before {
@@ -95,6 +108,14 @@
   border-radius: 50%;
 }
 
+.restore-confirm-modal__legend-selected {
+  color: var(--color-text-primary);
+}
+
+.restore-confirm-modal .ui-modal__actions {
+  margin-top: var(--gap-content);
+}
+
 .restore-confirm-modal__legend-selected::before {
   background: var(--color-primary);
 }
@@ -103,7 +124,47 @@
   border: 1px dashed var(--color-text-faint);
 }
 
-@media (max-width: 639px) {
+/* Для восстановления граница нижнего листа равна ширине окна: 500 px.
+   Число в media query соответствует --width-modal-restore; var() здесь не работает. */
+@media (min-width: 501px) and (max-width: 639px) {
+  .ui-modal.restore-confirm-modal {
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    margin-inline: 0;
+    padding: var(--padding-modal);
+    border-width: 1px;
+    border-radius: var(--radius-modal);
+  }
+
+  .ui-modal.restore-confirm-modal[open] {
+    animation: ui-modal-in var(--motion-base);
+  }
+
+  .ui-modal.restore-confirm-modal.ui-modal--closing {
+    animation: ui-modal-out var(--motion-exit) forwards;
+  }
+
+  .restore-confirm-modal .ui-modal__handle {
+    display: none;
+  }
+
+  .restore-confirm-modal .ui-modal__actions {
+    flex-direction: row;
+    gap: var(--gap-actions);
+  }
+
+  .restore-confirm-modal .ui-modal__actions .ui-button {
+    width: auto;
+    height: var(--size-button);
+    font-size: var(--font-button);
+  }
+}
+
+@media (max-width: 500px) {
+  /* Приоритет выше общего desktop-размера: нижний лист заполняет весь экран. */
+  .ui-modal.restore-confirm-modal {
+    width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+  }
   .restore-confirm-modal__description--desktop,
   .restore-confirm-modal__legend {
     display: none;
@@ -113,8 +174,16 @@
     display: block;
   }
 
+  .restore-confirm-modal h2 {
+    margin-bottom: var(--gap-history-help);
+  }
+
+  .restore-confirm-modal .ui-modal__actions {
+    margin-top: var(--gap-card-content);
+  }
+
   .restore-confirm-modal__timeline-scroll {
-    margin-top: var(--gap-history-help);
+    margin-top: var(--gap-form-fields);
   }
 
   .restore-confirm-modal__timeline {
@@ -122,12 +191,17 @@
   }
 
   .restore-confirm-modal__version + .restore-confirm-modal__version::before {
-    width: var(--gap-history-timeline-touch);
+    display: none;
+  }
+
+  .restore-confirm-modal .ui-button__rest > svg {
+    display: none;
   }
 
   .restore-confirm-modal__number {
     width: var(--size-button-sm-touch);
     height: var(--size-button-sm-touch);
+    font-size: var(--font-metadata);
   }
 }
 

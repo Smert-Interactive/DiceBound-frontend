@@ -16,6 +16,7 @@ import { MOCK_SYSTEMS } from "../mocks/systems";
 import { formatDateTime } from "../shared/formatDateTime";
 import { ChevronLeftIcon, RestoreIcon } from "../shared/icons";
 import { NotFoundOrForbidden } from "../shared/states";
+import { useMediaQuery } from "../shared/states/useMediaQuery";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Button, getButtonClassName } from "../shared/ui";
 
@@ -26,6 +27,7 @@ export default function CharacterVersionPage() {
   const { user } = useAuth();
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 639px)");
   // Принимаем только положительный целый номер. Неизвестный снимок и запрет выглядят как 404.
   const snapshot =
     user && /^[1-9]\d*$/u.test(version)
@@ -63,6 +65,34 @@ export default function CharacterVersionPage() {
     });
   }
 
+  // Одна группа действий: desktop — внутри баннера, телефон — отдельной строкой под ним.
+  const versionActions = (
+    <>
+      <Link
+        to={historyPath}
+        state={{ activeTab: "history" }}
+        className={getButtonClassName({
+          size: "sm",
+          className: "character-version-page__back",
+        })}
+      >
+        <span className="ui-button__rest">
+          <ChevronLeftIcon />К истории
+        </span>
+      </Link>
+      {canRestore && (
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<RestoreIcon />}
+          onClick={() => setIsRestoreOpen(true)}
+        >
+          {isMobile ? "Восстановить" : "Восстановить эту версию"}
+        </Button>
+      )}
+    </>
+  );
+
   return (
     <div
       className="character-version-page"
@@ -72,44 +102,20 @@ export default function CharacterVersionPage() {
         className="character-version-page__notice"
         icon="clock"
         title={`Версия ${snapshot.version_number} · ${formatDateTime(snapshot.created_at)}`}
-        actions={
-          <>
-            <Link
-              to={historyPath}
-              state={{ activeTab: "history" }}
-              className={getButtonClassName({ size: "sm" })}
-            >
-              <span className="ui-button__rest">
-                <ChevronLeftIcon />К истории
-              </span>
-            </Link>
-            {canRestore && (
-              // Открываем то же подтверждение, что и из списка истории.
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<RestoreIcon />}
-                onClick={() => setIsRestoreOpen(true)}
-              >
-                <span className="character-version-page__restore-desktop">
-                  Восстановить эту версию
-                </span>
-                <span className="character-version-page__restore-mobile">
-                  Восстановить
-                </span>
-              </Button>
-            )}
-          </>
-        }
+        actions={isMobile ? undefined : versionActions}
       >
         Только просмотр. Текущая версия персонажа —{" "}
         {character.current_version_number}.
       </Banner>
+      {isMobile && (
+        <div className="character-version-page__actions">{versionActions}</div>
+      )}
       <CharacterHeader
         name={character.name}
         systemName={system.name}
         schemaName={schema.name}
         updatedAt={snapshot.created_at}
+        showDateOnMobile
       />
       {/* Зависимость от ветки 7: здесь должен быть общий DynamicSheetRenderer с readOnly.
           Передавать нужно schema и snapshot.data, включая сохранённые calculated.

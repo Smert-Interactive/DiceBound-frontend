@@ -46,17 +46,22 @@ export default function CharacterPage() {
     versions: CharacterVersionSummary[];
   } | null>(null);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
-  // Вкладки меняют состояние страницы, отдельного адреса у них нет (ui-ux).
-  const [tabId, setTabId] = useState(() => {
-    const state: unknown = location.state;
-    // Кнопка из снимка открывает именно историю; отдельного URL у вкладки нет.
-    return state &&
-      typeof state === "object" &&
-      "activeTab" in state &&
-      state.activeTab === "history"
-      ? "history"
+  // Состояние маршрута общее для вкладок и хлебных крошек; сам URL не меняется.
+  const tabId =
+    routeState &&
+    typeof routeState === "object" &&
+    "activeTab" in routeState &&
+    (routeState.activeTab === "history" || routeState.activeTab === "access")
+      ? routeState.activeTab
       : "sheet";
-  });
+
+  function handleTabChange(nextTab: string) {
+    // replace не добавляет отдельный шаг браузерной истории на каждое переключение вкладки.
+    navigate(location.pathname, {
+      replace: true,
+      state: { activeTab: nextTab },
+    });
+  }
 
   // Одной сессии недостаточно: прямой адрес не должен открывать чужого mock-персонажа.
   const list = user && getMockCharacterList(user.email);
@@ -88,7 +93,7 @@ export default function CharacterPage() {
       user.email,
     );
     setIsRestoreOpen(false);
-    setTabId("sheet");
+    handleTabChange("sheet");
     setNotice(
       `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
     );
@@ -138,7 +143,7 @@ export default function CharacterPage() {
       <Tabs
         items={tabs}
         value={tabId}
-        onChange={setTabId}
+        onChange={handleTabChange}
         label="Разделы персонажа"
       />
       {restoreTarget && versions && character.access === "OWNER" && (

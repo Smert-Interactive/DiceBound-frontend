@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { generatePath, Link, useMatch } from "react-router-dom";
+import { generatePath, Link, useLocation, useMatch } from "react-router-dom";
 
 import "./AppHeader.css";
 
@@ -7,6 +7,7 @@ import logo from "../assets/logo.svg";
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import AppBreadcrumbs from "./AppBreadcrumbs";
+import { getMockCharacterList } from "../mocks/characters";
 import { ChevronLeftIcon, MenuIcon, UserIcon } from "../shared/icons";
 
 interface Props {
@@ -24,6 +25,23 @@ export default function AppHeader({
   const { user } = useAuth();
   const versionMatch = useMatch(ROUTES.characterVersion);
   const characterMatch = useMatch(ROUTES.character);
+  const location = useLocation();
+  const state: unknown = location.state;
+  const activeTab =
+    state &&
+    typeof state === "object" &&
+    "activeTab" in state &&
+    typeof state.activeTab === "string"
+      ? state.activeTab
+      : undefined;
+  // Имя берём только из доступного пользователю списка, в том числе на странице версии.
+  const characterId = versionMatch?.params.id ?? characterMatch?.params.id;
+  const list = user && getMockCharacterList(user.email);
+  const character =
+    list &&
+    [...list.owned, ...list.shared_view].find(
+      (item) => item.id === characterId,
+    );
   const historyPath =
     versionMatch &&
     generatePath(ROUTES.character, {
@@ -43,7 +61,7 @@ export default function AppHeader({
     <>
       {/* В разметке две шапки; какая из них видна, решает CSS по ширине экрана. */}
       <header className="desktop-header">
-        <AppBreadcrumbs />
+        <AppBreadcrumbs characterName={character?.name} activeTab={activeTab} />
         <Link
           to={ROUTES.profile}
           className="desktop-header__profile"

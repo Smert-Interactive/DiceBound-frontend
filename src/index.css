@@ -1,7 +1,4 @@
 :root {
-  /* Сохраняем место под полосу прокрутки, когда Modal блокирует прокрутку страницы. */
-  scrollbar-gutter: stable;
-
   /* =========================
      Background colors
      ========================= */
@@ -157,6 +154,8 @@
   --size-button-touch: 44px;
   --radius-button: 10px;
   --size-button-sm: 32px;
+  --padding-button-sm: 11px;
+  --padding-button-sm-touch: 12px;
   --radius-button-sm: 8px;
   --radius-button-sm-touch: 9px;
   --radius-card: 14px;
@@ -165,6 +164,7 @@
   --width-modal-restore: 500px;
   --radius-modal: 18px;
   --padding-modal: 24px;
+  --gap-modal-content: 18px;
   --width-layout: 1280px;
   --width-sidebar: 224px;
   --width-sidebar-tablet: 64px;
@@ -195,7 +195,8 @@
   --size-history-number-touch: 36px;
   --padding-history-card: 12px 14px;
   --gap-history-cards: 12px;
-  --gap-history-timeline-touch: 6px;
+  --gap-history-timeline-touch: var(--gap-page-heading);
+  --gap-inline-compact: 6px;
   --gap-history-inline: 8px;
   --gap-history-help: 10px;
   --gap-history-metadata: 2px;
@@ -252,6 +253,7 @@
   /* Смысловые размеры и шрифты UI-kit из холста. */
   --size-button-sm-touch: 36px;
   --size-icon-button: 15px;
+  --size-icon-button-sm: 14px;
   --size-icon-feedback: 18px;
   --size-checkbox: 18px;
   --size-radio: 16px;
@@ -272,6 +274,7 @@
   --radius-radio: 11px;
   --radius-system-list: 10px;
   --radius-system-sheet: 13px;
+  --radius-system-sheet-touch: 11px;
   --radius-checkbox: 5px;
   --radius-skeleton: 8px;
   --font-ui: 14px;
@@ -281,7 +284,8 @@
   --font-field-touch: 16px;
   --font-checkbox: 13.5px;
   --font-tab: 13.5px;
-  --font-modal-body-touch: 13.5px;
+  --font-modal-body: 13.5px;
+  --font-modal-body-touch: var(--font-modal-body);
   --font-caption: 11.5px;
   --font-caption-touch: 11px;
   --font-explanation: 12.5px;

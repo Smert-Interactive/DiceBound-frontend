@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -42,6 +42,7 @@ afterEach(() => {
   cleanup();
   Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
   Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
+  vi.unstubAllGlobals();
 });
 
 function renderVersion(
@@ -182,6 +183,39 @@ describe("character version page", () => {
       generatePath(ROUTES.characterVersion, { id: aldricId, version: "4" }),
     );
     expect(getMockCharacterVersion(aldricId, 7, MOCK_USER.email)).toBeDefined();
+  });
+
+  test("mobile actions open restoration and return to the history tab", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((media: string) => ({
+        matches: media === "(max-width: 639px)",
+        media,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    const { user, router } = renderVersion("4");
+    // На телефоне остаётся одна кнопка действия с короткой подписью.
+    const restoreButtons = screen.getAllByRole("button", {
+      name: "Восстановить",
+    });
+    expect(restoreButtons).toHaveLength(1);
+    await user.click(restoreButtons[0]);
+    const dialog = screen.getByRole("dialog", {
+      name: "Восстановить версию 4?",
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
+    await user.click(
+      screen.getAllByRole("link", { name: "К истории" }).at(-1)!,
+    );
+    expect(router.state.location.pathname).toBe(
+      generatePath(ROUTES.character, { id: aldricId }),
+    );
+    expect(screen.getByRole("tab", { name: "История" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   test("does not offer to restore the current version", () => {

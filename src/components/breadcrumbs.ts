@@ -14,6 +14,7 @@ export interface Crumb {
 export function getBreadcrumbs(
   pathname: string,
   characterName?: string,
+  activeTab?: string,
 ): Crumb[] {
   const parts = pathname.split("/").filter(Boolean);
   const isCharacterPath = parts[0] === "characters";
@@ -41,7 +42,7 @@ export function getBreadcrumbs(
 
   let path = "";
 
-  return parts.map((part, index) => {
+  const crumbs: Crumb[] = parts.map((part, index) => {
     path += `/${part}`;
 
     if (isCharacterPath && part !== "new") {
@@ -65,4 +66,17 @@ export function getBreadcrumbs(
     // «Персонажи», «Профиль» и так далее берём из словаря, неизвестное показываем как есть.
     return { path, label: routeLabels[part] ?? part, to: path };
   });
+  // Вкладка не меняет URL. Дополнительная крошка — текущий раздел, без отдельной ссылки.
+  if (
+    isCharacterPath &&
+    parts.length === 2 &&
+    parts[1] !== "new" &&
+    (activeTab === "history" || activeTab === "access")
+  ) {
+    crumbs.push({
+      path: `${path}/${activeTab === "history" ? "versions" : "access"}`,
+      label: activeTab === "history" ? "История" : "Доступ",
+    });
+  }
+  return crumbs;
 }

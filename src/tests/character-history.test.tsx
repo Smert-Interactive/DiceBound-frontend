@@ -111,6 +111,38 @@ function renderCharacter(email = MOCK_USER.email) {
 }
 
 describe("character history tab", () => {
+  test("keeps breadcrumbs and selected tabs in sync without changing the URL", async () => {
+    const { router, user } = renderCharacter();
+    const path = router.state.location.pathname;
+    const breadcrumbs = within(
+      screen.getByRole("navigation", { name: "Хлебные крошки" }),
+    );
+    expect(breadcrumbs.getByText("Aldric")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await user.click(screen.getByRole("tab", { name: "История" }));
+    expect(breadcrumbs.getByText("История")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(router.state.location.pathname).toBe(path);
+
+    await user.click(breadcrumbs.getByRole("link", { name: "Aldric" }));
+    expect(screen.getByRole("tab", { name: "Лист" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(breadcrumbs.queryByText("История")).toBeNull();
+
+    await user.click(screen.getByRole("tab", { name: "Доступ" }));
+    expect(breadcrumbs.getByText("Доступ")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(router.state.location.pathname).toBe(path);
+  });
   test("shows ordered versions, current and creation labels after switching tabs", async () => {
     const { user } = renderCharacter();
     expect(screen.queryByRole("region", { name: "История версий" })).toBeNull();

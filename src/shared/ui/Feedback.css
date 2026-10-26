@@ -197,6 +197,9 @@
   .ui-system--sheet {
     width: var(--size-system-sheet-touch);
     height: var(--size-system-sheet-touch);
+    border-radius: var(--radius-system-sheet-touch);
+    font-size: var(--font-caption-touch);
+    line-height: 1.5;
   }
 }
 

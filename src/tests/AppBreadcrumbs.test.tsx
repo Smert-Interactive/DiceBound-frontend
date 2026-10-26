@@ -13,6 +13,22 @@ function renderAt(path: string, characterName?: string) {
 }
 
 describe("getBreadcrumbs", () => {
+  test.each([
+    ["history", "История"],
+    ["access", "Доступ"],
+  ])("adds the selected %s tab without a separate link", (tab, label) => {
+    const crumbs = getBreadcrumbs("/characters/42", "Aldric", tab);
+    expect(crumbs.map((crumb) => crumb.label)).toEqual([
+      "Персонажи",
+      "Aldric",
+      label,
+    ]);
+    expect(crumbs.at(-1)?.to).toBeUndefined();
+    expect(getBreadcrumbs("/characters/new", undefined, tab)).toHaveLength(2);
+    expect(
+      getBreadcrumbs("/characters/42/versions/4", "Aldric", tab).at(-1)?.label,
+    ).toBe("Версия 4");
+  });
   // Образец из дизайна: Персонажи / Aldric / История / Версия 4.
   test("builds crumbs for a character version", () => {
     const crumbs = getBreadcrumbs("/characters/42/versions/4", "Aldric");
