@@ -88,6 +88,7 @@ interface BannerProps {
   variant?: BannerVariant;
   icon?: BannerIcon;
   notification?: boolean;
+  actions?: ReactNode;
   onClose?: () => void;
   className?: string;
 }
@@ -98,6 +99,7 @@ export function Banner({
   variant = "info",
   icon,
   notification = false,
+  actions,
   onClose,
   className = "",
 }: BannerProps) {
@@ -121,6 +123,7 @@ export function Banner({
         <div className="ui-banner__title">{title}</div>
         {children && <div className="ui-banner__description">{children}</div>}
       </div>
+      {actions && <div className="ui-banner__actions">{actions}</div>}
       {onClose && (
         <Button
           className="ui-banner__close"

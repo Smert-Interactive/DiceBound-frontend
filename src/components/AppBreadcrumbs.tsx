@@ -6,12 +6,13 @@ import { getBreadcrumbs } from "./breadcrumbs";
 
 interface Props {
   characterName?: string;
+  activeTab?: string;
 }
 
-function AppBreadcrumbs({ characterName }: Props) {
+function AppBreadcrumbs({ characterName, activeTab }: Props) {
   const location = useLocation();
 
-  const crumbs = getBreadcrumbs(location.pathname, characterName);
+  const crumbs = getBreadcrumbs(location.pathname, characterName, activeTab);
 
   return (
     <nav className="breadcrumbs" aria-label="Хлебные крошки">

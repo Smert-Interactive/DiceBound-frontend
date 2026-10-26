@@ -45,6 +45,10 @@
     gap: 12px;
   }
 
+  .character-header__main {
+    gap: var(--gap-page-heading);
+  }
+
   .character-header__title {
     gap: 8px;
   }
@@ -59,5 +63,27 @@
 
   .character-header__date {
     display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .character-header__meta {
+    column-gap: var(--gap-page-heading);
+  }
+
+  .character-header__version::before {
+    content: "·";
+    margin-right: var(--gap-page-heading);
+  }
+}
+
+@media (max-width: 639px) {
+  .character-header--with-mobile-date .character-header__date {
+    display: inline;
+  }
+
+  .character-header--with-mobile-date .character-header__date::before {
+    content: "·";
+    margin-right: var(--gap-page-heading);
   }
 }

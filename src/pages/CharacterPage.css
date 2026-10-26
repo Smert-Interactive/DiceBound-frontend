@@ -6,6 +6,18 @@
 
 @media (max-width: 639px) {
   .character-page {
-    gap: var(--gap-content-touch);
+    gap: var(--gap-history-cards);
+  }
+}
+
+/* В MHistory вкладки выше, а расстояние до первой карточки равно шагу между карточками. */
+@media (max-width: 639px) {
+  .character-page .ui-tabs__tab {
+    padding-block: var(--gap-history-cards);
+    font-size: var(--font-ui);
+  }
+
+  .character-page .ui-tabs [role="tabpanel"] {
+    padding-top: var(--gap-history-cards);
   }
 }

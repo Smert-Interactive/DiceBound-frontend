@@ -371,6 +371,8 @@ describe("Modal lifecycle", () => {
     cleanup();
     Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
     Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
+    vi.restoreAllMocks();
+    document.documentElement.style.scrollbarGutter = "";
   });
 
   function Example() {
@@ -414,6 +416,41 @@ describe("Modal lifecycle", () => {
     fireEvent(dialog, new Event("cancel", { cancelable: true })); // Escape dispatches cancel in a native dialog.
     await waitFor(() => expect(dialog).not.toHaveAttribute("open"));
     expect(trigger).toHaveFocus();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  test("does not reserve an empty scrollbar gutter on a short page", async () => {
+    vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(
+      window.innerWidth,
+    );
+    render(<Example />);
+    await userEvent.click(screen.getByRole("button", { name: "Открыть" }));
+    expect(document.documentElement.style.scrollbarGutter).toBe("");
+    expect(document.body.style.overflow).toBe("hidden");
+  });
+
+  test("preserves an existing scrollbar gutter and restores page styles on close and unmount", async () => {
+    const root = document.documentElement;
+    vi.spyOn(root, "clientWidth", "get").mockReturnValue(
+      window.innerWidth - 15,
+    );
+    root.style.scrollbarGutter = "auto";
+    const { unmount } = render(<Example />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Открыть" }));
+    expect(root.style.scrollbarGutter).toBe("stable");
+    fireEvent(
+      screen.getByRole("dialog"),
+      new Event("cancel", { cancelable: true }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(root.style.scrollbarGutter).toBe("auto");
+    expect(document.body.style.overflow).toBe("");
+
+    await user.click(screen.getByRole("button", { name: "Открыть" }));
+    expect(root.style.scrollbarGutter).toBe("stable");
+    unmount();
+    expect(root.style.scrollbarGutter).toBe("auto");
     expect(document.body.style.overflow).toBe("");
   });
 

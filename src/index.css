@@ -133,6 +133,7 @@
   --tint-banner-warning-bg: rgba(176, 42, 64, 0.1);
   --tint-banner-success-bg: rgba(109, 191, 149, 0.08);
   --tint-radio-bg: rgba(176, 42, 64, 0.12);
+  --tint-restore-bg: rgba(176, 42, 64, 0.2);
   --tint-system-card-bg: rgba(176, 42, 64, 0.1);
   --tint-radio-border: rgba(234, 106, 126, 0.45);
 
@@ -153,13 +154,17 @@
   --size-button-touch: 44px;
   --radius-button: 10px;
   --size-button-sm: 32px;
+  --padding-button-sm: 11px;
+  --padding-button-sm-touch: 12px;
   --radius-button-sm: 8px;
   --radius-button-sm-touch: 9px;
   --radius-card: 14px;
   --padding-card: 18px;
   --width-modal: 460px;
+  --width-modal-restore: 500px;
   --radius-modal: 18px;
   --padding-modal: 24px;
+  --gap-modal-content: 18px;
   --width-layout: 1280px;
   --width-sidebar: 224px;
   --width-sidebar-tablet: 64px;
@@ -172,6 +177,8 @@
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
+  --gap-card-content: 16px;
+  --gap-actions: 8px;
 
   /* Размеры карточки профиля по ui-ux; поверхность и шрифты берутся из общих токенов. */
   --width-profile-card: 520px;
@@ -179,6 +186,21 @@
   --size-profile-icon: 22px;
   --font-profile-email: 15px;
   --gap-profile-content: 16px;
+
+  /* История версий: размеры списка и справки из ui-ux и макета. */
+  --width-history-help: 340px;
+  --gap-history-columns: 20px;
+  --padding-history-row: 14px 18px;
+  --size-history-number: 34px;
+  --size-history-number-touch: 36px;
+  --padding-history-card: 12px 14px;
+  --gap-history-cards: 12px;
+  --gap-history-timeline-touch: var(--gap-page-heading);
+  --gap-inline-compact: 6px;
+  --gap-history-inline: 8px;
+  --gap-history-help: 10px;
+  --gap-history-metadata: 2px;
+  --font-metadata: 12px;
 
   /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
      Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */
@@ -231,6 +253,7 @@
   /* Смысловые размеры и шрифты UI-kit из холста. */
   --size-button-sm-touch: 36px;
   --size-icon-button: 15px;
+  --size-icon-button-sm: 14px;
   --size-icon-feedback: 18px;
   --size-checkbox: 18px;
   --size-radio: 16px;
@@ -251,6 +274,7 @@
   --radius-radio: 11px;
   --radius-system-list: 10px;
   --radius-system-sheet: 13px;
+  --radius-system-sheet-touch: 11px;
   --radius-checkbox: 5px;
   --radius-skeleton: 8px;
   --font-ui: 14px;
@@ -260,7 +284,8 @@
   --font-field-touch: 16px;
   --font-checkbox: 13.5px;
   --font-tab: 13.5px;
-  --font-modal-body-touch: 13.5px;
+  --font-modal-body: 13.5px;
+  --font-modal-body-touch: var(--font-modal-body);
   --font-caption: 11.5px;
   --font-caption-touch: 11px;
   --font-explanation: 12.5px;
@@ -351,6 +376,11 @@ h1 {
 }
 
 @media (max-width: 639px) {
+  :root {
+    /* В мобильной карточке истории подписи разделяет 1 px; на desktop остаётся 2 px. */
+    --gap-history-metadata: 1px;
+  }
+
   :where(.ui-card) {
     padding: var(--padding-card-touch);
   }

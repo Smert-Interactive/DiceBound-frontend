@@ -71,8 +71,15 @@
 
 .ui-button--sm {
   height: var(--size-button-sm);
-  padding-inline: 10px;
+  padding-inline: var(--padding-button-sm);
+  font-size: var(--font-button-sm);
   border-radius: var(--radius-button-sm);
+}
+
+.ui-button--sm .ui-button__rest > svg,
+.ui-button--sm .ui-button__loading > svg {
+  width: var(--size-icon-button-sm);
+  height: var(--size-icon-button-sm);
 }
 
 .ui-button--icon {
@@ -165,6 +172,8 @@
 
   .ui-button--sm {
     height: var(--size-button-sm-touch);
+    padding-inline: var(--padding-button-sm-touch);
+    font-size: var(--font-button);
     border-radius: var(--radius-button-sm-touch);
   }
 

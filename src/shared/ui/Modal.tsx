@@ -36,6 +36,7 @@ type ModalProps = CloseProps & {
   children: ReactNode;
   actions?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
+  className?: string;
 };
 
 export function Modal({
@@ -46,11 +47,13 @@ export function Modal({
   children,
   actions,
   initialFocusRef,
+  className = "",
 }: ModalProps) {
   const id = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const originalOverflowRef = useRef<string | null>(null);
+  const originalScrollbarGutterRef = useRef<string | null>(null);
 
   // Esc: браузер сам закрыл бы окно, поэтому отмена всегда блокируется,
   // а закрывает окно родитель через onClose (если окно закрываемое).
@@ -80,6 +83,11 @@ export function Modal({
         document.body.style.overflow = originalOverflowRef.current;
         originalOverflowRef.current = null;
       }
+      if (originalScrollbarGutterRef.current !== null) {
+        document.documentElement.style.scrollbarGutter =
+          originalScrollbarGutterRef.current;
+        originalScrollbarGutterRef.current = null;
+      }
       if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
     }
 
@@ -91,6 +99,20 @@ export function Modal({
         returnFocusRef.current =
           activeElement instanceof HTMLElement ? activeElement : null;
         originalOverflowRef.current = document.body.style.overflow;
+        const root = document.documentElement;
+        originalScrollbarGutterRef.current = root.style.scrollbarGutter;
+        // Резервируем только уже видимую полосу: фон не расширяется, короткие страницы
+        // не получают пустую полосу. Исходное значение возвращаем при закрытии и размонтировании.
+        const scrollbarWidth = Math.max(
+          0,
+          window.innerWidth - root.clientWidth,
+        );
+        // На телефоне лист занимает весь экран, включая зарезервированное место полосы.
+        dialog.style.setProperty(
+          "--ui-modal-scrollbar-width",
+          `${scrollbarWidth}px`,
+        );
+        if (scrollbarWidth > 0) root.style.scrollbarGutter = "stable";
         document.body.style.overflow = "hidden";
         dialog.showModal();
 
@@ -140,6 +162,11 @@ export function Modal({
         document.body.style.overflow = originalOverflowRef.current;
         originalOverflowRef.current = null;
       }
+      if (originalScrollbarGutterRef.current !== null) {
+        document.documentElement.style.scrollbarGutter =
+          originalScrollbarGutterRef.current;
+        originalScrollbarGutterRef.current = null;
+      }
       if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
     };
   }, []);
@@ -147,7 +174,7 @@ export function Modal({
   return createPortal(
     <dialog
       ref={dialogRef}
-      className="ui-modal"
+      className={`ui-modal ${className}`}
       aria-modal="true"
       aria-labelledby={`${id}-title`}
       tabIndex={-1}

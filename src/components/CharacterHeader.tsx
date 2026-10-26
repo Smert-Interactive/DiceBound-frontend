@@ -9,7 +9,10 @@ interface Props {
   systemName: string;
   schemaName: string;
   updatedAt: string;
-  version: number;
+  // В снимке номер уже показан в баннере, поэтому повтор в метаданных не нужен.
+  version?: number;
+  // На мобильной странице версии дата остаётся под именем, как в MVersion.
+  showDateOnMobile?: boolean;
 }
 
 // Шапка страницы персонажа: метка системы, имя, чип системы и строка подписей.
@@ -19,11 +22,14 @@ export default function CharacterHeader({
   schemaName,
   updatedAt,
   version,
+  showDateOnMobile = false,
 }: Props) {
   const systemKind = getSystemKind(systemName);
 
   return (
-    <header className="character-header">
+    <header
+      className={`character-header${showDateOnMobile ? " character-header--with-mobile-date" : ""}`}
+    >
       <SystemBadge name={systemName} system={systemKind} size="sheet" />
       <div className="character-header__main">
         <div className="character-header__title">
@@ -36,7 +42,11 @@ export default function CharacterHeader({
             Изменён{" "}
             <time dateTime={updatedAt}>{formatDateTime(updatedAt)}</time>
           </span>
-          <span>Версия&nbsp;{version}</span>
+          {version !== undefined && (
+            <span className="character-header__version">
+              Версия&nbsp;{version}
+            </span>
+          )}
         </p>
       </div>
     </header>

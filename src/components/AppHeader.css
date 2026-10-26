@@ -1,5 +1,6 @@
 /* Desktop и планшет: верхняя панель с крошками и кнопкой аккаунта. */
 .desktop-header {
+  box-sizing: border-box;
   height: var(--height-topbar);
   display: flex;
   align-items: center;
@@ -54,6 +55,7 @@
   }
 
   .mobile-header {
+    box-sizing: border-box;
     display: flex;
     height: var(--height-topbar);
     align-items: center;
@@ -99,5 +101,17 @@
   .mobile-header__button:active {
     background: var(--color-bg-surface);
     color: var(--color-text-primary);
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-header--back {
+    padding-inline: var(--gap-inline-compact);
+  }
+
+  .mobile-header__title {
+    margin-left: var(--gap-page-heading);
+    font-size: var(--font-ui);
+    font-weight: 500;
   }
 }

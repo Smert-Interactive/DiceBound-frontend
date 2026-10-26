@@ -1,0 +1,217 @@
+.restore-confirm-modal {
+  width: var(--width-modal-restore);
+  max-width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+}
+
+/* Центрируем относительно всего экрана, включая место скрытой полосы прокрутки.
+   translate не конфликтует с transform в анимации открытия общего Modal. */
+@media (min-width: 501px) {
+  .ui-modal.restore-confirm-modal {
+    position: fixed;
+    left: calc(50vw + var(--ui-modal-scrollbar-width, 0px) / 2);
+    right: auto;
+    margin-inline: 0;
+    translate: -50% 0;
+  }
+}
+
+.restore-confirm-modal__description {
+  margin: 0;
+}
+
+.restore-confirm-modal__description--mobile {
+  display: none;
+}
+
+.restore-confirm-modal__timeline-scroll {
+  margin-top: var(--gap-modal-content);
+  overflow-x: auto;
+}
+
+.restore-confirm-modal__timeline {
+  display: flex;
+  gap: var(--gap-form-fields);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.restore-confirm-modal__version {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Соединитель относится к следующей версии: после выбранной линии тоже пунктирные. */
+.restore-confirm-modal__version + .restore-confirm-modal__version::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: var(--gap-form-fields);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.restore-confirm-modal__number {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-field);
+  height: var(--size-field);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font: var(--font-button-sm) / 1.5 var(--mono);
+}
+
+.restore-confirm-modal__version--selected .restore-confirm-modal__number {
+  border-color: var(--color-primary);
+  background: var(--tint-restore-bg);
+}
+
+.restore-confirm-modal__version--deleted .restore-confirm-modal__number {
+  border-style: dashed;
+  border-color: var(--color-border-default);
+  background: transparent;
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+.restore-confirm-modal__version--deleted
+  + .restore-confirm-modal__version--deleted::before,
+.restore-confirm-modal__version--selected
+  + .restore-confirm-modal__version--deleted::before {
+  border-top-style: dashed;
+  border-color: var(--color-border-default);
+}
+
+.restore-confirm-modal__legend {
+  display: flex;
+  gap: var(--gap-card-content);
+  margin-top: var(--gap-history-help);
+  color: var(--color-text-muted);
+  font-size: var(--font-metadata);
+}
+
+.restore-confirm-modal__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-inline-compact);
+}
+
+.restore-confirm-modal__legend span::before {
+  box-sizing: border-box;
+  content: "";
+  width: var(--gap-actions);
+  height: var(--gap-actions);
+  border-radius: 50%;
+}
+
+.restore-confirm-modal__legend-selected {
+  color: var(--color-text-primary);
+}
+
+.restore-confirm-modal .ui-modal__actions {
+  margin-top: var(--gap-content);
+}
+
+.restore-confirm-modal__legend-selected::before {
+  background: var(--color-primary);
+}
+
+.restore-confirm-modal__legend-deleted::before {
+  border: 1px dashed var(--color-text-faint);
+}
+
+/* Для восстановления граница нижнего листа равна ширине окна: 500 px.
+   Число в media query соответствует --width-modal-restore; var() здесь не работает. */
+@media (min-width: 501px) and (max-width: 639px) {
+  .ui-modal.restore-confirm-modal {
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    margin-inline: 0;
+    padding: var(--padding-modal);
+    border-width: 1px;
+    border-radius: var(--radius-modal);
+  }
+
+  .ui-modal.restore-confirm-modal[open] {
+    animation: ui-modal-in var(--motion-base);
+  }
+
+  .ui-modal.restore-confirm-modal.ui-modal--closing {
+    animation: ui-modal-out var(--motion-exit) forwards;
+  }
+
+  .restore-confirm-modal .ui-modal__handle {
+    display: none;
+  }
+
+  .restore-confirm-modal .ui-modal__actions {
+    flex-direction: row;
+    gap: var(--gap-actions);
+  }
+
+  .restore-confirm-modal .ui-modal__actions .ui-button {
+    width: auto;
+    height: var(--size-button);
+    font-size: var(--font-button);
+  }
+}
+
+@media (max-width: 500px) {
+  /* Приоритет выше общего desktop-размера: нижний лист заполняет весь экран. */
+  .ui-modal.restore-confirm-modal {
+    width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+  }
+  .restore-confirm-modal__description--desktop,
+  .restore-confirm-modal__legend {
+    display: none;
+  }
+
+  .restore-confirm-modal__description--mobile {
+    display: block;
+  }
+
+  .restore-confirm-modal h2 {
+    margin-bottom: var(--gap-history-help);
+  }
+
+  .restore-confirm-modal .ui-modal__actions {
+    margin-top: var(--gap-card-content);
+  }
+
+  .restore-confirm-modal__timeline-scroll {
+    margin-top: var(--gap-form-fields);
+  }
+
+  .restore-confirm-modal__timeline {
+    gap: var(--gap-history-timeline-touch);
+  }
+
+  .restore-confirm-modal__version + .restore-confirm-modal__version::before {
+    display: none;
+  }
+
+  .restore-confirm-modal .ui-button__rest > svg {
+    display: none;
+  }
+
+  .restore-confirm-modal__number {
+    width: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
+    font-size: var(--font-metadata);
+  }
+}
+
+/* Ошибка действия над кнопками, как у остальных форм по ui-ux. */
+.restore-confirm-modal__error {
+  margin-top: var(--gap-form-fields);
+  padding: var(--padding-form-error);
+  border: 1px solid var(--tint-crimson-border);
+  border-radius: var(--radius-button);
+  background: var(--tint-banner-warning-bg);
+  color: var(--color-error);
+  font-size: var(--font-button);
+}
