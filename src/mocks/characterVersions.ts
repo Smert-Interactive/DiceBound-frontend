@@ -88,7 +88,9 @@ for (const summary of MOCK_CHARACTERS.owned) {
         ? updatedAt
         : createdAt + ((updatedAt - createdAt) * index) / (count - 1);
     return {
-      id: crypto.randomUUID(),
+      // UUID mock-версии: номер в первой группе, остальные группы — из ID персонажа.
+      // Не требует HTTPS, в отличие от crypto.randomUUID(), и не меняется при перезагрузке.
+      id: `${version.toString(16).padStart(8, "0")}${summary.id.slice(8)}`,
       version_number: version,
       created_at: new Date(timestamp).toISOString(),
       is_current: version === count,
