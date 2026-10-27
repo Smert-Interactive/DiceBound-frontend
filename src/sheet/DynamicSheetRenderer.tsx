@@ -154,6 +154,7 @@ export default function DynamicSheetRenderer({
         className="sheet-pair"
         data-changed={changed.has(pair.number.id) || undefined}
         data-error={errors[pair.number.id] ? true : undefined}
+        data-readonly={readOnly || undefined}
       >
         {renderField(pair.number, true)}
         {renderField(pair.calculated, true)}

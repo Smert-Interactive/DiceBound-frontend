@@ -134,7 +134,7 @@ export default function CharacterPage() {
       label: "Лист",
       content: (
         // На время запроса лист блокируется через inert, а не через readOnly: readOnly меняет вид
-        // полей (заливка, «из snapshot»), а ui-ux требует блокировку без смены вида.
+        // полей (плашки вместо полей), а ui-ux требует блокировку без смены вида.
         <div
           inert={saveStatus === "saving"}
           aria-busy={saveStatus === "saving"}

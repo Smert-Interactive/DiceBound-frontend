@@ -58,10 +58,7 @@ export default function SheetResourceField({
   }
 
   return (
-    <div
-      className="ui-field sheet-resource"
-      data-readonly={readOnly || undefined}
-    >
+    <div className="ui-field sheet-resource">
       <div className="sheet-resource__head">
         <span className="ui-field__label" id={labelId}>
           {field.label}

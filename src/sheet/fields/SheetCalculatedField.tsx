@@ -36,16 +36,19 @@ export default function SheetCalculatedField({
   const labelId = `${id}-label`;
   const noteId = `${id}-note`;
   const formulaId = `${id}-formula`;
-  // Формула показывается и в режиме чтения (решение дизайнера, 27 окт.): подписи «из snapshot» нет.
+  // Формула показывается и в режиме чтения (решение дизайнера, 27 окт.).
   const formulaText = field.formula;
   // В паре подсказка «пересчитывается при изменении…» не нужна: формула видна под плашкой.
   const note =
     error ?? (readOnly || inPair ? undefined : getCalculatedHint(dependsOn));
   const describedBy = note ? noteId : inPair ? formulaId : undefined;
 
+  // В режиме чтения число и формула пары стоят в одной плашке (решает CSS по ширине секции).
+  const isInline = inPair && readOnly;
+
   return (
     <div
-      className={`ui-field sheet-calculated${inPair ? " sheet-calculated--pair" : ""}`}
+      className={`ui-field sheet-calculated${inPair ? " sheet-calculated--pair" : ""}${isInline ? " sheet-calculated--inline" : ""}`}
     >
       <span className="ui-field__label sheet-calculated__label" id={labelId}>
         <FunctionIcon />
