@@ -18,7 +18,11 @@ import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { recalculateSheet } from "../sheet/recalculate";
-import { getSaveStatus, type SavePhase } from "../sheet/saveStatus";
+import {
+  getSaveStatus,
+  hasSaveBlockers,
+  type SavePhase,
+} from "../sheet/saveStatus";
 import { toCharacterData } from "../sheet/sheetDraft";
 import type { SheetDraftValue } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
@@ -94,7 +98,7 @@ export default function CharacterPage() {
   const fieldErrors = validateSheet(schema.schema, sheet.draft);
   const saveStatus = getSaveStatus({
     changedCount: sheet.changed.size,
-    hasErrors: Object.keys(fieldErrors).length > 0,
+    hasErrors: hasSaveBlockers(fieldErrors, calculation.errors),
     phase: savePhase,
   });
 
@@ -119,7 +123,7 @@ export default function CharacterPage() {
     try {
       await saveMockCharacterVersion(
         id,
-        toCharacterData(schema.schema, sheet.draft, calculation.values),
+        toCharacterData(schema.schema, sheet.draft),
         user.email,
       );
       setSavePhase("saved");
