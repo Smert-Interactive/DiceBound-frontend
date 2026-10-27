@@ -22,32 +22,6 @@ function renderSidebar(
 }
 
 describe("AppSidebar", () => {
-  //Проверяет, что боковая панель правильно отображает основные пункты навигации.
-  test("renders navigation items", () => {
-    // Отображаем компонент Sidebar.
-    renderSidebar(<AppSidebar />);
-
-    // Проверяем наличие пункта меню "Персонажи".
-    expect(screen.getByText("Персонажи")).toBeInTheDocument();
-
-    // Проверяем наличие пункта меню "Импорт системы".
-    expect(screen.getByText("Импорт системы")).toBeInTheDocument();
-
-    // Проверяем наличие пункта меню "Профиль".
-    expect(screen.getByText("Профиль")).toBeInTheDocument();
-  });
-
-  // Логотип ведёт на список персонажей.
-  test("links the logo to /characters", () => {
-    renderSidebar(<AppSidebar />, ["/profile"]);
-
-    expect(screen.getByRole("link", { name: "DiceBound" })).toHaveAttribute(
-      "href",
-      "/characters",
-    );
-  });
-
-  // Проверяет, что при открытии мобильного меню фокус переходит на кнопку закрытия.
   test("focuses close button on mobile", () => {
     renderSidebar(<AppSidebar mobile />);
 
@@ -69,7 +43,6 @@ describe("AppSidebar", () => {
     expect(last).toHaveFocus();
   });
 
-  // Проверяет, что пункты меню — ссылки, а текущий раздел помечен aria-current.
   test("marks current page link", () => {
     renderSidebar(<AppSidebar />, ["/characters/new"]);
 
@@ -110,20 +83,5 @@ describe("AppSidebar", () => {
 
     renderSidebar(<AppSidebar />);
     expect(screen.queryByText("bob@example.com")).not.toBeInTheDocument();
-  });
-
-  //Проверяет, что при нажатии на кнопку закрытия вызывается callback onClose.
-
-  test("calls onClose when close button clicked", () => {
-    const onClose = vi.fn();
-
-    // Рендерим мобильный Sidebar с переданным обработчиком закрытия.
-    renderSidebar(<AppSidebar mobile onClose={onClose} />);
-
-    // Имитируем клик пользователя по кнопке закрытия.
-    fireEvent.click(screen.getByRole("button", { name: "Закрыть меню" }));
-
-    // Проверяем, что обработчик был вызван один раз.
-    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

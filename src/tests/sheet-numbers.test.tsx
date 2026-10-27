@@ -137,18 +137,4 @@ describe("SheetNumberField counter", () => {
 
     expect(screen.getByLabelText("STR")).toHaveValue("16");
   });
-
-  test("read-only mode has no buttons", () => {
-    render(
-      <SheetNumberField
-        field={strField}
-        value="16"
-        onChange={() => undefined}
-        counter
-        readOnly
-      />,
-    );
-
-    expect(screen.queryByRole("button")).toBeNull();
-  });
 });

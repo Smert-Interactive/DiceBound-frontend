@@ -10,7 +10,6 @@ type SidebarProps = {
   onClose?: () => void;
 };
 
-//Мокаем AppSidebar.
 vi.mock("../components/AppSidebar", () => ({
   default: ({ mobile, onClose }: SidebarProps) => (
     <div>
@@ -27,7 +26,6 @@ type HeaderProps = {
   onMenuClick?: () => void;
 };
 
-//Мокаем AppHeader.
 vi.mock("../components/AppHeader", () => ({
   default: ({ onMenuClick }: HeaderProps) => (
     <button onClick={onMenuClick}>menu</button>
@@ -35,7 +33,6 @@ vi.mock("../components/AppHeader", () => ({
 }));
 
 describe("AppLayout", () => {
-  //Проверяет открытие мобильного Sidebar.
   test("opens mobile sidebar", () => {
     render(
       <MemoryRouter>
@@ -43,14 +40,11 @@ describe("AppLayout", () => {
       </MemoryRouter>,
     );
 
-    // Имитируем клик пользователя по кнопке меню.
     fireEvent.click(screen.getByText("menu"));
 
-    // Проверяем, что после клика появилась кнопка закрытия Sidebar.
     expect(screen.getByText("close")).toBeInTheDocument();
   });
 
-  //Проверяет закрытие мобильного Sidebar.
   test("closes sidebar from button", async () => {
     render(
       <MemoryRouter>
@@ -58,10 +52,8 @@ describe("AppLayout", () => {
       </MemoryRouter>,
     );
 
-    // Открываем мобильный Sidebar.
     fireEvent.click(screen.getByText("menu"));
 
-    // Нажимаем кнопку закрытия Sidebar.
     fireEvent.click(screen.getByText("close"));
 
     // Sidebar убирается после анимации выхода, поэтому ждём.
@@ -70,7 +62,6 @@ describe("AppLayout", () => {
     );
   });
 
-  //Проверяет закрытие мобильного Sidebar клавишей Escape.
   test("closes sidebar on Escape", async () => {
     render(
       <MemoryRouter>
@@ -78,10 +69,8 @@ describe("AppLayout", () => {
       </MemoryRouter>,
     );
 
-    // Открываем мобильный Sidebar.
     fireEvent.click(screen.getByText("menu"));
 
-    // Нажимаем Escape.
     fireEvent.keyDown(document, { key: "Escape" });
 
     await waitFor(() =>

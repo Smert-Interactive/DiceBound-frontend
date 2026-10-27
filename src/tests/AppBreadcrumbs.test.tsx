@@ -98,11 +98,9 @@ describe("getBreadcrumbs", () => {
 });
 
 describe("AppBreadcrumbs", () => {
-  // Проверяет поведение компонента для неизвестного маршрута.
   test("renders unknown paths as they are", () => {
     renderAt("/unknown");
 
-    // Проверяем, что неизвестный путь отображается без изменений.
     expect(screen.getByText("unknown")).toBeInTheDocument();
   });
 

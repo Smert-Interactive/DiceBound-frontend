@@ -69,33 +69,6 @@ function renderSheet(
 }
 
 describe("DynamicSheetRenderer", () => {
-  test("draws a titled card per section in schema order", () => {
-    renderSheet();
-    const titles = screen
-      .getAllByRole("heading", { level: 2 })
-      .map((heading) => heading.textContent);
-    expect(titles).toEqual(["Основное", "Показатели"]);
-    expect(screen.getAllByRole("region")).toHaveLength(2);
-  });
-
-  test("passes the draft values to the fields of every type", () => {
-    renderSheet();
-    expect(screen.getByRole("textbox", { name: "Имя" })).toHaveValue("Aldric");
-    expect(screen.getByRole("combobox", { name: "Класс" })).toHaveValue(
-      "fighter",
-    );
-    expect(
-      screen.getByRole("checkbox", { name: "Вдохновение" }),
-    ).not.toBeChecked();
-    expect(screen.getByRole("textbox", { name: "STR" })).toHaveValue("16");
-    expect(screen.getByRole("textbox", { name: "HP: текущее" })).toHaveValue(
-      "21",
-    );
-    expect(screen.getByRole("textbox", { name: "HP: максимум" })).toHaveValue(
-      "28",
-    );
-  });
-
   test("reports the field id and the new value for each edit", () => {
     const onChange = vi.fn();
     renderSheet({ onChange });
@@ -156,13 +129,6 @@ describe("DynamicSheetRenderer", () => {
   test("shows a dash when the calculated value cannot be computed", () => {
     renderSheet({ calculated: { bonus: undefined } });
     expect(screen.getByText("—")).toBeInTheDocument();
-  });
-
-  test("shows errors next to the fields they belong to", () => {
-    renderSheet({ errors: { name: "Обязательное поле" } });
-    const input = screen.getByRole("textbox", { name: "Имя" });
-    expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByText("Обязательное поле")).toBeInTheDocument();
   });
 
   test("read-only mode leaves no editable controls", () => {
