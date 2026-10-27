@@ -37,6 +37,22 @@
   white-space: nowrap;
 }
 
+/* Модификатор в паре: плашка высотой с малую кнопку, значение по центру, формула под ней. */
+.sheet-calculated--pair .sheet-calculated__box {
+  justify-content: center;
+  min-height: var(--size-button-sm);
+  height: var(--size-button-sm);
+}
+
+.sheet-calculated__pair-formula {
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--color-calculated);
+  font: 400 10.5px / 1.5 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Ошибка зависимости: вместо числа «—» приглушённым цветом. */
 .sheet-calculated__box[data-error] .sheet-calculated__value {
   color: var(--color-text-muted);
@@ -45,5 +61,10 @@
 @media (max-width: 639px) {
   .sheet-calculated__box {
     min-height: 44px;
+  }
+
+  .sheet-calculated--pair .sheet-calculated__box {
+    min-height: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
   }
 }

@@ -17,6 +17,8 @@ interface Props {
   // Ошибка зависимости (getDependencyError); значение тогда «—».
   error?: string;
   readOnly?: boolean;
+  // Модификатор внутри пары «значение | модификатор»: плашка ниже, формула стоит под ней.
+  inPair?: boolean;
 }
 
 // Поле type: "calculated": не редактируется, значение считает формула.
@@ -28,14 +30,22 @@ export default function SheetCalculatedField({
   dependsOn = [],
   error,
   readOnly,
+  inPair = false,
 }: Props) {
   const id = useId();
   const labelId = `${id}-label`;
   const noteId = `${id}-note`;
-  const note = error ?? (readOnly ? undefined : getCalculatedHint(dependsOn));
+  const formulaId = `${id}-formula`;
+  const formulaText = readOnly ? "из snapshot" : field.formula;
+  // В паре подсказка «пересчитывается при изменении…» не нужна: формула видна под плашкой.
+  const note =
+    error ?? (readOnly || inPair ? undefined : getCalculatedHint(dependsOn));
+  const describedBy = note ? noteId : inPair ? formulaId : undefined;
 
   return (
-    <div className="ui-field sheet-calculated">
+    <div
+      className={`ui-field sheet-calculated${inPair ? " sheet-calculated--pair" : ""}`}
+    >
       <span className="ui-field__label sheet-calculated__label" id={labelId}>
         <FunctionIcon />
         {field.label}
@@ -45,15 +55,20 @@ export default function SheetCalculatedField({
         className="sheet-calculated__box"
         data-error={error ? true : undefined}
         aria-labelledby={labelId}
-        aria-describedby={note ? noteId : undefined}
+        aria-describedby={describedBy}
       >
         <span className="sheet-calculated__value">
           {formatCalculatedValue(error ? undefined : value, signed)}
         </span>
-        <span className="sheet-calculated__formula">
-          {readOnly ? "из snapshot" : field.formula}
-        </span>
+        {!inPair && (
+          <span className="sheet-calculated__formula">{formulaText}</span>
+        )}
       </div>
+      {inPair && (
+        <span className="sheet-calculated__pair-formula" id={formulaId}>
+          {formulaText}
+        </span>
+      )}
       {note && (
         <span
           className={error ? "ui-field__error" : "ui-field__hint"}

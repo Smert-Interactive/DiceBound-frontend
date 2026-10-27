@@ -1,0 +1,86 @@
+import { toResourceDraft, type ResourceDraft } from "./resourceField";
+import type { CharacterData, SheetField, SheetSchemaBody } from "./sheetTypes";
+
+// Значение поля так, как оно набрано на листе: number и текстовые поля хранят строку
+// (пока человек печатает, она бывает пустой), checkbox — булево, resource — две строки.
+export type SheetDraftValue = string | boolean | ResourceDraft;
+
+// Черновик листа по field.id. Поля calculated в нём нет: их значения считает движок формул.
+export type SheetDraft = Record<string, SheetDraftValue>;
+
+function allFields(schema: SheetSchemaBody): SheetField[] {
+  return schema.sections.flatMap((section) => section.fields);
+}
+
+// Данные персонажа → черновик. Нет значения — поле пустое, лист не падает.
+export function toDraft(
+  schema: SheetSchemaBody,
+  data: CharacterData,
+): SheetDraft {
+  const draft: SheetDraft = {};
+
+  for (const field of allFields(schema)) {
+    const value = data[field.id];
+
+    switch (field.type) {
+      case "text":
+      case "select":
+        draft[field.id] = typeof value === "string" ? value : "";
+        break;
+      case "number":
+        draft[field.id] = typeof value === "number" ? String(value) : "";
+        break;
+      case "checkbox":
+        draft[field.id] = value === true;
+        break;
+      case "resource":
+        draft[field.id] =
+          typeof value === "object"
+            ? toResourceDraft(value)
+            : { current: "", max: "" };
+        break;
+      case "calculated":
+        break;
+    }
+  }
+
+  return draft;
+}
+
+function isSameValue(a: SheetDraftValue, b: SheetDraftValue | undefined) {
+  if (typeof a === "object" && typeof b === "object") {
+    return a.current === b.current && a.max === b.max;
+  }
+  return a === b;
+}
+
+// id полей, которые отличаются от сохранённых значений: у них рамка «изменено».
+export function getChangedFieldIds(
+  draft: SheetDraft,
+  baseline: SheetDraft,
+): Set<string> {
+  const changed = new Set<string>();
+
+  for (const [id, value] of Object.entries(draft)) {
+    if (!isSameValue(value, baseline[id])) changed.add(id);
+  }
+
+  return changed;
+}
+
+// Значения calculated, сохранённые в данных персонажа (так их отдаёт backend).
+// undefined — значения нет или оно не число.
+export function getStoredCalculated(
+  schema: SheetSchemaBody,
+  data: CharacterData,
+): Record<string, number | undefined> {
+  const result: Record<string, number | undefined> = {};
+
+  for (const field of allFields(schema)) {
+    if (field.type !== "calculated") continue;
+    const value = data[field.id];
+    result[field.id] = typeof value === "number" ? value : undefined;
+  }
+
+  return result;
+}

@@ -15,6 +15,9 @@ import CharacterHeader from "../components/CharacterHeader";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
+import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
+import { getStoredCalculated } from "../sheet/sheetDraft";
+import { useSheetDraft } from "../sheet/useSheetDraft";
 import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
 import { NotFoundOrForbidden } from "../shared/states";
 import { getSystemKind } from "../shared/systemKind";
@@ -68,11 +71,34 @@ export default function CharacterPage() {
   const system = MOCK_SYSTEMS.find(
     (item) => item.id === character?.game_system_id,
   );
+  // Черновик живёт здесь, а не во вкладке: вкладки показывают только активную панель.
+  // Хук вызывается до проверок ниже, иначе нарушится порядок хуков.
+  const sheet = useSheetDraft(
+    schema?.schema,
+    character?.data,
+    `${character?.current_version_number}:${character?.updated_at}`,
+  );
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
-  // Лист подключит renderer, «Доступ» — отдельная задача; история уже имеет свой список.
-  const tabs: TabItem[] = [{ id: "sheet", label: "Лист", content: null }];
+  // «Доступ» — отдельная задача; история уже имеет свой список.
+  // Пока calculated показываются сохранёнными: живой пересчёт делает следующий этап.
+  const tabs: TabItem[] = [
+    {
+      id: "sheet",
+      label: "Лист",
+      content: (
+        <DynamicSheetRenderer
+          schema={schema.schema}
+          draft={sheet.draft}
+          calculated={getStoredCalculated(schema.schema, character.data)}
+          changed={sheet.changed}
+          readOnly={!character.can_edit}
+          onChange={sheet.setValue}
+        />
+      ),
+    },
+  ];
   function handleRestoreRequest(version: CharacterVersionSummary) {
     if (character?.access !== "OWNER" || version.is_current) return;
     if (!versions) return;

@@ -177,6 +177,14 @@
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
+  /* Сетка полей листа: промежуток 12 px (ui-ux, «Секции и сетка»). */
+  --gap-sheet-fields: 12px;
+  --gap-sheet-title: 14px;
+  /* Плашка пары «значение | модификатор»: скругление 12 px, отступ 12 px (ui-ux, SheetDnD). */
+  --radius-sheet-pair: 12px;
+  --padding-sheet-pair: 12px;
+  --gap-sheet-pair: 10px;
+  --gap-sheet-pair-touch: 8px;
   --gap-card-content: 16px;
   --gap-actions: 8px;
 

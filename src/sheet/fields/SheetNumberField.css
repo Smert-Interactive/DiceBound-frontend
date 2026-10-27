@@ -4,6 +4,11 @@
   font-family: var(--mono);
 }
 
+/* Поле счётчика не сжимается до полоски: двухзначное число всегда читается. */
+.sheet-number--counter .ui-input__control {
+  min-width: 48px;
+}
+
 /* Счётчик пары: поле высотой с малую кнопку, значение по центру. */
 .sheet-number--counter .ui-control {
   min-height: var(--size-button-sm);
@@ -16,5 +21,12 @@
   .sheet-number--counter .ui-control {
     min-height: var(--size-button-sm-touch);
     height: var(--size-button-sm-touch);
+  }
+
+  /* Кнопки − / + счётчика 36 px, как на MSheetDnD, а не общие 44 px иконочных кнопок. */
+  .sheet-number--counter .ui-button--icon.ui-button--sm {
+    width: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
+    border-radius: var(--radius-button-sm-touch);
   }
 }
