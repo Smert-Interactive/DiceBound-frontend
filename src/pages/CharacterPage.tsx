@@ -269,6 +269,7 @@ export default function CharacterPage() {
           key={`${id}:${shareSession}`}
           open={isShareOpen}
           characterName={character.name}
+          shares={getMockCharacterShares(id, user.email) ?? []}
           systemName={system.name}
           onCancel={handleShareCancel}
         />

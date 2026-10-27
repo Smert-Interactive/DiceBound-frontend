@@ -64,6 +64,27 @@
   margin-left: calc(var(--size-checkbox) + var(--gap-history-help));
 }
 
+.share-add-modal__warning.ui-banner {
+  align-items: start;
+}
+
+.share-add-modal__warning.ui-banner > svg {
+  margin-top: var(--gap-history-metadata);
+}
+
+.share-add-modal__warning .ui-banner__title {
+  font-weight: 400;
+}
+
+.share-add-modal__error {
+  padding: var(--padding-form-error);
+  border: 1px solid var(--tint-crimson-border);
+  border-radius: var(--radius-button);
+  background: var(--tint-banner-warning-bg);
+  color: var(--color-error);
+  font-size: var(--font-metadata);
+}
+
 /* До 640 px общий Modal становится нижним листом с кнопками на всю ширину. */
 @media (max-width: 639px) {
   .ui-modal.share-add-modal {
