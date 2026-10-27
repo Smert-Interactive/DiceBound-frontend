@@ -3,10 +3,12 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
+import CharacterAccess from "../components/CharacterAccess";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterList } from "../mocks/characters";
+import { getMockCharacterShares } from "../mocks/characterShares";
 import {
   getMockCharacterVersions,
   restoreMockCharacterVersion,
@@ -195,7 +197,15 @@ export default function CharacterPage() {
   }
   // Вкладку «Доступ» видит только владелец, в том числе владелец EDIT-копии.
   if (character.access === "OWNER") {
-    tabs.push({ id: "access", label: "Доступ", content: null });
+    tabs.push({
+      id: "access",
+      label: "Доступ",
+      content: (
+        <CharacterAccess
+          shares={getMockCharacterShares(id, user.email) ?? []}
+        />
+      ),
+    });
   }
 
   return (

@@ -210,6 +210,23 @@
   --gap-history-metadata: 2px;
   --font-metadata: 12px;
 
+  /* Вкладка доступа: размеры досок Access, MAccess и TAccess. */
+  --width-access-help: 340px;
+  --gap-access-columns: 20px;
+  --padding-access-list: 18px 6px 6px;
+  --margin-access-head: 0 12px 18px;
+  --padding-access-column: 0 14px 10px;
+  --padding-access-cell: 12px 14px;
+  --padding-access-empty: 24px 14px;
+  --font-access-title: 15px;
+  --width-access-permission: 88px;
+  --width-access-history: 120px;
+  --width-access-action: 196px;
+  --width-access-permission-narrow: 64px;
+  --width-access-history-narrow: 100px;
+  --width-access-action-narrow: 168px;
+  --height-access-action-touch: 44px;
+
   /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
      Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */
   --columns-characters: auto minmax(0, 1fr) 192px 162px 132px;
