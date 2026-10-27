@@ -5,11 +5,16 @@ import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
 import CharacterAccess from "../components/CharacterAccess";
 import ShareAddModal from "../components/ShareAddModal";
+import RevokeAccessModal from "../components/RevokeAccessModal";
+import type { ViewShare } from "../sharing/sharingTypes";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterList } from "../mocks/characters";
-import { getMockCharacterShares } from "../mocks/characterShares";
+import {
+  getMockCharacterShares,
+  revokeMockCharacterShare,
+} from "../mocks/characterShares";
 import {
   getMockCharacterVersions,
   restoreMockCharacterVersion,
@@ -61,6 +66,23 @@ export default function CharacterPage() {
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [shareSession, setShareSession] = useState(0);
+  const [revokeTarget, setRevokeTarget] = useState<ViewShare | null>(null);
+  const [isRevokeOpen, setIsRevokeOpen] = useState(false);
+  const [revokeSession, setRevokeSession] = useState(0);
+  // После mock-запроса перечитываем выдачи; цель остаётся для анимации закрытия окна.
+  const [, refreshShares] = useState(0);
+
+  // Каждый выбор открывает новое подтверждение без ошибки от прошлой попытки.
+  function handleRevokeRequest(share: ViewShare) {
+    setRevokeSession((session) => session + 1);
+    setRevokeTarget(share);
+    setIsRevokeOpen(true);
+  }
+
+  // Закрытие подтверждения не отзывает доступ.
+  function handleRevokeCancel() {
+    setIsRevokeOpen(false);
+  }
 
   // Новое открытие сбрасывает форму; при закрытии содержимое остаётся до конца анимации.
   function handleShareOpen() {
@@ -104,7 +126,6 @@ export default function CharacterPage() {
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
-  // «Доступ» — отдельная задача; история уже имеет свой список.
   // calculated пересчитываются по черновику при каждой правке, сохранённые значения не нужны.
   const calculation = recalculateSheet(schema.schema, sheet.draft);
   const fieldErrors = validateSheet(schema.schema, sheet.draft);
@@ -116,6 +137,18 @@ export default function CharacterPage() {
 
   // Панель нужна тому, кто правит лист, и только на вкладке «Лист».
   const showSaveBar = character.can_edit && tabId === "sheet";
+
+  // Строка исчезает только после успешного ответа; ошибку показывает окно подтверждения.
+  async function handleRevokeConfirm() {
+    if (!revokeTarget) return;
+    await revokeMockCharacterShare(
+      revokeTarget.character_id,
+      revokeTarget.id,
+      user!.email,
+    );
+    refreshShares((revision) => revision + 1);
+    setIsRevokeOpen(false);
+  }
 
   function handleSheetChange(fieldId: string, value: SheetDraftValue) {
     setSavePhase("idle");
@@ -218,6 +251,7 @@ export default function CharacterPage() {
         <CharacterAccess
           shares={getMockCharacterShares(id, user.email) ?? []}
           onAdd={handleShareOpen}
+          onRevoke={handleRevokeRequest}
         />
       ),
     });
@@ -262,6 +296,16 @@ export default function CharacterPage() {
           onSave={handleSave}
           onReset={handleSheetReset}
           onRetry={handleSave}
+        />
+      )}
+      {revokeTarget && character.access === "OWNER" && (
+        <RevokeAccessModal
+          key={`${revokeTarget.id}:${revokeSession}`}
+          open={isRevokeOpen}
+          recipientEmail={revokeTarget.recipient_email}
+          characterName={character.name}
+          onCancel={handleRevokeCancel}
+          onConfirm={handleRevokeConfirm}
         />
       )}
       {shareSession > 0 && character.access === "OWNER" && (

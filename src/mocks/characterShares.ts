@@ -34,6 +34,9 @@ const shares: readonly CharacterShare[] = [
   },
 ];
 
+// Отзывы живут в памяти до перезагрузки, как изменения листа и истории.
+const revokedShareIds = new Set<string>();
+
 // Как GET /characters/{id}/shares: список доступен только владельцу.
 // undefined — нет доступа или персонажа; пустой массив — владелец ещё никому не выдал доступ.
 export function getMockCharacterShares(
@@ -46,6 +49,23 @@ export function getMockCharacterShares(
 
   // Возвращаем копии записей, чтобы вызывающий код не изменил сохранённые mock-данные.
   return shares
-    .filter((share) => share.character_id === id)
+    .filter(
+      (share) => share.character_id === id && !revokedShareIds.has(share.id),
+    )
     .map((share) => ({ ...share }));
+}
+
+// Повторяет DELETE shares: проверяет владельца и запрещает отзыв переданной EDIT-копии.
+export async function revokeMockCharacterShare(
+  characterId: string,
+  shareId: string,
+  ownerEmail: string,
+): Promise<void> {
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+  const share = getMockCharacterShares(characterId, ownerEmail)?.find(
+    (item) => item.id === shareId,
+  );
+  if (!share) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+  if (share.permission === "EDIT") throw new Error("SHARE_IRREVOCABLE");
+  revokedShareIds.add(share.id);
 }

@@ -54,7 +54,6 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
       );
     }
 
-    // Подтверждение отзыва подключается отдельным этапом ветки.
     return (
       <Button
         variant="ghost"

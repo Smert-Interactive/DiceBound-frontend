@@ -17,3 +17,6 @@ export type CharacterShare = ShareBase &
     | { permission: "VIEW"; history_visible: boolean }
     | { permission: "EDIT"; history_visible: null }
   );
+
+// Только VIEW может стать целью отзыва.
+export type ViewShare = Extract<CharacterShare, { permission: "VIEW" }>;
