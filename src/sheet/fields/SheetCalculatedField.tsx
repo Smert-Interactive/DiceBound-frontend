@@ -36,7 +36,8 @@ export default function SheetCalculatedField({
   const labelId = `${id}-label`;
   const noteId = `${id}-note`;
   const formulaId = `${id}-formula`;
-  const formulaText = readOnly ? "из snapshot" : field.formula;
+  // Формула показывается и в режиме чтения (решение дизайнера, 27 окт.): подписи «из snapshot» нет.
+  const formulaText = field.formula;
   // В паре подсказка «пересчитывается при изменении…» не нужна: формула видна под плашкой.
   const note =
     error ?? (readOnly || inPair ? undefined : getCalculatedHint(dependsOn));

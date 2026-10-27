@@ -10,6 +10,7 @@ import { getMockCharacterList } from "../mocks/characters";
 import {
   getMockCharacterVersions,
   restoreMockCharacterVersion,
+  saveMockCharacterVersion,
 } from "../mocks/characterVersions";
 import CharacterHeader from "../components/CharacterHeader";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
@@ -17,9 +18,13 @@ import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { recalculateSheet } from "../sheet/recalculate";
+import { getSaveStatus, type SavePhase } from "../sheet/saveStatus";
+import { toCharacterData } from "../sheet/sheetDraft";
+import type { SheetDraftValue } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
+import { validateSheet } from "../sheet/validateSheet";
 import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
-import { NotFoundOrForbidden } from "../shared/states";
+import { NotFoundOrForbidden, SaveBar } from "../shared/states";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
@@ -78,26 +83,72 @@ export default function CharacterPage() {
     character?.data,
     `${character?.current_version_number}:${character?.updated_at}`,
   );
+  // Результат последнего запроса сохранения; правка листа или «Отменить» возвращают idle.
+  const [savePhase, setSavePhase] = useState<SavePhase>("idle");
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
   // «Доступ» — отдельная задача; история уже имеет свой список.
   // calculated пересчитываются по черновику при каждой правке, сохранённые значения не нужны.
-  const calculation = schema && recalculateSheet(schema.schema, sheet.draft);
+  const calculation = recalculateSheet(schema.schema, sheet.draft);
+  const fieldErrors = validateSheet(schema.schema, sheet.draft);
+  const saveStatus = getSaveStatus({
+    changedCount: sheet.changed.size,
+    hasErrors: Object.keys(fieldErrors).length > 0,
+    phase: savePhase,
+  });
+
+  // Панель нужна тому, кто правит лист, и только на вкладке «Лист».
+  const showSaveBar = character.can_edit && tabId === "sheet";
+
+  function handleSheetChange(fieldId: string, value: SheetDraftValue) {
+    setSavePhase("idle");
+    sheet.setValue(fieldId, value);
+  }
+
+  function handleSheetReset() {
+    setSavePhase("idle");
+    sheet.reset();
+  }
+
+  async function handleSave() {
+    // «Повторить» после ошибки сети отправляет те же изменения, поэтому error тоже допустим.
+    if (!user || !schema) return;
+    if (saveStatus !== "dirty" && saveStatus !== "error") return;
+    setSavePhase("saving");
+    try {
+      await saveMockCharacterVersion(
+        id,
+        toCharacterData(schema.schema, sheet.draft, calculation.values),
+        user.email,
+      );
+      setSavePhase("saved");
+    } catch {
+      setSavePhase("error");
+    }
+  }
+
   const tabs: TabItem[] = [
     {
       id: "sheet",
       label: "Лист",
       content: (
-        <DynamicSheetRenderer
-          schema={schema.schema}
-          draft={sheet.draft}
-          calculated={calculation!.values}
-          errors={calculation!.errors}
-          changed={sheet.changed}
-          readOnly={!character.can_edit}
-          onChange={sheet.setValue}
-        />
+        // На время запроса лист блокируется через inert, а не через readOnly: readOnly меняет вид
+        // полей (заливка, «из snapshot»), а ui-ux требует блокировку без смены вида.
+        <div
+          inert={saveStatus === "saving"}
+          aria-busy={saveStatus === "saving"}
+        >
+          <DynamicSheetRenderer
+            schema={schema.schema}
+            draft={sheet.draft}
+            calculated={calculation.values}
+            errors={{ ...calculation.errors, ...fieldErrors }}
+            changed={sheet.changed}
+            readOnly={!character.can_edit}
+            onChange={handleSheetChange}
+          />
+        </div>
       ),
     },
   ];
@@ -149,7 +200,14 @@ export default function CharacterPage() {
 
   return (
     // data-system задаёт цвет полос resource через CSS, без ветвлений в renderer.
-    <div className="character-page" data-system={getSystemKind(system.name)}>
+    <div
+      className={
+        showSaveBar
+          ? "character-page character-page--with-savebar"
+          : "character-page"
+      }
+      data-system={getSystemKind(system.name)}
+    >
       {notice && (
         <Banner
           variant="success"
@@ -171,6 +229,16 @@ export default function CharacterPage() {
         onChange={handleTabChange}
         label="Разделы персонажа"
       />
+      {showSaveBar && (
+        <SaveBar
+          status={saveStatus}
+          changedCount={sheet.changed.size}
+          version={character.current_version_number}
+          onSave={handleSave}
+          onReset={handleSheetReset}
+          onRetry={handleSave}
+        />
+      )}
       {restoreTarget && versions && character.access === "OWNER" && (
         <RestoreConfirmModal
           open={isRestoreOpen}

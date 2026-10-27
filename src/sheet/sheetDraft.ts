@@ -1,3 +1,4 @@
+import { parseNumber } from "./numberField";
 import { toResourceDraft, type ResourceDraft } from "./resourceField";
 import type { CharacterData, SheetField, SheetSchemaBody } from "./sheetTypes";
 
@@ -45,6 +46,53 @@ export function toDraft(
   }
 
   return draft;
+}
+
+// Черновик → данные для сохранения: строки становятся числами, к ним добавляются результаты
+// формул (снимок версии хранит и calculated). Вызывать после validateSheet без ошибок;
+// значение, которое всё же не разобралось, в данные не попадает.
+export function toCharacterData(
+  schema: SheetSchemaBody,
+  draft: SheetDraft,
+  calculated: Readonly<Record<string, number | undefined>>,
+): CharacterData {
+  const data: CharacterData = {};
+
+  for (const field of allFields(schema)) {
+    const value = draft[field.id];
+
+    switch (field.type) {
+      case "text":
+      case "select":
+        if (typeof value === "string") data[field.id] = value;
+        break;
+      case "number": {
+        const number =
+          typeof value === "string" ? parseNumber(value) : undefined;
+        if (number !== undefined) data[field.id] = number;
+        break;
+      }
+      case "checkbox":
+        data[field.id] = value === true;
+        break;
+      case "resource": {
+        if (typeof value !== "object") break;
+        const current = parseNumber(value.current);
+        const max = parseNumber(value.max);
+        if (current !== undefined && max !== undefined) {
+          data[field.id] = { current, max };
+        }
+        break;
+      }
+      case "calculated": {
+        const result = calculated[field.id];
+        if (result !== undefined) data[field.id] = result;
+        break;
+      }
+    }
+  }
+
+  return data;
 }
 
 function isSameValue(a: SheetDraftValue, b: SheetDraftValue | undefined) {

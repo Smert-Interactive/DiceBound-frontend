@@ -21,6 +21,10 @@ export function getCalculatedHint(labels: readonly string[]): string {
   return `Не редактируется, пересчитывается при изменении ${labels.join(", ")}`;
 }
 
+// Остальные сбои формулы (цикл, деление на ноль, неразбираемая формула): человек их не
+// исправит, поэтому текст один и без обещаний (решение дизайнера, 27 окт.).
+export const CALCULATION_FAILED = "Не удалось вычислить значение";
+
 // Ошибка зависимости: labels — подписи полей с неверным значением.
 export function getDependencyError(labels: readonly string[]): string {
   return `Зависит от ${labels.join(", ")}: исправьте значение`;

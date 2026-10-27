@@ -249,10 +249,11 @@ describe("pairs of a value and its modifier", () => {
     expect(screen.queryByText(/вычисляются автоматически/u)).toBeNull();
   });
 
-  test("in read-only mode the pair has no counter and the modifier comes from the snapshot", () => {
+  test("in read-only mode the pair has no counter and the modifier keeps its formula", () => {
     renderSheet({ readOnly: true });
     expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByText("из snapshot")).toBeInTheDocument();
+    expect(screen.getByText(/floor/u)).toBeInTheDocument();
+    expect(screen.queryByText("из snapshot")).toBeNull();
     expect(screen.getByText("+3")).toBeInTheDocument();
   });
 });

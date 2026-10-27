@@ -1,4 +1,4 @@
-import { getDependencyError } from "./calculatedField";
+import { CALCULATION_FAILED, getDependencyError } from "./calculatedField";
 import { calculate, getFormulaFieldIds } from "./formula/evaluate";
 import { parseNumber } from "./numberField";
 import type { SheetDraft } from "./sheetDraft";
@@ -7,7 +7,7 @@ import type { CalculatedField, SheetSchemaBody } from "./sheetTypes";
 export interface SheetCalculation {
   // Результат формулы по id поля; undefined — посчитать нельзя.
   values: Record<string, number | undefined>;
-  // Ошибка зависимости по id поля calculated (getDependencyError).
+  // Ошибка по id поля calculated: зависимость от неверного поля или общий сбой формулы.
   errors: Record<string, string>;
 }
 
@@ -58,9 +58,10 @@ export function recalculateSheet(
     } else {
       values[id] = undefined;
       const badId = result.error.fieldId;
-      if (result.error.code === "not_a_number" && badId) {
-        errors[id] = getDependencyError([labels.get(badId) ?? badId]);
-      }
+      errors[id] =
+        result.error.code === "not_a_number" && badId
+          ? getDependencyError([labels.get(badId) ?? badId])
+          : CALCULATION_FAILED;
     }
     done.add(id);
   }

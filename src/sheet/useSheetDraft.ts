@@ -45,5 +45,10 @@ export function useSheetDraft(
     }));
   }
 
-  return { draft: state.draft, changed, setValue };
+  // «Отменить изменения»: возвращаем последнее сохранённое состояние, без подтверждения.
+  function reset() {
+    setState((previous) => ({ ...previous, draft: previous.baseline }));
+  }
+
+  return { draft: state.draft, changed, setValue, reset };
 }

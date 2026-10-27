@@ -150,6 +150,47 @@ export function getMockCharacterVersion(
   return snapshot && structuredClone(snapshot);
 }
 
+// Повторяет сохранение листа: создаёт версию N+1 и делает её текущей. Версия появляется только
+// по кнопке «Сохранить» (mvp-scope), поэтому других способов её создать нет.
+export async function saveMockCharacterVersion(
+  characterId: string,
+  data: CharacterData,
+  email: string,
+): Promise<number> {
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+
+  // Сохранять может только владелец; проверяем в сервисе, а не видимостью кнопки.
+  const owned = getMockCharacterList(email).owned.some(
+    (item) => item.id === characterId,
+  );
+  const versions = owned ? versionsByCharacter.get(characterId) : undefined;
+  if (!versions) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+
+  const versionNumber = versions[0].version_number + 1;
+  const createdAt = new Date().toISOString();
+  const id = `${versionNumber.toString(16).padStart(8, "0")}${characterId.slice(8)}`;
+
+  // После задержки всё меняется вместе, без промежуточного await.
+  applyMockCharacterVersion(characterId, data, versionNumber, createdAt);
+  versionsByCharacter.set(characterId, [
+    {
+      id,
+      version_number: versionNumber,
+      created_at: createdAt,
+      is_current: true,
+    },
+    ...versions.map((item) => ({ ...item, is_current: false })),
+  ]);
+  snapshotsByCharacter.get(characterId)!.push({
+    id,
+    character_id: characterId,
+    version_number: versionNumber,
+    created_at: createdAt,
+    data: structuredClone(data),
+  });
+  return versionNumber;
+}
+
 // Повторяет POST restore. Как остальные mock-запросы, хранит результат только в памяти.
 export async function restoreMockCharacterVersion(
   characterId: string,

@@ -65,8 +65,28 @@ describe("recalculateSheet", () => {
         },
       ],
     };
-    const { values } = recalculateSheet(cyclic, {});
+    const { values, errors } = recalculateSheet(cyclic, {});
     expect(values.a).toBeUndefined();
     expect(values.b).toBeUndefined();
+    expect(errors.a).toBe("Не удалось вычислить значение");
+  });
+
+  it("деление на ноль даёт общий текст, а не «Зависит от»", () => {
+    const divide: SheetSchemaBody = {
+      sections: [
+        {
+          id: "s",
+          label: "S",
+          fields: [
+            { id: "a", type: "number", label: "A" },
+            { id: "b", type: "number", label: "B" },
+            { id: "q", type: "calculated", label: "Q", formula: "a / b" },
+          ],
+        },
+      ],
+    };
+    const { values, errors } = recalculateSheet(divide, { a: "6", b: "0" });
+    expect(values.q).toBeUndefined();
+    expect(errors.q).toBe("Не удалось вычислить значение");
   });
 });
