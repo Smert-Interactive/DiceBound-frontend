@@ -16,7 +16,7 @@ import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
-import { getStoredCalculated } from "../sheet/sheetDraft";
+import { recalculateSheet } from "../sheet/recalculate";
 import { useSheetDraft } from "../sheet/useSheetDraft";
 import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
 import { NotFoundOrForbidden } from "../shared/states";
@@ -82,7 +82,8 @@ export default function CharacterPage() {
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
   // «Доступ» — отдельная задача; история уже имеет свой список.
-  // Пока calculated показываются сохранёнными: живой пересчёт делает следующий этап.
+  // calculated пересчитываются по черновику при каждой правке, сохранённые значения не нужны.
+  const calculation = schema && recalculateSheet(schema.schema, sheet.draft);
   const tabs: TabItem[] = [
     {
       id: "sheet",
@@ -91,7 +92,8 @@ export default function CharacterPage() {
         <DynamicSheetRenderer
           schema={schema.schema}
           draft={sheet.draft}
-          calculated={getStoredCalculated(schema.schema, character.data)}
+          calculated={calculation!.values}
+          errors={calculation!.errors}
           changed={sheet.changed}
           readOnly={!character.can_edit}
           onChange={sheet.setValue}
