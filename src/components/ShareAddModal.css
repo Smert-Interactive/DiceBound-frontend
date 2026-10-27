@@ -1,0 +1,76 @@
+.share-add-modal {
+  width: var(--width-modal-share);
+}
+
+/* Центрируем и при зарезервированной полосе прокрутки, как окно восстановления. */
+@media (min-width: 640px) {
+  .ui-modal.share-add-modal {
+    position: fixed;
+    left: calc(50vw + var(--ui-modal-scrollbar-width, 0px) / 2);
+    right: auto;
+    margin-inline: 0;
+    translate: -50% 0;
+  }
+}
+
+.share-add-modal__character {
+  margin: 0 0 var(--gap-modal-content);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.share-add-modal__form {
+  display: grid;
+  gap: var(--gap-form-fields);
+  min-width: 0;
+}
+
+.share-add-modal__permissions {
+  display: grid;
+  gap: var(--gap-history-help);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.share-add-modal__permissions legend {
+  margin-bottom: var(--gap-actions);
+  padding: 0;
+  color: var(--color-text-muted);
+  font: var(--font-metadata) / 1.5 var(--mono);
+}
+
+.share-add-modal .ui-radio > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.share-add-modal__history {
+  gap: 0;
+  padding: var(--padding-form-error);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-radio);
+  background: var(--color-bg-input);
+}
+
+.share-add-modal__history .ui-check {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.share-add-modal__history .ui-field__hint {
+  margin-left: calc(var(--size-checkbox) + var(--gap-history-help));
+}
+
+/* До 640 px общий Modal становится нижним листом с кнопками на всю ширину. */
+@media (max-width: 639px) {
+  .ui-modal.share-add-modal {
+    width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+  }
+
+  .share-add-modal .ui-button__rest {
+    white-space: normal;
+  }
+}

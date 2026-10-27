@@ -1,3 +1,8 @@
+// В EDIT-запросе history_visible отсутствует: новая копия всегда начинает с v1.
+export type CreateShareRequest =
+  | { recipient_email: string; permission: "VIEW"; history_visible: boolean }
+  | { recipient_email: string; permission: "EDIT"; history_visible?: never };
+
 interface ShareBase {
   id: string;
   character_id: string;

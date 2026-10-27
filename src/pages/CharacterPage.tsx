@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
 import CharacterAccess from "../components/CharacterAccess";
+import ShareAddModal from "../components/ShareAddModal";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatRestoreNotice } from "../history/restoreNotice";
@@ -58,6 +59,19 @@ export default function CharacterPage() {
     versions: CharacterVersionSummary[];
   } | null>(null);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareSession, setShareSession] = useState(0);
+
+  // Новое открытие сбрасывает форму; при закрытии содержимое остаётся до конца анимации.
+  function handleShareOpen() {
+    setShareSession((session) => session + 1);
+    setIsShareOpen(true);
+  }
+
+  // Возвращаем фокус к кнопке выдачи через общий Modal.
+  function handleShareCancel() {
+    setIsShareOpen(false);
+  }
   // Состояние маршрута общее для вкладок и хлебных крошек; сам URL не меняется.
   const tabId = getActiveTab(location.state) ?? "sheet";
 
@@ -203,6 +217,7 @@ export default function CharacterPage() {
       content: (
         <CharacterAccess
           shares={getMockCharacterShares(id, user.email) ?? []}
+          onAdd={handleShareOpen}
         />
       ),
     });
@@ -247,6 +262,15 @@ export default function CharacterPage() {
           onSave={handleSave}
           onReset={handleSheetReset}
           onRetry={handleSave}
+        />
+      )}
+      {shareSession > 0 && character.access === "OWNER" && (
+        <ShareAddModal
+          key={`${id}:${shareSession}`}
+          open={isShareOpen}
+          characterName={character.name}
+          systemName={system.name}
+          onCancel={handleShareCancel}
         />
       )}
       {restoreTarget && versions && character.access === "OWNER" && (
