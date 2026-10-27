@@ -6,6 +6,8 @@ export interface Crumb {
   label: string;
   // Адрес ссылки. Если его нет, крошка выводится обычным текстом.
   to?: string;
+  // Состояние перехода: у вкладок страницы персонажа нет адреса, активная вкладка едет в state.
+  state?: { activeTab: string };
 }
 
 // Превращает адрес страницы в список хлебных крошек.
@@ -51,10 +53,15 @@ export function getBreadcrumbs(
         return { path, label: characterName ?? part, to: path };
       }
 
-      // /characters/:id/versions: вкладка «История» открывается на странице персонажа,
-      // отдельного адреса у неё нет, поэтому ссылки нет.
+      // /characters/:id/versions: у вкладки «История» нет своего адреса, поэтому ссылка
+      // ведёт на страницу персонажа и открывает вкладку через state.
       if (index === 2 && part === "versions") {
-        return { path, label: "История" };
+        return {
+          path,
+          label: "История",
+          to: `/characters/${parts[1]}`,
+          state: { activeTab: "history" },
+        };
       }
 
       // /characters/:id/versions/:version

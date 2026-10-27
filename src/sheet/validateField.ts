@@ -28,7 +28,7 @@ export function validateField(
       } else if (typeof value === "string") {
         number = parseNumber(value);
       }
-      // Нет границ — в ui-ux нет и текста для пустого поля; TODO: утвердить формулировку.
+      // Пустое поле без границ: текст «Нужно число», как у resource.
       const rangeMessage = getRangeMessage(field);
       if (number === undefined) return rangeMessage ?? "Нужно число";
       if (field.min !== undefined && number < field.min) return rangeMessage;

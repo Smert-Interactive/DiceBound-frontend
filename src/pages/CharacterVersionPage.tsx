@@ -5,6 +5,7 @@ import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import { ROUTES } from "../constants/routes";
+import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import {
   getMockCharacterVersion,
@@ -60,7 +61,7 @@ export default function CharacterVersionPage() {
     // Новый адрес открывает вкладку «Лист»; баннер берёт числа из ответа сервиса.
     navigate(historyPath, {
       state: {
-        restoreNotice: `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
+        restoreNotice: formatRestoreNotice(result),
       },
     });
   }

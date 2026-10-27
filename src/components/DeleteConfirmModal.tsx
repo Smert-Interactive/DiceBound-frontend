@@ -1,4 +1,5 @@
 import { TrashIcon } from "../shared/icons";
+import { NO_BREAK_SPACE } from "../shared/noBreakSpace";
 import { pluralize } from "../shared/pluralize";
 import { Button, Modal } from "../shared/ui";
 
@@ -18,11 +19,16 @@ export default function DeleteConfirmModal({
   onCancel,
   onConfirm,
 }: Props) {
+  // «все 1 версию» звучит неправильно, поэтому для одной версии отдельная фраза.
   const versionsWord = pluralize(versionCount, {
     one: "версию",
     few: "версии",
     many: "версий",
   });
+  const historyText =
+    versionCount === 1
+      ? "единственная версия истории"
+      : `все${NO_BREAK_SPACE}${versionCount}${NO_BREAK_SPACE}${versionsWord} истории`;
 
   return (
     <Modal
@@ -40,9 +46,8 @@ export default function DeleteConfirmModal({
         </>
       }
     >
-      Будут удалены лист, все {versionCount}&nbsp;{versionsWord} истории и
-      выданные доступы. Копии, созданные другим пользователям через EDIT,
-      останутся у них.
+      Будут удалены лист, {historyText} и выданные доступы. Копии, созданные
+      другим пользователям через EDIT, останутся у них.
     </Modal>
   );
 }

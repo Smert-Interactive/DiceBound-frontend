@@ -284,8 +284,10 @@
   --font-field-touch: 16px;
   --font-checkbox: 13.5px;
   --font-tab: 13.5px;
-  --font-modal-body: 13.5px;
-  --font-modal-body-touch: var(--font-modal-body);
+  --font-modal-body: 13px;
+  --font-modal-body-touch: 13.5px;
+  /* Окно восстановления: на холсте RestoreConfirm текст 13.5 px и на desktop. */
+  --font-modal-body-restore: 13.5px;
   --font-caption: 11.5px;
   --font-caption-touch: 11px;
   --font-explanation: 12.5px;

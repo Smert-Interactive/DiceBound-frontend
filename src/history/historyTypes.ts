@@ -1,4 +1,4 @@
-import type { CharacterData, CharacterDetails } from "../sheet/sheetTypes";
+import type { Character, CharacterData } from "../sheet/sheetTypes";
 
 // Ответ GET /characters/{id}/versions: список содержит метаданные, без снимков data.
 // Полные снимки понадобятся странице просмотра отдельной версии.
@@ -19,7 +19,8 @@ export interface CharacterVersion {
 }
 
 // Ответ POST /characters/{id}/versions/{version}/restore; новая версия не создаётся.
+// В контракте character — Character, без access и can_view_history.
 export interface RestoreResult {
-  character: CharacterDetails;
+  character: Character;
   deleted_versions_count: number;
 }

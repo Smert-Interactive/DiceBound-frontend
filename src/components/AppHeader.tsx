@@ -7,7 +7,8 @@ import logo from "../assets/logo.svg";
 import { useAuth } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 import AppBreadcrumbs from "./AppBreadcrumbs";
-import { getMockCharacterList } from "../mocks/characters";
+import { useCharacterName } from "./useCharacterName";
+import { getActiveTab } from "../shared/characterRouteState";
 import { ChevronLeftIcon, MenuIcon, UserIcon } from "../shared/icons";
 
 interface Props {
@@ -26,22 +27,11 @@ export default function AppHeader({
   const versionMatch = useMatch(ROUTES.characterVersion);
   const characterMatch = useMatch(ROUTES.character);
   const location = useLocation();
-  const state: unknown = location.state;
-  const activeTab =
-    state &&
-    typeof state === "object" &&
-    "activeTab" in state &&
-    typeof state.activeTab === "string"
-      ? state.activeTab
-      : undefined;
-  // Имя берём только из доступного пользователю списка, в том числе на странице версии.
-  const characterId = versionMatch?.params.id ?? characterMatch?.params.id;
-  const list = user && getMockCharacterList(user.email);
-  const character =
-    list &&
-    [...list.owned, ...list.shared_view].find(
-      (item) => item.id === characterId,
-    );
+  const activeTab = getActiveTab(location.state);
+  // Имя нужно и на странице версии, поэтому id берём из любого из двух маршрутов.
+  const characterName = useCharacterName(
+    versionMatch?.params.id ?? characterMatch?.params.id,
+  );
   const historyPath =
     versionMatch &&
     generatePath(ROUTES.character, {
@@ -61,7 +51,7 @@ export default function AppHeader({
     <>
       {/* В разметке две шапки; какая из них видна, решает CSS по ширине экрана. */}
       <header className="desktop-header">
-        <AppBreadcrumbs characterName={character?.name} activeTab={activeTab} />
+        <AppBreadcrumbs characterName={characterName} activeTab={activeTab} />
         <Link
           to={ROUTES.profile}
           className="desktop-header__profile"

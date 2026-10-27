@@ -76,11 +76,12 @@ describe("getBreadcrumbs", () => {
     expect(crumbs[0].to).toBe("/systems/import");
   });
 
-  // У «Истории» нет собственного адреса, поэтому нет и ссылки.
-  test("history crumb has no link", () => {
+  // У «Истории» нет собственного адреса: ссылка ведёт на страницу персонажа и открывает вкладку.
+  test("history crumb opens the history tab of the character", () => {
     const history = getBreadcrumbs("/characters/42/versions/4")[2];
 
-    expect(history.to).toBeUndefined();
+    expect(history.to).toBe("/characters/42");
+    expect(history.state).toEqual({ activeTab: "history" });
   });
 
   // Адреса крошек накапливаются и поэтому уникальны.
@@ -118,10 +119,11 @@ describe("AppBreadcrumbs", () => {
       "/characters/42",
     );
 
-    // «История» — обычный текст, «Версия 4» — текущая страница.
-    expect(
-      screen.queryByRole("link", { name: "История" }),
-    ).not.toBeInTheDocument();
+    // «История» — тоже ссылка (на страницу персонажа), «Версия 4» — текущая страница.
+    expect(screen.getByRole("link", { name: "История" })).toHaveAttribute(
+      "href",
+      "/characters/42",
+    );
     expect(screen.getByText("Версия 4")).toHaveAttribute(
       "aria-current",
       "page",

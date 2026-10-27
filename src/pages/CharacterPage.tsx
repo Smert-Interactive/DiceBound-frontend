@@ -5,6 +5,7 @@ import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
+import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterList } from "../mocks/characters";
 import {
   getMockCharacterVersions,
@@ -14,6 +15,7 @@ import CharacterHeader from "../components/CharacterHeader";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
+import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
 import { NotFoundOrForbidden } from "../shared/states";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Tabs } from "../shared/ui";
@@ -26,17 +28,17 @@ export default function CharacterPage() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const routeState: unknown = location.state;
-  const incomingNotice =
-    routeState &&
-    typeof routeState === "object" &&
-    "restoreNotice" in routeState &&
-    typeof routeState.restoreNotice === "string"
-      ? routeState.restoreNotice
-      : null;
+  const incomingNotice = getRestoreNotice(location.state);
   const [notice, setNotice] = useState<string | null>(incomingNotice);
+  // Уведомление приходит в state и со страницы версии, и с вкладки «История» (страница уже
+  // открыта). Новое значение замечаем при рендере: setState в эффекте дал бы лишний кадр.
+  const [seenNotice, setSeenNotice] = useState(incomingNotice);
+  if (incomingNotice !== seenNotice) {
+    setSeenNotice(incomingNotice);
+    if (incomingNotice) setNotice(incomingNotice);
+  }
   useEffect(() => {
-    // Уведомление передаётся со страницы версии один раз и не появляется заново через «Назад».
+    // Баннер показывается один раз: state очищается, поэтому «Назад» его не повторит.
     if (incomingNotice)
       navigate(location.pathname, { replace: true, state: null });
   }, [incomingNotice, location.pathname, navigate]);
@@ -47,13 +49,7 @@ export default function CharacterPage() {
   } | null>(null);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   // Состояние маршрута общее для вкладок и хлебных крошек; сам URL не меняется.
-  const tabId =
-    routeState &&
-    typeof routeState === "object" &&
-    "activeTab" in routeState &&
-    (routeState.activeTab === "history" || routeState.activeTab === "access")
-      ? routeState.activeTab
-      : "sheet";
+  const tabId = getActiveTab(location.state) ?? "sheet";
 
   function handleTabChange(nextTab: string) {
     // replace не добавляет отдельный шаг браузерной истории на каждое переключение вкладки.
@@ -93,10 +89,11 @@ export default function CharacterPage() {
       user.email,
     );
     setIsRestoreOpen(false);
-    handleTabChange("sheet");
-    setNotice(
-      `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
-    );
+    // Без activeTab страница открывает «Лист»; баннер покажет эффект выше.
+    navigate(location.pathname, {
+      replace: true,
+      state: { restoreNotice: formatRestoreNotice(result) },
+    });
   }
 
   const versions = character.can_view_history

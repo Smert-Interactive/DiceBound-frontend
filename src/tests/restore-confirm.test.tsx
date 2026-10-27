@@ -35,6 +35,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
   Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
 });
@@ -73,6 +74,60 @@ describe("restoration confirmation", () => {
       expect(onConfirm).toHaveBeenCalledTimes(1);
     },
   );
+
+  test.each([
+    [
+      4,
+      "Версия 4 станет текущей. Версии 5, 6 и 7 будут удалены. Действие необратимо.",
+    ],
+    [
+      6,
+      "Версия 6 станет текущей. Версия 7 будет удалена. Действие необратимо.",
+    ],
+  ])(
+    "phone text for v%s lists numbers without a v prefix",
+    (target, expected) => {
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn((media: string) => ({
+          matches: media === "(max-width: 639px)",
+          media,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        })),
+      );
+      render(
+        <RestoreConfirmModal
+          open
+          version={versions.find((item) => item.version_number === target)!}
+          versions={versions}
+          onCancel={vi.fn()}
+          onConfirm={vi.fn()}
+        />,
+      );
+      expect(screen.getByText(expected)).toBeInTheDocument();
+      // Подписи к таймлайну есть только на desktop.
+      expect(screen.queryByText("станет текущей")).toBeNull();
+    },
+  );
+
+  test("desktop text names the date and the deleted versions", () => {
+    render(
+      <RestoreConfirmModal
+        open
+        version={version}
+        versions={versions}
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        /Персонаж получит данные версии 4 от .*Версии 5, 6 и 7 будут удалены без возможности вернуть\./u,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("станет текущей")).toBeInTheDocument();
+  });
 
   test("blocks repeated confirmation and cancellation while the request is pending", async () => {
     let finish!: () => void;

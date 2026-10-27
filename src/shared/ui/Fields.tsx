@@ -274,7 +274,9 @@ export function Checkbox({
       >
         <CheckMark checked={checked} />
         <span id={accessibility.labelId}>
-          {label}: {checked ? "Да" : "Нет"}
+          {label}
+          {/* Состояние видно по квадрату, скринридеру его говорит скрытый текст. */}
+          <span className="ui-visually-hidden">: {checked ? "Да" : "Нет"}</span>
         </span>
       </div>
     );

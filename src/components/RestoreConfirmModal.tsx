@@ -3,6 +3,7 @@ import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatDateTime } from "../shared/formatDateTime";
 import { RestoreIcon } from "../shared/icons";
 import { pluralize } from "../shared/pluralize";
+import { useMediaQuery } from "../shared/states/useMediaQuery";
 import { Button, Modal } from "../shared/ui";
 
 import "./RestoreConfirmModal.css";
@@ -28,6 +29,8 @@ export default function RestoreConfirmModal({
   onCancel,
   onConfirm,
 }: Props) {
+  // Телефон (лист снизу) показывает короткий текст без подписей к таймлайну, как MVersion.
+  const isMobile = useMediaQuery("(max-width: 639px)");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Ref блокирует повторное подтверждение сразу, ещё до следующей отрисовки React.
@@ -66,6 +69,10 @@ export default function RestoreConfirmModal({
   const deletedNumbers = listFormatter.format(
     deletedVersions.map((item) => String(item.version_number)),
   );
+  // Одна удаляемая версия: «Версия 7 будет удалена», несколько: «Версии 5, 6 и 7 будут удалены».
+  const isSingle = deletedVersions.length === 1;
+  const deletedLabel = isSingle ? "Версия" : "Версии";
+  const deletedVerb = isSingle ? "будет удалена" : "будут удалены";
   const versionsWord = pluralize(deletedVersions.length, {
     one: "версию",
     few: "версии",
@@ -99,21 +106,19 @@ export default function RestoreConfirmModal({
         </>
       }
     >
-      <p className="restore-confirm-modal__description restore-confirm-modal__description--desktop">
-        Персонаж получит данные версии {version.version_number} от{" "}
-        {formatDateTime(version.created_at)}.{" "}
-        {deletedVersions.length === 1 ? "Версия" : "Версии"} {deletedNumbers}{" "}
-        {deletedVersions.length === 1 ? "будет удалена" : "будут удалены"} без
-        возможности вернуть.
-      </p>
-      <p className="restore-confirm-modal__description restore-confirm-modal__description--mobile">
-        Версия {version.version_number} станет текущей.{" "}
-        {deletedVersions.length === 1 ? "Версия" : "Версии"}{" "}
-        {listFormatter.format(
-          deletedVersions.map((item) => `v${item.version_number}`),
-        )}{" "}
-        {deletedVersions.length === 1 ? "будет удалена" : "будут удалены"}.
-        Действие необратимо.
+      <p className="restore-confirm-modal__description">
+        {isMobile ? (
+          <>
+            Версия {version.version_number} станет текущей. {deletedLabel}{" "}
+            {deletedNumbers} {deletedVerb}. Действие необратимо.
+          </>
+        ) : (
+          <>
+            Персонаж получит данные версии {version.version_number} от{" "}
+            {formatDateTime(version.created_at)}. {deletedLabel}{" "}
+            {deletedNumbers} {deletedVerb} без возможности вернуть.
+          </>
+        )}
       </p>
       <div className="restore-confirm-modal__timeline-scroll">
         <ol
@@ -146,14 +151,16 @@ export default function RestoreConfirmModal({
         </ol>
       </div>
       {/* Подписи дополняют цвет и пунктир; у каждой ячейки есть текстовый статус для программ экрана. */}
-      <div className="restore-confirm-modal__legend" aria-hidden="true">
-        <span className="restore-confirm-modal__legend-selected">
-          станет текущей
-        </span>
-        <span className="restore-confirm-modal__legend-deleted">
-          будут удалены
-        </span>
-      </div>
+      {!isMobile && (
+        <div className="restore-confirm-modal__legend" aria-hidden="true">
+          <span className="restore-confirm-modal__legend-selected">
+            станет текущей
+          </span>
+          <span className="restore-confirm-modal__legend-deleted">
+            будут удалены
+          </span>
+        </div>
+      )}
       {error && (
         <div className="restore-confirm-modal__error" role="alert">
           {error}
