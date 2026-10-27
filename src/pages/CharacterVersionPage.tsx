@@ -5,6 +5,7 @@ import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import { ROUTES } from "../constants/routes";
+import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import {
   getMockCharacterVersion,
@@ -13,6 +14,8 @@ import {
 } from "../mocks/characterVersions";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
+import { getStoredCalculated, toDraft } from "../sheet/sheetDraft";
+import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { formatDateTime } from "../shared/formatDateTime";
 import { ChevronLeftIcon, RestoreIcon } from "../shared/icons";
 import { NotFoundOrForbidden } from "../shared/states";
@@ -60,7 +63,7 @@ export default function CharacterVersionPage() {
     // Новый адрес открывает вкладку «Лист»; баннер берёт числа из ответа сервиса.
     navigate(historyPath, {
       state: {
-        restoreNotice: `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
+        restoreNotice: formatRestoreNotice(result),
       },
     });
   }
@@ -117,9 +120,13 @@ export default function CharacterVersionPage() {
         updatedAt={snapshot.created_at}
         showDateOnMobile
       />
-      {/* Зависимость от ветки 7: здесь должен быть общий DynamicSheetRenderer с readOnly.
-          Передавать нужно schema и snapshot.data, включая сохранённые calculated.
-          Пока renderer отсутствует, не создаём второй и не пересчитываем формулы снимка. */}
+      {/* Снимок показывается как сохранён: calculated берём из данных версии, без пересчёта. */}
+      <DynamicSheetRenderer
+        schema={schema.schema}
+        draft={toDraft(schema.schema, snapshot.data)}
+        calculated={getStoredCalculated(schema.schema, snapshot.data)}
+        readOnly
+      />
       {canRestore && (
         <RestoreConfirmModal
           open={isRestoreOpen}

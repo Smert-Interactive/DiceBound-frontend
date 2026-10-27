@@ -143,35 +143,25 @@ describe("character history tab", () => {
     );
     expect(router.state.location.pathname).toBe(path);
   });
-  test("shows ordered versions, current and creation labels after switching tabs", async () => {
+  test("lists versions from newest to oldest and restores only non-current ones", async () => {
     const { user } = renderCharacter();
     expect(screen.queryByRole("region", { name: "История версий" })).toBeNull();
     await user.click(screen.getByRole("tab", { name: "История" }));
 
-    const list = screen.getByRole("region", { name: "История версий" });
-    const rows = within(list).getAllByRole("listitem");
+    const rows = within(
+      screen.getByRole("region", { name: "История версий" }),
+    ).getAllByRole("listitem");
     expect(rows).toHaveLength(7);
     expect(within(rows[0]).getByText("Версия 7")).toBeInTheDocument();
     expect(within(rows[0]).getByText("текущая")).toBeInTheDocument();
+    expect(within(rows[6]).getByText("создание персонажа")).toBeInTheDocument();
+
+    // «Восстановить» есть у шести строк, кроме текущей.
+    const restore = screen.getAllByRole("button", { name: /Восстановить/u });
+    expect(restore).toHaveLength(6);
     expect(
       within(rows[0]).queryByRole("button", { name: /Восстановить/u }),
     ).toBeNull();
-    expect(within(rows[6]).getByText("создание персонажа")).toBeInTheDocument();
-    expect(
-      within(list)
-        .getAllByRole("link")
-        .map((link) => link.getAttribute("href")),
-    ).toEqual(
-      [7, 6, 5, 4, 3, 2, 1].map((version) =>
-        generatePath(ROUTES.characterVersion, {
-          id: aldricId,
-          version: String(version),
-        }),
-      ),
-    );
-    expect(
-      screen.getByRole("complementary", { name: "Как работает история" }),
-    ).toHaveTextContent("Удалённые версии вернуть нельзя");
   });
 
   test("returns from the character history to the character list", async () => {

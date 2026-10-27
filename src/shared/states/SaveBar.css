@@ -5,10 +5,14 @@
   left: var(--width-sidebar);
   z-index: 10;
   display: flex;
+  /* Не помещаются статус, ошибка и кнопки в ряд — кнопки уходят на вторую строку. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  height: var(--height-savebar);
-  padding: 0 36px;
+  gap: 8px 12px;
+  /* border-box: 68 px включают отступы и рамку, иначе панель выходит на 89 px. */
+  box-sizing: border-box;
+  min-height: var(--height-savebar);
+  padding: 10px 36px;
   border-top: 1px solid var(--color-border-default);
   background: var(--color-bg-savebar);
 }
@@ -19,7 +23,8 @@
 
 .save-bar__status {
   display: flex;
-  flex: 1;
+  /* 280 px — ширина, ниже которой заголовок не сжимается: строка переносится раньше. */
+  flex: 1 1 280px;
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -81,6 +86,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  /* На второй строке кнопки остаются справа. */
+  margin-left: auto;
 }
 
 /* Планшет: боковая панель сужена до рейки. */
@@ -94,8 +101,8 @@
 @media (max-width: 639px) {
   .save-bar {
     left: 0;
-    height: auto;
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     gap: 8px;
     padding: 10px 16px 14px;
@@ -112,6 +119,7 @@
 
   .save-bar__actions {
     gap: 8px;
+    margin-left: 0;
   }
 
   .save-bar__actions .save-bar__save,

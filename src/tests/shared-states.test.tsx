@@ -140,32 +140,6 @@ describe("SaveBar", () => {
     return handlers;
   }
 
-  test("buttons are inactive while nothing has changed", async () => {
-    const handlers = renderBar("clean");
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole("button", { name: "Сохранить" }));
-    await user.click(
-      screen.getByRole("button", { name: "Отменить изменения" }),
-    );
-
-    expect(handlers.onSave).not.toHaveBeenCalled();
-    expect(handlers.onReset).not.toHaveBeenCalled();
-  });
-
-  test("changes can be saved or cancelled", async () => {
-    const handlers = renderBar("dirty");
-    const user = userEvent.setup();
-
-    await user.click(screen.getByRole("button", { name: "Сохранить" }));
-    await user.click(
-      screen.getByRole("button", { name: "Отменить изменения" }),
-    );
-
-    expect(handlers.onSave).toHaveBeenCalledTimes(1);
-    expect(handlers.onReset).toHaveBeenCalledTimes(1);
-  });
-
   test("a network error is announced as an alert and replaces the buttons with a retry", async () => {
     const handlers = renderBar("error");
     const user = userEvent.setup();

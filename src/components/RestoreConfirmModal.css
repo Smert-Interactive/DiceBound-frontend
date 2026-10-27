@@ -4,8 +4,9 @@
 }
 
 /* Центрируем относительно всего экрана, включая место скрытой полосы прокрутки.
-   translate не конфликтует с transform в анимации открытия общего Modal. */
-@media (min-width: 501px) {
+   translate не конфликтует с transform в анимации открытия общего Modal.
+   До 640 px (телефон) окно остаётся нижним листом из общего Modal. */
+@media (min-width: 640px) {
   .ui-modal.restore-confirm-modal {
     position: fixed;
     left: calc(50vw + var(--ui-modal-scrollbar-width, 0px) / 2);
@@ -17,10 +18,7 @@
 
 .restore-confirm-modal__description {
   margin: 0;
-}
-
-.restore-confirm-modal__description--mobile {
-  display: none;
+  font-size: var(--font-modal-body-restore);
 }
 
 .restore-confirm-modal__timeline-scroll {
@@ -124,54 +122,11 @@
   border: 1px dashed var(--color-text-faint);
 }
 
-/* Для восстановления граница нижнего листа равна ширине окна: 500 px.
-   Число в media query соответствует --width-modal-restore; var() здесь не работает. */
-@media (min-width: 501px) and (max-width: 639px) {
-  .ui-modal.restore-confirm-modal {
-    max-height: calc(100dvh - 32px);
-    margin: auto;
-    margin-inline: 0;
-    padding: var(--padding-modal);
-    border-width: 1px;
-    border-radius: var(--radius-modal);
-  }
-
-  .ui-modal.restore-confirm-modal[open] {
-    animation: ui-modal-in var(--motion-base);
-  }
-
-  .ui-modal.restore-confirm-modal.ui-modal--closing {
-    animation: ui-modal-out var(--motion-exit) forwards;
-  }
-
-  .restore-confirm-modal .ui-modal__handle {
-    display: none;
-  }
-
-  .restore-confirm-modal .ui-modal__actions {
-    flex-direction: row;
-    gap: var(--gap-actions);
-  }
-
-  .restore-confirm-modal .ui-modal__actions .ui-button {
-    width: auto;
-    height: var(--size-button);
-    font-size: var(--font-button);
-  }
-}
-
-@media (max-width: 500px) {
+/* Телефон (до 640 px, как в общем Modal): всегда лист снизу на всю ширину экрана. */
+@media (max-width: 639px) {
   /* Приоритет выше общего desktop-размера: нижний лист заполняет весь экран. */
   .ui-modal.restore-confirm-modal {
     width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
-  }
-  .restore-confirm-modal__description--desktop,
-  .restore-confirm-modal__legend {
-    display: none;
-  }
-
-  .restore-confirm-modal__description--mobile {
-    display: block;
   }
 
   .restore-confirm-modal h2 {

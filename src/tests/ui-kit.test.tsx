@@ -134,7 +134,11 @@ describe("UI controls", () => {
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.getByText("Воин")).toBeInTheDocument();
     expect(screen.getByText("Merlin")).toBeInTheDocument();
-    expect(screen.getByText("Вдохновение: Да")).toBeInTheDocument();
+    // Видна только подпись, состояние «Да» читает скринридер через скрытый текст.
+    expect(
+      screen.getByRole("group", { name: "Вдохновение: Да" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Вдохновение")).toBeVisible();
     expect(screen.getByRole("group", { name: "Имя" })).toHaveTextContent(
       "Merlin",
     );

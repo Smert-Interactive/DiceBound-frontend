@@ -177,6 +177,14 @@
   --padding-content-touch: 16px;
   --padding-card-touch: 14px;
   --gap-page-heading: 4px;
+  /* Сетка полей листа: промежуток 12 px (ui-ux, «Секции и сетка»). */
+  --gap-sheet-fields: 12px;
+  --gap-sheet-title: 14px;
+  /* Плашка пары «значение | модификатор»: скругление 12 px, отступ 12 px (ui-ux, SheetDnD). */
+  --radius-sheet-pair: 12px;
+  --padding-sheet-pair: 12px;
+  --gap-sheet-pair: 10px;
+  --gap-sheet-pair-touch: 8px;
   --gap-card-content: 16px;
   --gap-actions: 8px;
 
@@ -284,8 +292,10 @@
   --font-field-touch: 16px;
   --font-checkbox: 13.5px;
   --font-tab: 13.5px;
-  --font-modal-body: 13.5px;
-  --font-modal-body-touch: var(--font-modal-body);
+  --font-modal-body: 13px;
+  --font-modal-body-touch: 13.5px;
+  /* Окно восстановления: на холсте RestoreConfirm текст 13.5 px и на desktop. */
+  --font-modal-body-restore: 13.5px;
   --font-caption: 11.5px;
   --font-caption-touch: 11px;
   --font-explanation: 12.5px;

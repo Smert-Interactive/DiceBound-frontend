@@ -4,9 +4,18 @@
   gap: var(--gap-content);
 }
 
+/* Закреплённая панель сохранения закрывает низ страницы: оставляем под неё место. */
+.character-page--with-savebar {
+  padding-bottom: 108px;
+}
+
 @media (max-width: 639px) {
   .character-page {
     gap: var(--gap-history-cards);
+  }
+
+  .character-page--with-savebar {
+    padding-bottom: 140px;
   }
 }
 

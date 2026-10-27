@@ -23,7 +23,11 @@ function AppBreadcrumbs({ characterName, activeTab }: Props) {
           return (
             <li key={crumb.path} className="breadcrumbs__item">
               {crumb.to && !isLast ? (
-                <Link to={crumb.to} className="breadcrumbs__link">
+                <Link
+                  to={crumb.to}
+                  state={crumb.state}
+                  className="breadcrumbs__link"
+                >
                   {crumb.label}
                 </Link>
               ) : (

@@ -5,16 +5,26 @@ import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
+import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterList } from "../mocks/characters";
 import {
   getMockCharacterVersions,
   restoreMockCharacterVersion,
+  saveMockCharacterVersion,
 } from "../mocks/characterVersions";
 import CharacterHeader from "../components/CharacterHeader";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
-import { NotFoundOrForbidden } from "../shared/states";
+import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
+import { recalculateSheet } from "../sheet/recalculate";
+import { getSaveStatus, type SavePhase } from "../sheet/saveStatus";
+import { toCharacterData } from "../sheet/sheetDraft";
+import type { SheetDraftValue } from "../sheet/sheetDraft";
+import { useSheetDraft } from "../sheet/useSheetDraft";
+import { validateSheet } from "../sheet/validateSheet";
+import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
+import { NotFoundOrForbidden, SaveBar } from "../shared/states";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
@@ -26,17 +36,17 @@ export default function CharacterPage() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const routeState: unknown = location.state;
-  const incomingNotice =
-    routeState &&
-    typeof routeState === "object" &&
-    "restoreNotice" in routeState &&
-    typeof routeState.restoreNotice === "string"
-      ? routeState.restoreNotice
-      : null;
+  const incomingNotice = getRestoreNotice(location.state);
   const [notice, setNotice] = useState<string | null>(incomingNotice);
+  // Уведомление приходит в state и со страницы версии, и с вкладки «История» (страница уже
+  // открыта). Новое значение замечаем при рендере: setState в эффекте дал бы лишний кадр.
+  const [seenNotice, setSeenNotice] = useState(incomingNotice);
+  if (incomingNotice !== seenNotice) {
+    setSeenNotice(incomingNotice);
+    if (incomingNotice) setNotice(incomingNotice);
+  }
   useEffect(() => {
-    // Уведомление передаётся со страницы версии один раз и не появляется заново через «Назад».
+    // Баннер показывается один раз: state очищается, поэтому «Назад» его не повторит.
     if (incomingNotice)
       navigate(location.pathname, { replace: true, state: null });
   }, [incomingNotice, location.pathname, navigate]);
@@ -47,13 +57,7 @@ export default function CharacterPage() {
   } | null>(null);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
   // Состояние маршрута общее для вкладок и хлебных крошек; сам URL не меняется.
-  const tabId =
-    routeState &&
-    typeof routeState === "object" &&
-    "activeTab" in routeState &&
-    (routeState.activeTab === "history" || routeState.activeTab === "access")
-      ? routeState.activeTab
-      : "sheet";
+  const tabId = getActiveTab(location.state) ?? "sheet";
 
   function handleTabChange(nextTab: string) {
     // replace не добавляет отдельный шаг браузерной истории на каждое переключение вкладки.
@@ -72,11 +76,82 @@ export default function CharacterPage() {
   const system = MOCK_SYSTEMS.find(
     (item) => item.id === character?.game_system_id,
   );
+  // Черновик живёт здесь, а не во вкладке: вкладки показывают только активную панель.
+  // Хук вызывается до проверок ниже, иначе нарушится порядок хуков.
+  const sheet = useSheetDraft(
+    schema?.schema,
+    character?.data,
+    `${character?.current_version_number}:${character?.updated_at}`,
+  );
+  // Результат последнего запроса сохранения; правка листа или «Отменить» возвращают idle.
+  const [savePhase, setSavePhase] = useState<SavePhase>("idle");
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
-  // Лист подключит renderer, «Доступ» — отдельная задача; история уже имеет свой список.
-  const tabs: TabItem[] = [{ id: "sheet", label: "Лист", content: null }];
+  // «Доступ» — отдельная задача; история уже имеет свой список.
+  // calculated пересчитываются по черновику при каждой правке, сохранённые значения не нужны.
+  const calculation = recalculateSheet(schema.schema, sheet.draft);
+  const fieldErrors = validateSheet(schema.schema, sheet.draft);
+  const saveStatus = getSaveStatus({
+    changedCount: sheet.changed.size,
+    hasErrors: Object.keys(fieldErrors).length > 0,
+    phase: savePhase,
+  });
+
+  // Панель нужна тому, кто правит лист, и только на вкладке «Лист».
+  const showSaveBar = character.can_edit && tabId === "sheet";
+
+  function handleSheetChange(fieldId: string, value: SheetDraftValue) {
+    setSavePhase("idle");
+    sheet.setValue(fieldId, value);
+  }
+
+  function handleSheetReset() {
+    setSavePhase("idle");
+    sheet.reset();
+  }
+
+  async function handleSave() {
+    // «Повторить» после ошибки сети отправляет те же изменения, поэтому error тоже допустим.
+    if (!user || !schema) return;
+    if (saveStatus !== "dirty" && saveStatus !== "error") return;
+    setSavePhase("saving");
+    try {
+      await saveMockCharacterVersion(
+        id,
+        toCharacterData(schema.schema, sheet.draft, calculation.values),
+        user.email,
+      );
+      setSavePhase("saved");
+    } catch {
+      setSavePhase("error");
+    }
+  }
+
+  const tabs: TabItem[] = [
+    {
+      id: "sheet",
+      label: "Лист",
+      content: (
+        // На время запроса лист блокируется через inert, а не через readOnly: readOnly меняет вид
+        // полей (заливка, «из snapshot»), а ui-ux требует блокировку без смены вида.
+        <div
+          inert={saveStatus === "saving"}
+          aria-busy={saveStatus === "saving"}
+        >
+          <DynamicSheetRenderer
+            schema={schema.schema}
+            draft={sheet.draft}
+            calculated={calculation.values}
+            errors={{ ...calculation.errors, ...fieldErrors }}
+            changed={sheet.changed}
+            readOnly={!character.can_edit}
+            onChange={handleSheetChange}
+          />
+        </div>
+      ),
+    },
+  ];
   function handleRestoreRequest(version: CharacterVersionSummary) {
     if (character?.access !== "OWNER" || version.is_current) return;
     if (!versions) return;
@@ -93,10 +168,11 @@ export default function CharacterPage() {
       user.email,
     );
     setIsRestoreOpen(false);
-    handleTabChange("sheet");
-    setNotice(
-      `Восстановлена версия ${result.character.current_version_number}. Удалено версий: ${result.deleted_versions_count}`,
-    );
+    // Без activeTab страница открывает «Лист»; баннер покажет эффект выше.
+    navigate(location.pathname, {
+      replace: true,
+      state: { restoreNotice: formatRestoreNotice(result) },
+    });
   }
 
   const versions = character.can_view_history
@@ -124,7 +200,14 @@ export default function CharacterPage() {
 
   return (
     // data-system задаёт цвет полос resource через CSS, без ветвлений в renderer.
-    <div className="character-page" data-system={getSystemKind(system.name)}>
+    <div
+      className={
+        showSaveBar
+          ? "character-page character-page--with-savebar"
+          : "character-page"
+      }
+      data-system={getSystemKind(system.name)}
+    >
       {notice && (
         <Banner
           variant="success"
@@ -146,6 +229,16 @@ export default function CharacterPage() {
         onChange={handleTabChange}
         label="Разделы персонажа"
       />
+      {showSaveBar && (
+        <SaveBar
+          status={saveStatus}
+          changedCount={sheet.changed.size}
+          version={character.current_version_number}
+          onSave={handleSave}
+          onReset={handleSheetReset}
+          onRetry={handleSave}
+        />
+      )}
       {restoreTarget && versions && character.access === "OWNER" && (
         <RestoreConfirmModal
           open={isRestoreOpen}

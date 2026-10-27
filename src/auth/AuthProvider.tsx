@@ -28,10 +28,8 @@ export default function AuthProvider({
     pendingRef.current = true;
     setPending(true);
     try {
-      // await ждёт результат. При исключении setUser не вызывается, ошибка уходит в форму.
       setUser(await request());
     } finally {
-      // finally выполняется и при успехе, и при исключении: загрузка всегда завершается.
       // При отказе сессия не создаётся, но форму снова можно отправить.
       pendingRef.current = false;
       setPending(false);

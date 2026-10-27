@@ -68,7 +68,6 @@ export default function RegisterForm() {
       email.trim().length === 0 ||
       password.length === 0 ||
       passwordConfirmation.length === 0 ||
-      // Object.keys возвращает имена полей с ошибками; хотя бы одно блокирует продолжение.
       Object.keys(nextErrors).length > 0
     ) {
       return;
@@ -102,7 +101,6 @@ export default function RegisterForm() {
         placeholder="you@example.com"
         required
         disabled={pending}
-        // value и onChange связывают поле с состоянием React.
         value={email}
         onChange={(event) => {
           setEmail(event.target.value);

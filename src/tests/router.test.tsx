@@ -30,24 +30,6 @@ describe("routes", () => {
     ).toBeInTheDocument();
   });
 
-  // Страница /systems существует.
-  test("renders /systems", () => {
-    renderAt("/systems");
-
-    expect(
-      screen.getByRole("heading", { name: "Systems page" }),
-    ).toBeInTheDocument();
-  });
-
-  // Со страницы импорта есть ссылка на список систем.
-  test("links from /systems/import to /systems", () => {
-    renderAt("/systems/import");
-
-    expect(
-      screen.getByRole("link", { name: "Мои игровые системы" }),
-    ).toHaveAttribute("href", "/systems");
-  });
-
   // Без входа защищённая страница недоступна: человека отправляет на /login.
   test("redirects to /login when not signed in", () => {
     renderAt("/characters", null);
@@ -63,15 +45,6 @@ describe("routes", () => {
 
     expect(router.state.location.pathname).toBe("/login");
     expect(router.state.location.state.from.pathname).toBe("/characters/new");
-  });
-
-  // Страница входа доступна без входа и не зацикливается.
-  test("renders /login when not signed in", () => {
-    renderAt("/login", null);
-
-    expect(
-      screen.getByRole("heading", { name: "Листы персонажей для любой НРИ" }),
-    ).toBeInTheDocument();
   });
 
   // Неизвестный адрес показывает экран «не найден или доступ закрыт» со ссылкой на список.

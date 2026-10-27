@@ -77,7 +77,7 @@ describe("SheetCalculatedField", () => {
     );
   });
 
-  test("read-only shows the snapshot value instead of the formula and hint", () => {
+  test("read-only shows the saved value with the formula and without the hint", () => {
     render(
       <SheetCalculatedField
         field={modifierField}
@@ -90,8 +90,8 @@ describe("SheetCalculatedField", () => {
 
     const group = screen.getByRole("group", { name: "STR Modifier" });
     expect(group).toHaveTextContent("+3");
-    expect(group).toHaveTextContent("из snapshot");
-    expect(group).not.toHaveTextContent("floor");
+    expect(group).toHaveTextContent("floor");
+    expect(group).not.toHaveTextContent("из snapshot");
     expect(group).not.toHaveAccessibleDescription();
   });
 

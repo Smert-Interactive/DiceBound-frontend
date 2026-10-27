@@ -1,0 +1,223 @@
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+/* Поверхность и отступ карточки даёт общий .ui-card; здесь только содержимое. */
+.sheet-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sheet-fields);
+  /* Раскладка пар зависит от ширины самой секции, а не окна: боковая панель и отступы
+     съедают разное место, и пара в 222 px ломала счётчик. */
+  container: sheet-section / inline-size;
+}
+
+/* Заголовок слева, пояснение к парам справа; до полей 14 px (с учётом шага сетки 12 px). */
+.sheet-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: calc(var(--gap-sheet-title) - var(--gap-sheet-fields));
+}
+
+.sheet-section__title {
+  margin: 0;
+  color: var(--color-text-muted);
+  font: 400 var(--font-metadata) / 1.5 var(--mono);
+}
+
+.sheet-section__hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-size: var(--font-metadata);
+}
+
+.sheet-section__hint svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: var(--color-calculated);
+}
+
+/* Desktop: 4 колонки, поля идут по порядку массива fields. */
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap-sheet-fields);
+  align-items: start;
+}
+
+.sheet-cell {
+  min-width: 0;
+}
+
+.sheet-cell[data-type="resource"] {
+  grid-column: span 2;
+}
+
+/* Пары «значение | модификатор» идут отдельной сеткой: desktop 3 колонки. */
+.sheet-pairs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-sheet-fields);
+  align-items: start;
+}
+
+/* Плашка пары: слева число со счётчиком, справа модификатор; формула под ним. */
+.sheet-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-sheet-pair);
+  align-items: start;
+  padding: var(--padding-sheet-pair);
+  border: 1px solid var(--color-border-divider);
+  border-radius: var(--radius-sheet-pair);
+  background: var(--color-bg-readonly);
+}
+
+.sheet-pair[data-changed] {
+  border-color: var(--color-border-pair-changed);
+}
+
+.sheet-pair[data-error] {
+  border-color: var(--color-border-pair-error);
+}
+
+/* Планшет: 2 колонки обычных полей. */
+@media (max-width: 1023px) {
+  .sheet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Пары: колонки зависят от ширины секции (при 1280 px окна секция 946 px → 3 колонки,
+   при 800 px → 2, при 390 px → строка), чтобы плашка не становилась уже ~300 px. */
+@container sheet-section (max-width: 923px) {
+  .sheet-pairs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Узкая секция: каждая пара — строка на всю ширину (MSheetDnD): подпись, счётчик,
+   модификатор, формула под строкой. */
+@container sheet-section (max-width: 611px) {
+  .sheet-pairs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap-sheet-pair-touch);
+  }
+
+  .sheet-pair {
+    /* Счётчик не шире 240 px: на широких экранах строки пар не растягивают его. */
+    grid-template-columns: minmax(44px, auto) minmax(0, 240px) 64px;
+    justify-content: start;
+    column-gap: var(--gap-sheet-pair);
+    row-gap: 6px;
+    align-items: center;
+    padding: 10px var(--padding-sheet-pair);
+  }
+
+  /* Поля пары отдают свои части общей сетке пары: подпись, поле, заметки. */
+  .sheet-pair > .sheet-number,
+  .sheet-pair > .sheet-calculated {
+    display: contents;
+  }
+
+  .sheet-pair .sheet-number > .ui-field__label {
+    grid-row: 1;
+    grid-column: 1;
+    margin: 0;
+    color: var(--color-text-primary);
+    font: 500 13px / 1.5 var(--mono);
+  }
+
+  .sheet-pair .sheet-number > .ui-input,
+  .sheet-pair .sheet-number > .ui-readonly {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .sheet-pair .sheet-calculated__box {
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  /* В строке подпись модификатора не рисуется, но остаётся для скринридера. */
+  .sheet-pair .sheet-calculated__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Формула и ошибки идут ниже, под счётчиком и модификатором. */
+  .sheet-pair .sheet-calculated__pair-formula,
+  .sheet-pair .ui-field__error,
+  .sheet-pair .ui-field__hint {
+    grid-column: 2 / -1;
+    margin: 0;
+  }
+
+  /* При ошибке числа вместо формулы виден текст ошибки (MSheetDnD). */
+  .sheet-pair[data-error] .sheet-calculated__pair-formula {
+    display: none;
+  }
+}
+
+/* Совсем узкая секция (окно уже ~360 px): места на счётчик и плашку в одной строке нет
+   (счётчику нужно ~140 px), поэтому всё идёт столбиком: подпись, счётчик, плашка, формула. */
+@container sheet-section (max-width: 299px) {
+  .sheet-pair {
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .sheet-pair .sheet-number > .ui-field__label {
+    grid-column: 1;
+  }
+
+  .sheet-pair .sheet-number > .ui-input,
+  .sheet-pair .sheet-number > .ui-readonly {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .sheet-pair .sheet-calculated__box {
+    grid-row: 3;
+    grid-column: 1;
+    width: 64px;
+  }
+
+  .sheet-pair .sheet-calculated__pair-formula,
+  .sheet-pair .ui-field__error,
+  .sheet-pair .ui-field__hint {
+    grid-column: 1;
+  }
+}
+
+/* Телефон: 2 колонки, text, select и resource занимают всю ширину. */
+@media (max-width: 639px) {
+  .sheet {
+    gap: var(--gap-content-touch);
+    /* MSheetDnD: шаг сетки полей 10 px, заголовок секции до полей 12 px. */
+    --gap-sheet-fields: 10px;
+    --gap-sheet-title: 12px;
+  }
+
+  .sheet-cell[data-type="text"],
+  .sheet-cell[data-type="select"],
+  .sheet-cell[data-type="resource"] {
+    grid-column: 1 / -1;
+  }
+
+  .sheet-section__hint {
+    font: 400 var(--font-caption-touch) / 1.5 var(--mono);
+  }
+}
