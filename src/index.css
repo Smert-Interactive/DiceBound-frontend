@@ -163,6 +163,8 @@
   --width-modal: 460px;
   --width-modal-restore: 500px;
   --width-modal-share: 480px;
+  --gap-share-text: 2px;
+  --padding-share-history-touch: 11px 12px;
   --radius-modal: 18px;
   --padding-modal: 24px;
   --gap-modal-content: 18px;

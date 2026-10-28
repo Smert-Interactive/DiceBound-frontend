@@ -178,6 +178,11 @@ describe("VIEW revocation confirmation", () => {
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Доступ user@example.com отозван",
+    );
+    await user.click(screen.getByRole("button", { name: "Закрыть" }));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Лист" }));
     await user.click(screen.getByRole("tab", { name: "Доступ" }));
     expect(screen.queryByText("user@example.com")).not.toBeInTheDocument();

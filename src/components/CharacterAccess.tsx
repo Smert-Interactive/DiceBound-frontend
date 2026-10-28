@@ -14,12 +14,11 @@ interface Props {
   onRevoke?: (share: CharacterShare & { permission: "VIEW" }) => void;
 }
 
-// UTC оставляет дату выдачи одинаковой независимо от часового пояса браузера.
+// Дата выдачи отображается в местном часовом поясе пользователя, как остальные даты по ui-ux.
 const dateFormat = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
-  timeZone: "UTC",
 });
 
 // Выданные доступы владельца: таблица на широком экране, карточки на телефоне и справка.

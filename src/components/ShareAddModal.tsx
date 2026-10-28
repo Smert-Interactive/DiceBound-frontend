@@ -60,7 +60,10 @@ export default function ShareAddModal({
 
   // Проверяем посещённое поле, сохраняя серверную ошибку до изменения адреса.
   function handleEmailBlur(event: FocusEvent<HTMLInputElement>) {
-    if (busy || emailError) return;
+    // Закрытие dialog возвращает фокус наружу, в том числе при проверке эффектов StrictMode.
+    // Такой blur не означает, что пользователь закончил ввод в открытой форме.
+    if (!event.currentTarget.closest("dialog")?.open || busy || emailError)
+      return;
     setEmailError(
       validateShareEmail(email, event.currentTarget.validity.typeMismatch),
     );

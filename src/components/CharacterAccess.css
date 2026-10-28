@@ -109,7 +109,7 @@
 .character-access__help {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-history-cards);
+  gap: var(--gap-form-fields);
   font-size: var(--font-button);
 }
 
@@ -124,13 +124,20 @@
   color: var(--color-text-secondary);
 }
 
+.character-access__level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap-page-heading);
+}
+
 .character-access__level .ui-chip {
-  margin-bottom: var(--gap-inline-compact);
+  line-height: 1.5;
 }
 
 .character-access__help .character-access__note {
   color: var(--color-text-muted);
-  font-size: var(--font-metadata);
+  font-size: var(--font-explanation);
 }
 
 @media (max-width: 1179px) {

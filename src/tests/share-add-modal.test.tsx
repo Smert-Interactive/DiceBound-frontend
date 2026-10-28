@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
@@ -172,15 +173,20 @@ describe("sharing form", () => {
     });
     const user = userEvent.setup();
     render(
-      <AuthProvider initialUser={MOCK_USER}>
-        <RouterProvider router={router} />
-      </AuthProvider>,
+      <StrictMode>
+        <AuthProvider initialUser={MOCK_USER}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </StrictMode>,
     );
     await user.click(screen.getByRole("tab", { name: "Доступ" }));
     const add = screen.getByRole("button", {
       name: "Выдать доступ",
     });
     await user.click(add);
+    expect(
+      screen.queryByText("Введите почту пользователя"),
+    ).not.toBeInTheDocument();
     await user.type(screen.getByRole("textbox"), "friend@example.com");
     await user.click(screen.getByRole("checkbox"));
     await user.click(
@@ -189,6 +195,9 @@ describe("sharing form", () => {
     await user.click(screen.getByRole("button", { name: "Отмена" }));
     await screen.findByRole("button", { name: "Выдать доступ" });
     await user.click(add);
+    expect(
+      screen.queryByText("Введите почту пользователя"),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("textbox")).toHaveValue("");
     expect(
       screen.getByRole("radio", { name: /Просмотр · VIEW/u }),

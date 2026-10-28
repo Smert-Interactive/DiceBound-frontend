@@ -146,6 +146,8 @@ export default function CharacterPage() {
       revokeTarget.id,
       user!.email,
     );
+    // Одно уведомление заменяет предыдущее и закрывается общей кнопкой баннера.
+    setNotice(`Доступ ${revokeTarget.recipient_email} отозван`);
     refreshShares((revision) => revision + 1);
     setIsRevokeOpen(false);
   }
