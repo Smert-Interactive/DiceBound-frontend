@@ -237,6 +237,9 @@
   --width-editor-gutter: 52px;
   --line-code: 1.65;
   --size-status-dot: 6px;
+  --padding-validation-error: 11px 0;
+  --size-icon-validation: 15px;
+  --padding-validation-preview: 28px;
 
   /* Список систем: ширины колонок и примечания по ui-ux. */
   --width-systems-source: 220px;

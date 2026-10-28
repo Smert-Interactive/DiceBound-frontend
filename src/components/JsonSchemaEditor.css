@@ -16,6 +16,7 @@
 }
 
 .json-editor__surface {
+  position: relative;
   display: grid;
   grid-template-columns: var(--width-editor-gutter) minmax(0, 1fr);
   height: var(--height-json-editor);
@@ -33,7 +34,8 @@
 
 .json-editor__numbers,
 .json-editor__input,
-.json-editor__highlight {
+.json-editor__highlight,
+.json-editor__line-marks {
   box-sizing: border-box;
   margin: 0;
   font: 400 var(--font-metadata) / var(--line-code) var(--mono);
@@ -41,6 +43,7 @@
 }
 
 .json-editor__numbers {
+  position: relative;
   min-height: 0;
   padding: var(--gap-form-fields) var(--padding-content-touch)
     var(--gap-form-fields) 0;
@@ -172,4 +175,32 @@
   .json-editor__highlight {
     display: none;
   }
+}
+
+/* Строки ошибок лежат под подсветкой и полем ввода, не перехватывая мышь и выделение. */
+.json-editor__line-marks {
+  position: absolute;
+  inset: 0;
+  padding: var(--gap-form-fields) 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.json-editor__line-marks code {
+  display: block;
+  font: inherit;
+}
+
+.json-editor__line {
+  display: block;
+  height: 1lh;
+}
+
+.json-editor__line[data-error] {
+  background: var(--tint-crimson-mark-bg);
+}
+
+.json-editor__line-number[data-error] {
+  color: var(--color-error);
 }

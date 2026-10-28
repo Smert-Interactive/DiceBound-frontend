@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
+import SchemaValidationFeedback from "../components/SchemaValidationFeedback";
 import { ROUTES } from "../constants/routes";
 import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";
+import { validateMockSchema } from "../mocks/schemaValidation";
+import { analyzeJson } from "../systems/jsonSyntax";
+import type { SchemaValidationResult } from "../systems/schemaValidationTypes";
 import { readJsonFile } from "../systems/readJsonFile";
-import { UploadIcon } from "../shared/icons";
+import { CheckIcon, UploadIcon } from "../shared/icons";
 import { Banner, Button, Input, getButtonClassName } from "../shared/ui";
 
 import "./ImportSystemPage.css";
@@ -21,14 +25,64 @@ export default function ImportSystemPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileReadVersion = useRef(0);
+  const validationVersion = useRef(0);
+  const checkingRef = useRef(false);
+  const [readingFile, setReadingFile] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState<SchemaValidationResult | null>(null);
+  const [requestFailed, setRequestFailed] = useState(false);
+  const [nameTouched, setNameTouched] = useState({
+    system: false,
+    schema: false,
+  });
+  const analysis = useMemo(() => analyzeJson(schemaText), [schemaText]);
 
   useEffect(
     () => () => {
       // Завершившееся чтение не должно обновлять уже закрытую страницу.
       fileReadVersion.current += 1;
+      validationVersion.current += 1;
     },
     [],
   );
+
+  // Любая замена JSON отменяет применение старого ответа и снимает прежние ошибки схемы.
+  function resetValidation() {
+    validationVersion.current += 1;
+    checkingRef.current = false;
+    setChecking(false);
+    setResult(null);
+    setRequestFailed(false);
+  }
+
+  // Отправляем исходный текст один раз; исправлять его во время запроса разрешено.
+  async function handleValidate() {
+    setNameTouched({ system: true, schema: true });
+    if (
+      !systemName.trim() ||
+      !schemaName.trim() ||
+      !analysis.syntax.valid ||
+      readingFile ||
+      checkingRef.current
+    )
+      return;
+    const version = ++validationVersion.current;
+    checkingRef.current = true;
+    setChecking(true);
+    setResult(null);
+    setRequestFailed(false);
+    try {
+      const response = await validateMockSchema({ schema_text: schemaText });
+      if (version === validationVersion.current) setResult(response);
+    } catch {
+      if (version === validationVersion.current) setRequestFailed(true);
+    } finally {
+      if (version === validationVersion.current) {
+        checkingRef.current = false;
+        setChecking(false);
+      }
+    }
+  }
 
   // Настоящий file-input скрыт, а выбор запускается доступной кнопкой из UI-kit.
   function handleChooseFile() {
@@ -42,20 +96,26 @@ export default function ImportSystemPage() {
     input.value = "";
     if (!file) return;
     const version = ++fileReadVersion.current;
+    setReadingFile(true);
     setFileError(null);
     try {
       const text = await readJsonFile(file);
       // Более новый файл или ручная правка важнее запоздавшего результата чтения.
       if (version !== fileReadVersion.current) return;
+      resetValidation();
       setSchemaText(text);
     } catch {
       if (version === fileReadVersion.current) setFileError(file.name);
+    } finally {
+      if (version === fileReadVersion.current) setReadingFile(false);
     }
   }
 
   // Ручной ввод отменяет применение ещё читающегося файла, сохраняя новый черновик.
   function handleSchemaChange(text: string) {
     fileReadVersion.current += 1;
+    setReadingFile(false);
+    resetValidation();
     setSchemaText(text);
   }
 
@@ -84,11 +144,29 @@ export default function ImportSystemPage() {
             <Input
               label="Название системы"
               value={systemName}
+              required
+              error={
+                nameTouched.system && !systemName.trim()
+                  ? "Введите название системы"
+                  : undefined
+              }
+              onBlur={() =>
+                setNameTouched((current) => ({ ...current, system: true }))
+              }
               onChange={(event) => setSystemName(event.target.value)}
             />
             <Input
               label="Название листа"
               value={schemaName}
+              required
+              error={
+                nameTouched.schema && !schemaName.trim()
+                  ? "Введите название листа"
+                  : undefined
+              }
+              onBlur={() =>
+                setNameTouched((current) => ({ ...current, schema: true }))
+              }
               onChange={(event) => setSchemaName(event.target.value)}
             />
           </div>
@@ -110,6 +188,8 @@ export default function ImportSystemPage() {
           )}
           <JsonSchemaEditor
             value={schemaText}
+            analysis={analysis}
+            errors={result?.errors}
             onChange={handleSchemaChange}
             actions={
               <Button
@@ -122,10 +202,18 @@ export default function ImportSystemPage() {
               </Button>
             }
           />
-          {/* Проверка и импорт подключаются следующими пунктами; успешного ответа пока нет. */}
+          {/* Импорт подключается отдельно; положительная проверка сама ничего не сохраняет. */}
           <div className="import-system__actions">
-            <Button disabled>Проверить схему</Button>
-            <Button variant="primary" disabled>
+            <Button
+              icon={<CheckIcon />}
+              onClick={handleValidate}
+              disabled={!analysis.syntax.valid || readingFile}
+              loading={checking}
+              loadingText="Проверка…"
+            >
+              Проверить схему
+            </Button>
+            <Button variant="primary" icon={<UploadIcon />} disabled>
               Импортировать систему
             </Button>
           </div>
@@ -133,11 +221,13 @@ export default function ImportSystemPage() {
         <aside
           className="import-system__result"
           aria-label="Результат проверки схемы"
+          aria-busy={checking || undefined}
         >
-          <Banner variant="error" title="Схему нельзя проверить">
-            Исправьте синтаксис JSON — предпросмотр появится после проверки
-            схемы.
-          </Banner>
+          <SchemaValidationFeedback
+            result={result}
+            pending={checking}
+            requestFailed={requestFailed}
+          />
         </aside>
       </div>
     </div>
