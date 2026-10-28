@@ -1,0 +1,44 @@
+.schema-preview {
+  min-width: 0;
+}
+
+.schema-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--gap-actions);
+  margin-bottom: var(--gap-sheet-title);
+}
+
+.schema-preview__header h2 {
+  margin: 0;
+  color: var(--color-text-muted);
+  font: 400 var(--font-metadata) / 1.5 var(--mono);
+}
+
+/* В компактном предпросмотре секции идут внутри общей карточки, как на холсте. */
+.schema-preview .sheet {
+  gap: var(--gap-sheet-title);
+}
+
+.schema-preview .sheet-section {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: var(--gap-sheet-pair-touch);
+}
+
+.schema-preview .sheet-section__head {
+  margin-bottom: 0;
+}
+
+.schema-preview .sheet-section__title {
+  font-family: var(--sans);
+}
+
+.schema-preview .sheet-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-sheet-pair);
+}

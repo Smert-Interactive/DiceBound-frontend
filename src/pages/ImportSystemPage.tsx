@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
 import SchemaValidationFeedback from "../components/SchemaValidationFeedback";
+import SchemaPreview from "../components/SchemaPreview";
 import { ROUTES } from "../constants/routes";
 import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";
 import { validateMockSchema } from "../mocks/schemaValidation";
@@ -228,6 +229,9 @@ export default function ImportSystemPage() {
             pending={checking}
             requestFailed={requestFailed}
           />
+          {result?.valid && !checking && !requestFailed && (
+            <SchemaPreview schema={result.schema} />
+          )}
         </aside>
       </div>
     </div>
