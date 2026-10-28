@@ -3,7 +3,7 @@ import {
   COC_SYSTEM_ID as COC_ID,
   CUSTOM_SYSTEM_ID as CUSTOM_ID,
   DND_SYSTEM_ID as DND_ID,
-  MOCK_SYSTEMS,
+  getMockSystems,
 } from "./systems";
 
 // Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
@@ -44,7 +44,7 @@ export async function createMockCharacter(
   await new Promise<void>((resolve) =>
     window.setTimeout(resolve, MOCK_REQUEST_DELAY),
   );
-  const system = MOCK_SYSTEMS.find(
+  const system = getMockSystems(ownerEmail).find(
     (item) => item.id === request.game_system_id,
   );
   if (!system) throw new Error("UNKNOWN_SYSTEM");

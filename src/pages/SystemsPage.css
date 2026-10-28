@@ -1,0 +1,113 @@
+.systems-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.systems-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-actions);
+}
+
+.systems-page__heading {
+  min-width: 0;
+}
+
+.systems-page__heading h1 {
+  margin-bottom: var(--gap-page-heading);
+}
+
+.systems-page__heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-button);
+}
+
+.systems-page__import {
+  flex-shrink: 0;
+}
+
+.systems-page__list {
+  min-width: 0;
+  padding: var(--padding-access-list);
+}
+
+.systems-page__table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: var(--font-field);
+}
+
+.systems-page__source-col {
+  width: var(--width-systems-source);
+}
+
+.systems-page__count-col {
+  width: var(--width-systems-count);
+}
+
+.systems-page__action-col {
+  width: var(--width-systems-action);
+}
+
+.systems-page__table thead th {
+  padding: var(--padding-access-column);
+  color: var(--color-text-muted);
+  font: 400 var(--font-caption-touch) / 1.5 var(--mono);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.systems-page__note {
+  max-width: var(--width-systems-note);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-explanation);
+}
+
+@media (min-width: 640px) and (max-width: 1179px) {
+  .systems-page__header {
+    flex-wrap: wrap;
+    gap: var(--gap-content-touch);
+  }
+
+  .systems-page__source-col {
+    width: 24%;
+  }
+
+  .systems-page__count-col {
+    width: 19%;
+  }
+
+  .systems-page__action-col {
+    width: 25%;
+  }
+}
+
+@media (max-width: 639px) {
+  .systems-page {
+    gap: var(--gap-content-touch);
+  }
+
+  .systems-page__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gap-content-touch);
+  }
+
+  .systems-page__cards {
+    display: grid;
+    gap: var(--gap-content-touch);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .systems-page__notice .ui-button--icon {
+    width: var(--size-button-sm-touch);
+    height: var(--size-button-sm-touch);
+  }
+}

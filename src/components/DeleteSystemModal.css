@@ -1,0 +1,20 @@
+.delete-system-modal__description {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.delete-system-modal__used,
+.delete-system-modal .ui-banner {
+  margin: var(--gap-form-fields) 0 0;
+}
+
+/* Предупреждение о существующих персонажах — отдельная плашка по ui-ux. */
+.delete-system-modal__used {
+  padding: var(--gap-sheet-fields) var(--padding-content-touch);
+  border: 1px solid var(--tint-crimson-border);
+  border-radius: var(--radius-banner);
+  background: var(--tint-banner-warning-bg);
+  color: var(--color-error);
+  font-size: var(--font-button);
+  overflow-wrap: anywhere;
+}

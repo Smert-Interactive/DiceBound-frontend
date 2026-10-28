@@ -230,6 +230,14 @@
   --width-access-action-narrow: 168px;
   --height-access-action-touch: 44px;
 
+  /* Список систем: ширины колонок и примечания по ui-ux. */
+  --width-systems-source: 220px;
+  --width-systems-count: 200px;
+  --width-systems-action: 230px;
+  --width-systems-note: 760px;
+  --width-system-label: 120px;
+  --gap-system-details: 3px;
+
   /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
      Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */
   --columns-characters: auto minmax(0, 1fr) 192px 162px 132px;

@@ -6,7 +6,7 @@ import { useAuth } from "../auth/authContext";
 import SystemCard from "../components/SystemCard";
 import { ROUTES } from "../constants/routes";
 import { createMockCharacter } from "../mocks/characters";
-import { MOCK_SYSTEMS, getMockSchemas } from "../mocks/systems";
+import { getMockSystems, getMockSchemas } from "../mocks/systems";
 import { UploadIcon } from "../shared/icons";
 import {
   Button,
@@ -48,17 +48,17 @@ function StepCard({ number, title, hint, children, actions }: StepProps) {
 }
 
 export default function NewCharacterPage() {
-  // По умолчанию выбрана первая система, как на холсте.
-  const [systemId, setSystemId] = useState(MOCK_SYSTEMS[0].id);
+  const { user } = useAuth();
+  // Удалённые и чужие системы не участвуют в создании новых персонажей.
+  const systems = getMockSystems(user?.email ?? "");
+  const [systemId, setSystemId] = useState(systems[0].id);
+  const system = systems.find((item) => item.id === systemId) ?? systems[0];
   // Лист хранится по id. Если он не из выбранной системы, берётся её первый лист:
   // так при смене системы выбор не нужно сбрасывать вручную.
   const [schemaId, setSchemaId] = useState("");
-  const schemas = getMockSchemas(systemId);
+  const schemas = getMockSchemas(system.id);
   const schema = schemas.find((item) => item.id === schemaId) ?? schemas[0];
   const [name, setName] = useState("");
-  const system =
-    MOCK_SYSTEMS.find((item) => item.id === systemId) ?? MOCK_SYSTEMS[0];
-  const { user } = useAuth();
   const navigate = useNavigate();
   const hintId = useId();
   const [pending, setPending] = useState(false);
@@ -124,13 +124,13 @@ export default function NewCharacterPage() {
               role="radiogroup"
               aria-label="Игровая система"
             >
-              {MOCK_SYSTEMS.map((system) => (
+              {systems.map((item) => (
                 <SystemCard
-                  key={system.id}
-                  system={system}
-                  schemaCount={getMockSchemas(system.id).length}
+                  key={item.id}
+                  system={item}
+                  schemaCount={getMockSchemas(item.id).length}
                   name="game-system"
-                  checked={system.id === systemId}
+                  checked={item.id === system.id}
                   onSelect={setSystemId}
                 />
               ))}
