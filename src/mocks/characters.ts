@@ -1,9 +1,13 @@
+import { initializeMockCharacterSheet } from "./characterDetails";
+import { createMockId } from "./mockId";
+import { getMockSheetSchema } from "./sheetSchemas";
 import { getStoredShares } from "./characterSharesStore";
 import {
   COC_SYSTEM_ID as COC_ID,
   CUSTOM_SYSTEM_ID as CUSTOM_ID,
   DND_SYSTEM_ID as DND_ID,
   getMockSystems,
+  MOCK_SYSTEMS,
 } from "./systems";
 
 // Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
@@ -36,7 +40,7 @@ export interface CreateCharacterRequest {
 const MOCK_REQUEST_DELAY = 500;
 
 // Имитирует создание: ответ приходит с задержкой, чтобы была видна загрузка кнопки.
-// Персонаж нигде не сохраняется (как и удаление, пока нет API).
+// Метаданные и лист остаются в памяти до перезагрузки приложения.
 export async function createMockCharacter(
   request: CreateCharacterRequest,
   ownerEmail: string,
@@ -49,16 +53,24 @@ export async function createMockCharacter(
   );
   if (!system) throw new Error("UNKNOWN_SYSTEM");
 
-  return {
-    id: crypto.randomUUID(),
+  const schema = getMockSheetSchema(request.sheet_schema_id);
+  if (!schema || schema.game_system_id !== system.id)
+    throw new Error("UNKNOWN_SCHEMA");
+  const character: CharacterSummary = {
+    id: createMockId(),
     name: request.name.trim(),
     game_system_id: system.id,
     game_system_name: system.name,
     updated_at: new Date().toISOString(),
     access: "OWNER",
-    owner_username: ownerEmail,
+    owner_username: ownerEmail.trim().toLowerCase(),
     copy_source_owner_name: null,
   };
+  initializeMockCharacterSheet(character.id, schema, character.updated_at);
+  addMockCharacterSummary(character);
+  const storedSystem = MOCK_SYSTEMS.find((item) => item.id === system.id)!;
+  storedSystem.character_count += 1;
+  return character;
 }
 
 // Числа версий для окна удаления. В CharacterSummary поля нет (см. открытые вопросы в плане),

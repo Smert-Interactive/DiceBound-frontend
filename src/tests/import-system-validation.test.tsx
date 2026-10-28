@@ -1,3 +1,5 @@
+import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   act,
@@ -26,7 +28,9 @@ const validResponse: SchemaValidationResult = {
 function renderImport() {
   const view = render(
     <MemoryRouter>
-      <ImportSystemPage />
+      <AuthProvider initialUser={MOCK_USER}>
+        <ImportSystemPage />
+      </AuthProvider>
     </MemoryRouter>,
   );
   return {

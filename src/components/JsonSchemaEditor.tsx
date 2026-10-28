@@ -7,6 +7,7 @@ import "./JsonSchemaEditor.css";
 
 interface Props {
   value: string;
+  disabled?: boolean;
   onChange: (value: string) => void;
   actions?: ReactNode;
   analysis?: JsonAnalysis;
@@ -16,6 +17,7 @@ interface Props {
 // Подсветка и статус дополняют обычное поле ввода; незаконченная схема остаётся в черновике.
 export default function JsonSchemaEditor({
   value,
+  disabled = false,
   onChange,
   actions,
   analysis,
@@ -116,6 +118,7 @@ export default function JsonSchemaEditor({
             id={inputId}
             className="json-editor__input"
             value={value}
+            disabled={disabled}
             aria-describedby={statusId}
             aria-invalid={invalid || undefined}
             onChange={(event) => onChange(event.target.value)}

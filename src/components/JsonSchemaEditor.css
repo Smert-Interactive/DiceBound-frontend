@@ -204,3 +204,36 @@
 .json-editor__line-number[data-error] {
   color: var(--color-error);
 }
+
+@media (max-width: 639px) {
+  .json-editor {
+    /* Размеры телефонного редактора из MImport; текст прокручивается внутри textarea. */
+    --height-json-editor: 360px;
+    --width-editor-gutter: 40px;
+    --size-status-dot: 8px;
+  }
+
+  .json-editor__header {
+    flex-wrap: wrap;
+  }
+
+  .json-editor__numbers {
+    padding: var(--gap-sheet-fields) var(--gap-sheet-fields)
+      var(--gap-sheet-fields) 0;
+  }
+
+  .json-editor__input,
+  .json-editor__highlight {
+    padding: var(--gap-sheet-fields) var(--padding-content-touch)
+      var(--gap-sheet-fields) 0;
+  }
+
+  .json-editor__line-marks {
+    padding-block: var(--gap-sheet-fields);
+  }
+
+  .json-editor__status {
+    align-items: baseline;
+    overflow-wrap: anywhere;
+  }
+}

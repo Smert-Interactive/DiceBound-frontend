@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/authContext";
+import { importMockSystem } from "../mocks/systemImport";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
 import SchemaValidationFeedback from "../components/SchemaValidationFeedback";
@@ -20,6 +22,11 @@ const INITIAL_SCHEMA_TEXT = JSON.stringify(CUSTOM_SCHEMA.schema, null, 2);
 
 // Черновик импорта хранится на странице: названия и JSON не зависят от состояния редактора.
 export default function ImportSystemPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const importingRef = useRef(false);
+  const [importing, setImporting] = useState(false);
+  const [importFailed, setImportFailed] = useState(false);
   const [systemName, setSystemName] = useState("Custom System");
   const [schemaName, setSchemaName] = useState(CUSTOM_SCHEMA.name);
   const [schemaText, setSchemaText] = useState(INITIAL_SCHEMA_TEXT);
@@ -54,6 +61,7 @@ export default function ImportSystemPage() {
     setChecking(false);
     setResult(null);
     setRequestFailed(false);
+    setImportFailed(false);
   }
 
   // Отправляем исходный текст один раз; исправлять его во время запроса разрешено.
@@ -64,7 +72,8 @@ export default function ImportSystemPage() {
       !schemaName.trim() ||
       !analysis.syntax.valid ||
       readingFile ||
-      checkingRef.current
+      checkingRef.current ||
+      importingRef.current
     )
       return;
     const version = ++validationVersion.current;
@@ -81,6 +90,50 @@ export default function ImportSystemPage() {
       if (version === validationVersion.current) {
         checkingRef.current = false;
         setChecking(false);
+      }
+    }
+  }
+
+  // Отправляем проверенный JSON, а не пробные значения предпросмотра. При сбое черновик остаётся.
+  async function handleImport() {
+    setNameTouched({ system: true, schema: true });
+    if (
+      !user ||
+      !result?.valid ||
+      !systemName.trim() ||
+      !schemaName.trim() ||
+      readingFile ||
+      checkingRef.current ||
+      importingRef.current
+    )
+      return;
+    importingRef.current = true;
+    setImporting(true);
+    setImportFailed(false);
+    const version = validationVersion.current;
+    try {
+      const imported = await importMockSystem(
+        {
+          system_name: systemName,
+          sheet_schema_name: schemaName,
+          schema_text: schemaText,
+        },
+        user.email,
+      );
+      if (version !== validationVersion.current) return;
+      navigate(ROUTES.newCharacter, {
+        state: {
+          importedSystemId: imported.system.id,
+          importedSchemaId: imported.sheet_schema.id,
+          importedSystemName: imported.system.name,
+        },
+      });
+    } catch {
+      if (version === validationVersion.current) setImportFailed(true);
+    } finally {
+      if (version === validationVersion.current) {
+        importingRef.current = false;
+        setImporting(false);
       }
     }
   }
@@ -145,6 +198,7 @@ export default function ImportSystemPage() {
             <Input
               label="Название системы"
               value={systemName}
+              disabled={importing}
               required
               error={
                 nameTouched.system && !systemName.trim()
@@ -159,6 +213,7 @@ export default function ImportSystemPage() {
             <Input
               label="Название листа"
               value={schemaName}
+              disabled={importing}
               required
               error={
                 nameTouched.schema && !schemaName.trim()
@@ -174,6 +229,7 @@ export default function ImportSystemPage() {
           <input
             ref={fileInputRef}
             type="file"
+            disabled={importing}
             accept=".json,application/json"
             aria-label="Загрузить JSON-схему"
             onChange={handleFileChange}
@@ -189,6 +245,7 @@ export default function ImportSystemPage() {
           )}
           <JsonSchemaEditor
             value={schemaText}
+            disabled={importing}
             analysis={analysis}
             errors={result?.errors}
             onChange={handleSchemaChange}
@@ -198,23 +255,54 @@ export default function ImportSystemPage() {
                 size="sm"
                 icon={<UploadIcon />}
                 onClick={handleChooseFile}
+                disabled={importing}
+                aria-label="Выбрать .json файл"
               >
-                Выбрать .json файл
+                <span className="import-system__file-label">
+                  Выбрать .json файл
+                </span>
+                <span className="import-system__file-label-touch">
+                  .json файл
+                </span>
               </Button>
             }
           />
-          {/* Импорт подключается отдельно; положительная проверка сама ничего не сохраняет. */}
+          {importFailed && (
+            <Banner
+              className="import-system__failure"
+              variant="error"
+              title="Не удалось импортировать систему"
+            >
+              Не удалось выполнить действие. Попробуйте ещё раз.
+            </Banner>
+          )}
           <div className="import-system__actions">
             <Button
+              className="import-system__check"
               icon={<CheckIcon />}
               onClick={handleValidate}
-              disabled={!analysis.syntax.valid || readingFile}
+              disabled={!analysis.syntax.valid || readingFile || importing}
               loading={checking}
               loadingText="Проверка…"
             >
               Проверить схему
             </Button>
-            <Button variant="primary" icon={<UploadIcon />} disabled>
+            <Button
+              className="import-system__import"
+              variant="primary"
+              icon={<UploadIcon />}
+              disabled={
+                !result?.valid ||
+                checking ||
+                readingFile ||
+                !systemName.trim() ||
+                !schemaName.trim() ||
+                !user
+              }
+              loading={importing}
+              loadingText="Импорт…"
+              onClick={handleImport}
+            >
               Импортировать систему
             </Button>
           </div>

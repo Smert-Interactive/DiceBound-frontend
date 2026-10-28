@@ -242,3 +242,7 @@
     display: none;
   }
 }
+
+.new-character > .ui-banner {
+  margin-bottom: var(--gap-content);
+}

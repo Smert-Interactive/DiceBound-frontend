@@ -1,14 +1,16 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link, generatePath, useNavigate } from "react-router-dom";
+import { Link, generatePath, useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import SystemCard from "../components/SystemCard";
 import { ROUTES } from "../constants/routes";
 import { createMockCharacter } from "../mocks/characters";
 import { getMockSystems, getMockSchemas } from "../mocks/systems";
+import { getImportedSystem } from "../systems/importRouteState";
 import { UploadIcon } from "../shared/icons";
 import {
+  Banner,
   Button,
   ButtonLink,
   Input,
@@ -51,11 +53,25 @@ export default function NewCharacterPage() {
   const { user } = useAuth();
   // Удалённые и чужие системы не участвуют в создании новых персонажей.
   const systems = getMockSystems(user?.email ?? "");
-  const [systemId, setSystemId] = useState(systems[0].id);
+  const location = useLocation();
+  const imported = getImportedSystem(location.state);
+  // Предвыбор применяем только к своей доступной системе с действительно существующим листом.
+  const importedSystem = systems.find(
+    (item) =>
+      item.id === imported?.systemId &&
+      getMockSchemas(item.id).some((schema) => schema.id === imported.schemaId),
+  );
+  const [showImportNotice, setShowImportNotice] = useState(
+    Boolean(importedSystem),
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [systemId, setSystemId] = useState(importedSystem?.id ?? systems[0].id);
   const system = systems.find((item) => item.id === systemId) ?? systems[0];
   // Лист хранится по id. Если он не из выбранной системы, берётся её первый лист:
   // так при смене системы выбор не нужно сбрасывать вручную.
-  const [schemaId, setSchemaId] = useState("");
+  const [schemaId, setSchemaId] = useState(
+    importedSystem ? imported!.schemaId : "",
+  );
   const schemas = getMockSchemas(system.id);
   const schema = schemas.find((item) => item.id === schemaId) ?? schemas[0];
   const [name, setName] = useState("");
@@ -86,7 +102,20 @@ export default function NewCharacterPage() {
 
   return (
     <div className="new-character">
-      <h1>Новый персонаж</h1>
+      {showImportNotice && importedSystem && (
+        <Banner
+          variant="success"
+          notification
+          title={`Система «${importedSystem.name}» импортирована`}
+          onClose={() => {
+            setShowImportNotice(false);
+            headingRef.current?.focus();
+          }}
+        />
+      )}
+      <h1 ref={headingRef} tabIndex={-1}>
+        Новый персонаж
+      </h1>
       {/* Шаги слева, «Сводка» справа; на планшете и телефоне «Сводка» уходит вниз. */}
       <div className="new-character__layout">
         <div className="new-character__steps">

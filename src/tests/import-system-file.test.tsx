@@ -1,3 +1,5 @@
+import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   act,
@@ -13,11 +15,13 @@ import { MemoryRouter } from "react-router-dom";
 import ImportSystemPage from "../pages/ImportSystemPage";
 import * as files from "../systems/readJsonFile";
 
-// Настоящая страница с черновиком и редактором; API и авторизация здесь не нужны.
+// Проверяем загрузку файла с начальной mock-сессией; настоящий backend не нужен.
 function renderImport() {
   render(
     <MemoryRouter>
-      <ImportSystemPage />
+      <AuthProvider initialUser={MOCK_USER}>
+        <ImportSystemPage />
+      </AuthProvider>
     </MemoryRouter>,
   );
   return {

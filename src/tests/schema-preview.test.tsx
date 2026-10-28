@@ -1,3 +1,5 @@
+import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../auth/authContext";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   cleanup,
@@ -98,7 +100,9 @@ test("preview appears only after success, preserves JSON and resets on a new che
     .mockResolvedValue(success);
   render(
     <MemoryRouter>
-      <ImportSystemPage />
+      <AuthProvider initialUser={MOCK_USER}>
+        <ImportSystemPage />
+      </AuthProvider>
     </MemoryRouter>,
   );
   const editor = screen.getByRole("textbox", { name: "JSON-схема" });
@@ -130,7 +134,9 @@ test("does not display preview after invalid validation or a request failure", a
   });
   render(
     <MemoryRouter>
-      <ImportSystemPage />
+      <AuthProvider initialUser={MOCK_USER}>
+        <ImportSystemPage />
+      </AuthProvider>
     </MemoryRouter>,
   );
   await user.click(screen.getByRole("button", { name: "Проверить схему" }));
