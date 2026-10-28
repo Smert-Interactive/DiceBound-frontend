@@ -42,7 +42,7 @@ export default function SheetResourceField({
       <input
         className="ui-control"
         value={value[part]}
-        inputMode="numeric"
+        inputMode="decimal"
         aria-label={`${field.label}: ${name}`}
         aria-invalid={isInvalid || undefined}
         aria-describedby={isInvalid ? errorId : undefined}

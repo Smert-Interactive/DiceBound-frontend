@@ -8,6 +8,7 @@ import {
   saveMockCharacterVersion,
 } from "../mocks/characterVersions";
 import { DND_SCHEMA } from "../mocks/sheetSchemas";
+import { recalculateSheet } from "../sheet/recalculate";
 import { toCharacterData, toDraft } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
 
@@ -38,6 +39,16 @@ describe("toCharacterData", () => {
     expect(saved.hp).toEqual(data.hp);
     // Backend отвечает 422, если calculated пришёл в запросе: его считает сервер.
     expect(saved).not.toHaveProperty("str_modifier");
+  });
+});
+
+describe("fractional values", () => {
+  test("a value typed with a comma is saved as a number and feeds the formula", () => {
+    const draft = toDraft(schema, getMockCharacterDetails(aldric.id)!.data);
+    draft.str = "16,5";
+
+    expect(toCharacterData(schema, draft).str).toBe(16.5);
+    expect(recalculateSheet(schema, draft).values.str_modifier).toBe(3);
   });
 });
 

@@ -7,6 +7,7 @@ import SheetNumberField from "../sheet/fields/SheetNumberField";
 import { formatModifier } from "../sheet/formatModifier";
 import {
   formatRange,
+  parseNumber,
   sanitizeNumberInput,
   stepNumber,
 } from "../sheet/numberField";
@@ -48,6 +49,46 @@ describe("number input helpers", () => {
     expect(sanitizeNumberInput("5-3", {})).toBe("53");
   });
 
+  test("a fractional part is typed with a dot or a comma, one separator at most", () => {
+    expect(sanitizeNumberInput("1.5", {})).toBe("1.5");
+    expect(sanitizeNumberInput("1,5", {})).toBe("1,5");
+    expect(sanitizeNumberInput("1.5.2", {})).toBe("1.52");
+    expect(sanitizeNumberInput("1,5.2", {})).toBe("1,52");
+    expect(sanitizeNumberInput("2.x5", {})).toBe("2.5");
+    expect(sanitizeNumberInput("-1.5", { min: -10 })).toBe("-1.5");
+    expect(sanitizeNumberInput("-1.5", strField)).toBe("1.5");
+  });
+
+  test("a separator without digits before it gets a zero", () => {
+    expect(sanitizeNumberInput(".", {})).toBe("0.");
+    expect(sanitizeNumberInput(",5", {})).toBe("0,5");
+  });
+
+  test("parses dot and comma into the same number", () => {
+    expect(parseNumber("1.5")).toBe(1.5);
+    expect(parseNumber("1,5")).toBe(1.5);
+    expect(parseNumber("-0.25")).toBe(-0.25);
+    expect(parseNumber("16")).toBe(16);
+    // Пока набирают «1.5», промежуточное «1.» не должно мигать ошибкой.
+    expect(parseNumber("1.")).toBe(1);
+    expect(parseNumber("")).toBeUndefined();
+    expect(parseNumber("-")).toBeUndefined();
+    expect(parseNumber(".5")).toBeUndefined();
+    expect(parseNumber("1.5.2")).toBeUndefined();
+  });
+
+  test("steps a fractional value by one without a binary tail", () => {
+    expect(stepNumber("1.5", 1, {})).toBe("2.5");
+    expect(stepNumber("1,5", -1, {})).toBe("0.5");
+    expect(stepNumber("4.35", 1, {})).toBe("5.35");
+    expect(stepNumber("0.7", 1, {})).toBe("1.7");
+    expect(stepNumber("1.1", 1, { max: 1.5 })).toBe("1.5");
+  });
+
+  test("an empty field starts from a fractional min as it is", () => {
+    expect(stepNumber("", 1, { min: 0.25 })).toBe("0.25");
+  });
+
   test("steps by one and stays inside min and max", () => {
     expect(stepNumber("16", 1, strField)).toBe("17");
     expect(stepNumber("16", -1, strField)).toBe("15");
@@ -87,6 +128,14 @@ describe("validateField: number", () => {
     expect(validateField(strField, "16")).toBeUndefined();
     expect(validateField(strField, "31")).toBe("Допустимо от 1 до 30");
     expect(validateField(strField, "")).toBe("Допустимо от 1 до 30");
+  });
+
+  test("accepts fractional values inside the range, with a dot or a comma", () => {
+    expect(validateField(strField, 1.5)).toBeUndefined();
+    expect(validateField(strField, "1.5")).toBeUndefined();
+    expect(validateField(strField, "1,5")).toBeUndefined();
+    expect(validateField(strField, "0.5")).toBe("Допустимо от 1 до 30");
+    expect(validateField(strField, "30,5")).toBe("Допустимо от 1 до 30");
   });
 
   test("one bound gives a shorter message", () => {
