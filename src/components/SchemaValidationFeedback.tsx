@@ -56,7 +56,7 @@ export default function SchemaValidationFeedback({
     <div className="schema-validation">
       <Banner
         variant="error"
-        title={`Найдено ${count} ${pluralize(count, { one: "ошибка", few: "ошибки", many: "ошибок" })}`}
+        title={`${count % 10 === 1 && count % 100 !== 11 ? "Найдена" : "Найдено"} ${count} ${pluralize(count, { one: "ошибка", few: "ошибки", many: "ошибок" })}`}
       >
         Исправьте JSON и проверьте снова
       </Banner>

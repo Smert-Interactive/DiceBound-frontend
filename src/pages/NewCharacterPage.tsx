@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, generatePath, useNavigate, useLocation } from "react-router-dom";
 
@@ -78,6 +78,11 @@ export default function NewCharacterPage() {
   const navigate = useNavigate();
   const hintId = useId();
   const [pending, setPending] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
+  const createErrorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (createFailed) createErrorRef.current?.focus();
+  }, [createFailed]);
   const isNameEmpty = name.trim().length === 0;
 
   async function handleCreate() {
@@ -85,6 +90,7 @@ export default function NewCharacterPage() {
     // приходит: отсекаем его здесь, как и повторное нажатие во время запроса.
     if (isNameEmpty || pending || !user) return;
     setPending(true);
+    setCreateFailed(false);
     try {
       const character = await createMockCharacter(
         {
@@ -95,6 +101,9 @@ export default function NewCharacterPage() {
         user.email,
       );
       navigate(generatePath(ROUTES.character, { id: character.id }));
+    } catch {
+      // Сохраняем имя и выбор листа; пользователь может повторить создание.
+      setCreateFailed(true);
     } finally {
       setPending(false);
     }
@@ -225,6 +234,18 @@ export default function NewCharacterPage() {
             Поля листа заполнятся значениями по умолчанию из схемы. Состояние
             сразу сохранится как версия&nbsp;1.
           </p>
+          {createFailed && (
+            <div
+              className="new-character__failure"
+              ref={createErrorRef}
+              tabIndex={-1}
+            >
+              <Banner
+                variant="error"
+                title="Не удалось выполнить действие. Попробуйте ещё раз."
+              />
+            </div>
+          )}
           <div className="new-character__actions">
             {/* Пока создаётся персонаж, остальные кнопки недоступны (ui-ux). */}
             {pending ? (

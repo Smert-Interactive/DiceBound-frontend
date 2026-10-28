@@ -33,6 +33,8 @@ interface Props {
   readOnly?: boolean;
   // Компактный предпросмотр показывает number и calculated отдельными полями.
   groupPairs?: boolean;
+  // В предпросмотре формула уже видна в поле; пояснение под ним не занимает место.
+  showCalculatedHints?: boolean;
   onChange?: (fieldId: string, value: SheetDraftValue) => void;
 }
 
@@ -57,6 +59,7 @@ export default function DynamicSheetRenderer({
   changed = NO_CHANGES,
   readOnly = false,
   groupPairs = true,
+  showCalculatedHints = true,
   onChange,
 }: Props) {
   const isPhone = useMediaQuery("(max-width: 639px)");
@@ -141,6 +144,7 @@ export default function DynamicSheetRenderer({
           <SheetCalculatedField
             field={field}
             value={calculated[field.id]}
+            showHint={showCalculatedHints}
             dependsOn={getFormulaFieldIds(field.formula).map(
               (id) => labels.get(id) ?? id,
             )}

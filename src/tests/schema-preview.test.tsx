@@ -49,6 +49,9 @@ test("preview supports the six shared field types and recalculates only local tr
   fireEvent.change(preview.getByRole("textbox", { name: "Реакция" }), {
     target: { value: "12" },
   });
+  expect(
+    preview.queryByText(/Не редактируется, пересчитывается/u),
+  ).not.toBeInTheDocument();
   const defense = preview.getByRole("group", { name: "Защита" });
   expect(within(defense).getByText("10")).toBeInTheDocument();
   fireEvent.change(preview.getByRole("textbox", { name: "Реакция" }), {

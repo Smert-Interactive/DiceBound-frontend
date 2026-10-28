@@ -40,12 +40,19 @@ export default function SchemaPreview({ schema }: Props) {
       data-system="imported"
     >
       <header className="schema-preview__header">
-        <h2>Предпросмотр листа</h2>
+        <h2>
+          Предпросмотр листа
+          <span className="schema-preview__mobile-caption">
+            {" "}
+            · тот же renderer
+          </span>
+        </h2>
         <Chip>тот же renderer</Chip>
       </header>
       <DynamicSheetRenderer
         schema={schema}
         groupPairs={false}
+        showCalculatedHints={false}
         draft={draft}
         calculated={calculation.values}
         errors={{ ...errors, ...(changed.size ? calculation.errors : {}) }}

@@ -246,3 +246,8 @@
 .new-character > .ui-banner {
   margin-bottom: var(--gap-content);
 }
+
+.new-character__failure {
+  margin-bottom: var(--gap-content-touch);
+  scroll-margin-bottom: 180px;
+}
