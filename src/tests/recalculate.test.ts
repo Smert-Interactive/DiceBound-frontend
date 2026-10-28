@@ -71,7 +71,7 @@ describe("recalculateSheet", () => {
     expect(errors.a).toBe("Не удалось вычислить значение");
   });
 
-  it("деление на ноль даёт общий текст, а не «Зависит от»", () => {
+  it("деление на ноль называет поля-числа формулы, а не «Зависит от»", () => {
     const divide: SheetSchemaBody = {
       sections: [
         {
@@ -87,6 +87,41 @@ describe("recalculateSheet", () => {
     };
     const { values, errors } = recalculateSheet(divide, { a: "6", b: "0" });
     expect(values.q).toBeUndefined();
-    expect(errors.q).toBe("Не удалось вычислить значение");
+    expect(errors.q).toBe("Деление на ноль: измените A, B");
+  });
+
+  it("деление на ноль через другой calculated называет числа, а не calculated", () => {
+    const chained: SheetSchemaBody = {
+      sections: [
+        {
+          id: "s",
+          label: "S",
+          fields: [
+            { id: "x", type: "number", label: "X" },
+            { id: "m", type: "calculated", label: "M", formula: "x - 2" },
+            { id: "q", type: "calculated", label: "Q", formula: "10 / m" },
+          ],
+        },
+      ],
+    };
+    const { errors } = recalculateSheet(chained, { x: "2" });
+    expect(errors.q).toBe("Деление на ноль: измените X");
+  });
+
+  it("деление на ноль в формуле из одних констант остаётся общим текстом", () => {
+    const constants: SheetSchemaBody = {
+      sections: [
+        {
+          id: "s",
+          label: "S",
+          fields: [
+            { id: "q", type: "calculated", label: "Q", formula: "1 / 0" },
+          ],
+        },
+      ],
+    };
+    expect(recalculateSheet(constants, {}).errors.q).toBe(
+      "Не удалось вычислить значение",
+    );
   });
 });

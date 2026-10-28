@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { Button, Modal } from "../shared/ui";
 
 import "./RevokeAccessModal.css";
@@ -9,6 +9,7 @@ interface Props {
   characterName: string;
   onCancel: () => void;
   onConfirm: () => Promise<void>;
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 // Подтверждает отзыв VIEW: получатель теряет доступ к оригиналу, а не к EDIT-копии.
@@ -18,6 +19,7 @@ export default function RevokeAccessModal({
   characterName,
   onCancel,
   onConfirm,
+  fallbackFocusRef,
 }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
@@ -47,6 +49,7 @@ export default function RevokeAccessModal({
   return (
     <Modal
       open={open}
+      fallbackFocusRef={fallbackFocusRef}
       title="Отозвать доступ VIEW?"
       className="revoke-access-modal"
       {...(pending

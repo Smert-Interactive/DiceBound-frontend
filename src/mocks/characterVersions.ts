@@ -1,3 +1,5 @@
+import { recalculateSheet } from "../sheet/recalculate";
+import { toDraft } from "../sheet/sheetDraft";
 import type { CharacterData } from "../sheet/sheetTypes";
 import type {
   CharacterVersion,
@@ -9,6 +11,7 @@ import {
   getMockCharacterDetails,
 } from "./characterDetails";
 import { getMockCharacterList, MOCK_CHARACTERS } from "./characters";
+import { getMockSheetSchema } from "./sheetSchemas";
 
 // Демонстрационные правки ранних версий. Ни одна формула при чтении истории не исполняется:
 // str_modifier уже записан в снимок, как в ответе backend. Текущая версия берётся без правок.
@@ -156,6 +159,38 @@ export function getMockCharacterVersion(
   return snapshot && structuredClone(snapshot);
 }
 
+// Повторяет проверку и расчёт backend при PUT /characters/{id}: в запросе только
+// пользовательские значения, calculated присылать нельзя, а формулы считает сервер и кладёт
+// результат в снимок. Ошибка формулы (деление на ноль, цикл) — как 422 VALIDATION_ERROR.
+function withCalculatedValues(
+  characterId: string,
+  data: CharacterData,
+): CharacterData {
+  const details = getMockCharacterDetails(characterId);
+  const schema = details && getMockSheetSchema(details.sheet_schema_id);
+  if (!schema) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+
+  const calculatedIds = schema.schema.sections
+    .flatMap((section) => section.fields)
+    .filter((field) => field.type === "calculated")
+    .map((field) => field.id);
+  if (calculatedIds.some((id) => id in data)) {
+    throw new Error("VALIDATION_ERROR");
+  }
+
+  const result = recalculateSheet(schema.schema, toDraft(schema.schema, data));
+  if (Object.keys(result.errors).length > 0) {
+    throw new Error("VALIDATION_ERROR");
+  }
+
+  const saved = { ...data };
+  for (const id of calculatedIds) {
+    const value = result.values[id];
+    if (value !== undefined) saved[id] = value;
+  }
+  return saved;
+}
+
 // Повторяет сохранение листа: создаёт версию N+1 и делает её текущей. Версия появляется только
 // по кнопке «Сохранить» (mvp-scope), поэтому других способов её создать нет.
 export async function saveMockCharacterVersion(
@@ -172,13 +207,14 @@ export async function saveMockCharacterVersion(
   if (owned) ensureMockCharacterVersions(characterId);
   const versions = owned ? versionsByCharacter.get(characterId) : undefined;
   if (!versions) throw new Error("NOT_FOUND_OR_FORBIDDEN");
+  const saved = withCalculatedValues(characterId, data);
 
   const versionNumber = versions[0].version_number + 1;
   const createdAt = new Date().toISOString();
   const id = `${versionNumber.toString(16).padStart(8, "0")}${characterId.slice(8)}`;
 
   // После задержки всё меняется вместе, без промежуточного await.
-  applyMockCharacterVersion(characterId, data, versionNumber, createdAt);
+  applyMockCharacterVersion(characterId, saved, versionNumber, createdAt);
   versionsByCharacter.set(characterId, [
     {
       id,
@@ -193,7 +229,7 @@ export async function saveMockCharacterVersion(
     character_id: characterId,
     version_number: versionNumber,
     created_at: createdAt,
-    data: structuredClone(data),
+    data: structuredClone(saved),
   });
   return versionNumber;
 }

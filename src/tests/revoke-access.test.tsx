@@ -160,6 +160,9 @@ describe("VIEW revocation confirmation", () => {
     expect(
       screen.getByRole("row", { name: /user@example.com/u }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Отозвать доступ user@example.com" }),
+    ).toHaveFocus();
     await user.click(
       screen.getByRole("button", { name: "Отозвать доступ user@example.com" }),
     );
@@ -181,6 +184,7 @@ describe("VIEW revocation confirmation", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Доступ user@example.com отозван",
     );
+    expect(screen.getByRole("button", { name: "Выдать доступ" })).toHaveFocus();
     await user.click(screen.getByRole("button", { name: "Закрыть" }));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Лист" }));

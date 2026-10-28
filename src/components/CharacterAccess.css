@@ -36,19 +36,19 @@
 }
 
 .character-access__email-col {
-  width: 28%;
+  width: 26.23%;
 }
 
 .character-access__permission-col {
-  width: 14%;
+  width: 14.38%;
 }
 
 .character-access__history-col {
-  width: 21%;
+  width: 21.82%;
 }
 
 .character-access__action-col {
-  width: 37%;
+  width: 37.57%;
 }
 
 .character-access__table thead th {
@@ -73,11 +73,15 @@
   overflow-wrap: anywhere;
 }
 
+.character-access__email b {
+  font-weight: 400;
+}
+
 .character-access__email span {
   display: block;
-  margin-top: var(--gap-history-metadata);
+  margin-top: 1px;
   color: var(--color-text-muted);
-  font: 400 var(--font-metadata) / 1.5 var(--mono);
+  font: 400 var(--font-metadata) / 1.5 var(--sans);
 }
 
 .character-access__table .ui-button {
@@ -215,7 +219,7 @@
 
   .character-access__cards {
     display: grid;
-    gap: var(--gap-history-cards);
+    gap: var(--gap-content-touch);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -229,10 +233,6 @@
     background: var(--color-bg-surface);
   }
 
-  .character-access__card[data-permission="VIEW"] {
-    border-style: dashed;
-  }
-
   .character-access__recipient {
     display: flex;
     align-items: center;
@@ -242,14 +242,18 @@
 
   .character-access__recipient b {
     min-width: 0;
-    font-size: var(--font-button);
+    font-size: var(--font-ui);
+  }
+
+  .character-access__recipient .ui-chip {
+    line-height: 1.5;
   }
 
   .character-access__details {
     display: grid;
-    gap: var(--gap-history-inline);
-    margin: var(--gap-history-cards) 0;
-    font-size: var(--font-metadata);
+    gap: var(--gap-inline-compact);
+    margin: var(--gap-history-help) 0;
+    font-size: var(--font-button);
   }
 
   .character-access__details > div {
@@ -259,12 +263,19 @@
   }
 
   .character-access__details dt {
+    padding-top: 1px;
     color: var(--color-text-muted);
+    font: 400 var(--font-caption) / 1.5 var(--mono);
   }
 
   .character-access__details dd {
     margin: 0;
+    color: var(--color-text-secondary);
     text-align: right;
+  }
+
+  .character-access__details .character-access__date {
+    font: 400 var(--font-explanation) / 1.5 var(--mono);
   }
 
   .character-access__action .ui-button {
@@ -274,9 +285,8 @@
   }
 
   .character-access__permanent {
-    justify-content: center;
-    padding-top: var(--gap-history-help);
-    border-top: 1px solid var(--color-border-divider);
+    align-items: center;
+    font-size: var(--font-explanation);
   }
 
   .character-access__empty {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
@@ -27,7 +27,11 @@ import { getMockSheetSchema } from "../mocks/sheetSchemas";
 import { MOCK_SYSTEMS } from "../mocks/systems";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { recalculateSheet } from "../sheet/recalculate";
-import { getSaveStatus, type SavePhase } from "../sheet/saveStatus";
+import {
+  getSaveStatus,
+  hasSaveBlockers,
+  type SavePhase,
+} from "../sheet/saveStatus";
 import { getStoredCalculated, toCharacterData } from "../sheet/sheetDraft";
 import type { SheetDraftValue } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
@@ -71,6 +75,8 @@ export default function CharacterPage() {
   const [revokeTarget, setRevokeTarget] = useState<ViewShare | null>(null);
   const [isRevokeOpen, setIsRevokeOpen] = useState(false);
   const [revokeSession, setRevokeSession] = useState(0);
+  // После отзыва строка с прежней кнопкой исчезает; Modal вернёт фокус на выдачу доступа.
+  const addAccessButtonRef = useRef<HTMLButtonElement>(null);
   // После mock-запроса перечитываем выдачи; цель остаётся для анимации закрытия окна.
   const [, refreshShares] = useState(0);
 
@@ -143,7 +149,7 @@ export default function CharacterPage() {
   const isCopy = Boolean(summary?.copy_source_owner_name);
   const saveStatus = getSaveStatus({
     changedCount: sheet.changed.size,
-    hasErrors: Object.keys(fieldErrors).length > 0,
+    hasErrors: hasSaveBlockers(fieldErrors, calculation.errors),
     phase: savePhase,
   });
 
@@ -194,7 +200,7 @@ export default function CharacterPage() {
     try {
       await saveMockCharacterVersion(
         id,
-        toCharacterData(schema.schema, sheet.draft, calculation.values),
+        toCharacterData(schema.schema, sheet.draft),
         user.email,
       );
       setSavePhase("saved");
@@ -209,7 +215,7 @@ export default function CharacterPage() {
       label: "Лист",
       content: (
         // На время запроса лист блокируется через inert, а не через readOnly: readOnly меняет вид
-        // полей (заливка, «из snapshot»), а ui-ux требует блокировку без смены вида.
+        // полей (плашки вместо полей), а ui-ux требует блокировку без смены вида.
         <div
           inert={saveStatus === "saving"}
           aria-busy={saveStatus === "saving"}
@@ -275,6 +281,7 @@ export default function CharacterPage() {
       label: "Доступ",
       content: (
         <CharacterAccess
+          addButtonRef={addAccessButtonRef}
           shares={getMockCharacterShares(id, user.email) ?? []}
           onAdd={handleShareOpen}
           onRevoke={handleRevokeRequest}
@@ -354,6 +361,7 @@ export default function CharacterPage() {
           characterName={character.name}
           onCancel={handleRevokeCancel}
           onConfirm={handleRevokeConfirm}
+          fallbackFocusRef={addAccessButtonRef}
         />
       )}
       {shareSession > 0 && character.access === "OWNER" && (

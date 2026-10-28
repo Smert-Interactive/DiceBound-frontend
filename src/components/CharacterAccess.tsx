@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type RefObject } from "react";
 
 import type { CharacterShare } from "../sharing/sharingTypes";
 import { formatDate } from "../shared/formatDate";
@@ -10,13 +10,19 @@ import "./CharacterAccess.css";
 
 interface Props {
   shares: readonly CharacterShare[];
+  addButtonRef?: RefObject<HTMLButtonElement | null>;
   // Окна выдачи и отзыва подключаются отдельно; без обработчика кнопка недоступна.
   onAdd?: () => void;
   onRevoke?: (share: CharacterShare & { permission: "VIEW" }) => void;
 }
 
 // Выданные доступы владельца: таблица на широком экране, карточки на телефоне и справка.
-export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
+export default function CharacterAccess({
+  shares,
+  onAdd,
+  onRevoke,
+  addButtonRef,
+}: Props) {
   const titleId = useId();
   const helpId = useId();
   const isPhone = useMediaQuery("(max-width: 639px)");
@@ -49,8 +55,10 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
 
     return (
       <Button
-        variant="ghost"
-        size="sm"
+        {...(isPhone
+          ? { variant: "default" as const }
+          : { variant: "ghost" as const })}
+        size={isPhone ? "normal" : "sm"}
         disabled={!onRevoke}
         onClick={() => onRevoke?.(share)}
         aria-label={`Отозвать доступ ${share.recipient_email}`}
@@ -76,8 +84,9 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
         <header className="character-access__head">
           <h2 id={titleId}>Пользователи с доступом</h2>
           <Button
+            ref={addButtonRef}
             variant="primary"
-            size="sm"
+            size={isPhone ? "normal" : "sm"}
             icon={<PlusIcon />}
             disabled={!onAdd}
             onClick={onAdd}
@@ -106,7 +115,7 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
                     <dt>
                       {share.permission === "VIEW" ? "Выдан" : "Копия передана"}
                     </dt>
-                    <dd>{date(share)}</dd>
+                    <dd className="character-access__date">{date(share)}</dd>
                   </div>
                   <div>
                     <dt>История версий</dt>

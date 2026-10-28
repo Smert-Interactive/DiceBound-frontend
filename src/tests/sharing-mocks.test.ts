@@ -44,10 +44,15 @@ test("VIEW exposes the live original and revocation removes it from the recipien
     owner_username: owner,
   });
   const original = details.getMockCharacterDetails(originalId, owner)!;
+  const { getMockSheetSchema } = await import("../mocks/sheetSchemas");
+  const { toDraft, toCharacterData } = await import("../sheet/sheetDraft");
+  const schema = getMockSheetSchema(original.sheet_schema_id)!.schema;
+  // Запрос сохранения содержит только пользовательские поля; calculated возвращает mock-backend.
+  const saveData = toCharacterData(schema, toDraft(schema, original.data));
   await respond(
     history.saveMockCharacterVersion(
       originalId,
-      { ...original.data, level: 4 },
+      { ...saveData, level: 4 },
       owner,
     ),
   );
@@ -71,6 +76,11 @@ test("EDIT starts at v1, saves independently and cannot be revoked", async () =>
   const details = await import("../mocks/characterDetails");
   const history = await import("../mocks/characterVersions");
   const original = details.getMockCharacterDetails(originalId, owner)!;
+  const { getMockSheetSchema } = await import("../mocks/sheetSchemas");
+  const { toDraft, toCharacterData } = await import("../sheet/sheetDraft");
+  const schema = getMockSheetSchema(original.sheet_schema_id)!.schema;
+  // Запрос сохранения содержит только пользовательские поля; calculated возвращает mock-backend.
+  const saveData = toCharacterData(schema, toDraft(schema, original.data));
   const result = await respond(
     shares.createMockCharacterShare(
       originalId,
@@ -104,7 +114,7 @@ test("EDIT starts at v1, saves independently and cannot be revoked", async () =>
     history.saveMockCharacterVersion(
       copyId,
       {
-        ...original.data,
+        ...saveData,
         level: 8,
         hp: { current: 1, max: 30 },
       },
@@ -117,7 +127,7 @@ test("EDIT starts at v1, saves independently and cannot be revoked", async () =>
   await respond(
     history.saveMockCharacterVersion(
       originalId,
-      { ...original.data, level: 4 },
+      { ...saveData, level: 4 },
       owner,
     ),
   );

@@ -1,6 +1,6 @@
 import type {
   AnchorHTMLAttributes,
-  ButtonHTMLAttributes,
+  ComponentPropsWithRef,
   ReactNode,
 } from "react";
 
@@ -34,7 +34,7 @@ type LoadingProps =
 type ButtonProps = Appearance &
   AccessibleIcon &
   LoadingProps &
-  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
+  Omit<ComponentPropsWithRef<"button">, "children">;
 
 type ButtonLinkProps = Appearance &
   AccessibleIcon &

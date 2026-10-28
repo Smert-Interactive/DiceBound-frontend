@@ -4,18 +4,13 @@
   gap: var(--gap-content);
 }
 
+/* Цвет заголовка, значка и пояснения даёт общий баннер (ui-tone--violet, ui-banner__description). */
 .character-version-page__notice {
   align-items: center;
-  color: var(--color-text-primary);
 }
 
 .character-version-page__notice > svg {
   margin-top: 0;
-  color: var(--color-calculated-text);
-}
-
-.character-version-page__notice .ui-banner__description {
-  color: var(--color-text-muted);
 }
 
 @media (max-width: 639px) {

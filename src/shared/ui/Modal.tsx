@@ -36,6 +36,8 @@ type ModalProps = CloseProps & {
   children: ReactNode;
   actions?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
+  // Если открывшая окно кнопка удалена, возвращаем фокус к оставшемуся действию.
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
   className?: string;
 };
 
@@ -47,6 +49,7 @@ export function Modal({
   children,
   actions,
   initialFocusRef,
+  fallbackFocusRef,
   className = "",
 }: ModalProps) {
   const id = useId();
@@ -88,7 +91,10 @@ export function Modal({
           originalScrollbarGutterRef.current;
         originalScrollbarGutterRef.current = null;
       }
-      if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+      const target = returnFocusRef.current?.isConnected
+        ? returnFocusRef.current
+        : fallbackFocusRef?.current;
+      if (target?.isConnected) target.focus();
     }
 
     if (open) {
@@ -151,10 +157,11 @@ export function Modal({
       window.clearTimeout(timer);
       dialog.removeEventListener("animationend", handleAnimationEnd);
     };
-  }, [open, initialFocusRef]);
+  }, [open, initialFocusRef, fallbackFocusRef]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const fallbackFocusTarget = fallbackFocusRef?.current;
 
     return () => {
       dialog?.close();
@@ -167,9 +174,12 @@ export function Modal({
           originalScrollbarGutterRef.current;
         originalScrollbarGutterRef.current = null;
       }
-      if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+      const target = returnFocusRef.current?.isConnected
+        ? returnFocusRef.current
+        : fallbackFocusTarget;
+      if (target?.isConnected) target.focus();
     };
-  }, []);
+  }, [fallbackFocusRef]);
 
   return createPortal(
     <dialog

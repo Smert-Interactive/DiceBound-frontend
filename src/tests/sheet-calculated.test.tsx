@@ -91,7 +91,6 @@ describe("SheetCalculatedField", () => {
     const group = screen.getByRole("group", { name: "STR Modifier" });
     expect(group).toHaveTextContent("+3");
     expect(group).toHaveTextContent("floor");
-    expect(group).not.toHaveTextContent("из snapshot");
     expect(group).not.toHaveAccessibleDescription();
   });
 

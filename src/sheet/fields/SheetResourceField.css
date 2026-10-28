@@ -55,8 +55,3 @@
   height: 100%;
   background: var(--sheet-resource-fill, var(--gradient-resource-dnd));
 }
-
-/* Read-only: полоса серая, без цвета системы. */
-.sheet-resource[data-readonly] .sheet-resource__bar i {
-  background: var(--color-code-gutter);
-}
