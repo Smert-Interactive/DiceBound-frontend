@@ -21,6 +21,7 @@
   /* JSON редактор */
   --color-bg-editor: #101016;
   --color-code-gutter: #4a4a60;
+  --color-code-text: #c9c5d2;
   --color-code-number: #e6c07b;
   --gradient-primary-hover: linear-gradient(180deg, #d33d59, #bb3047);
   --color-primary-pressed: #b02a40;
@@ -229,6 +230,11 @@
   --width-access-history-narrow: 100px;
   --width-access-action-narrow: 168px;
   --height-access-action-touch: 44px;
+
+  /* JSON-редактор: высота, колонка номеров и интерлиньяж по ui-ux. */
+  --height-json-editor: 536px;
+  --width-editor-gutter: 52px;
+  --line-code: 1.65;
 
   /* Список систем: ширины колонок и примечания по ui-ux. */
   --width-systems-source: 220px;
