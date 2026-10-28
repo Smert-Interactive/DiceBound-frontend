@@ -3,6 +3,20 @@ import type { SaveBarStatus } from "../shared/states/saveBarModel";
 // Что случилось с последним запросом сохранения. Любая правка листа возвращает idle.
 export type SavePhase = "idle" | "saving" | "saved" | "error";
 
+type ErrorsById = Readonly<Record<string, string>>;
+
+// Лист нельзя сохранить, пока есть ошибка в поле или сбой формулы calculated: backend отвечает
+// на оба случая 422 (деление на ноль, цикл, неразбираемая формула), версия бы не создалась.
+export function hasSaveBlockers(
+  fieldErrors: ErrorsById,
+  calculationErrors: ErrorsById,
+): boolean {
+  return (
+    Object.keys(fieldErrors).length > 0 ||
+    Object.keys(calculationErrors).length > 0
+  );
+}
+
 interface Input {
   // Сколько полей изменено относительно сохранённой версии.
   changedCount: number;

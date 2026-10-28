@@ -48,13 +48,13 @@ export function toDraft(
   return draft;
 }
 
-// Черновик → данные для сохранения: строки становятся числами, к ним добавляются результаты
-// формул (снимок версии хранит и calculated). Вызывать после validateSheet без ошибок;
+// Черновик → данные для сохранения: строки становятся числами. Только пользовательские
+// значения: backend сам считает формулы и отвечает 422, если calculated пришёл в запросе
+// (technical-contracts, SaveCharacterRequest). Вызывать после validateSheet без ошибок;
 // значение, которое всё же не разобралось, в данные не попадает.
 export function toCharacterData(
   schema: SheetSchemaBody,
   draft: SheetDraft,
-  calculated: Readonly<Record<string, number | undefined>>,
 ): CharacterData {
   const data: CharacterData = {};
 
@@ -84,11 +84,8 @@ export function toCharacterData(
         }
         break;
       }
-      case "calculated": {
-        const result = calculated[field.id];
-        if (result !== undefined) data[field.id] = result;
+      case "calculated":
         break;
-      }
     }
   }
 

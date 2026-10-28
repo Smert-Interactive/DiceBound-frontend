@@ -103,6 +103,52 @@
   }
 }
 
+/* Режим чтения, секция от 612 px (Version): модификатор и формула стоят в одной плашке.
+   Рамка и фон рисуются на ::before во второй строке сетки поля, число и формула лежат
+   поверх неё в той же строке. Колонке модификатора достаётся больше места: число короткое. */
+@container sheet-section (min-width: 612px) {
+  .sheet-pair[data-readonly] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+
+  .sheet-calculated--inline {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .sheet-calculated--inline::before {
+    content: "";
+    grid-area: 2 / 1 / 3 / -1;
+    box-sizing: border-box;
+    height: var(--size-field);
+    border: 1px dashed var(--tint-calculated-field-border);
+    border-radius: var(--radius-field);
+    background: var(--tint-calculated-field-bg);
+  }
+
+  .sheet-calculated--inline .sheet-calculated__label {
+    grid-column: 1 / -1;
+  }
+
+  .sheet-calculated--inline .sheet-calculated__box {
+    grid-area: 2 / 1;
+    justify-content: flex-start;
+    /* Высота поля, как у числа слева: в паре плашка модификатора обычно ниже (малая кнопка). */
+    min-height: var(--size-field);
+    height: var(--size-field);
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .sheet-calculated--inline .sheet-calculated__pair-formula {
+    grid-area: 2 / 2;
+    margin-top: 0;
+    padding-right: 12px;
+  }
+}
+
 /* Узкая секция: каждая пара — строка на всю ширину (MSheetDnD): подпись, счётчик,
    модификатор, формула под строкой. */
 @container sheet-section (max-width: 611px) {
@@ -163,6 +209,13 @@
   .sheet-pair .ui-field__hint {
     grid-column: 2 / -1;
     margin: 0;
+  }
+
+  /* Подпись модификатора здесь скрыта, поэтому формулу отмечает знак ƒ, как на MSheetDnD.
+     Вторая запись content пустым альтернативным текстом прячет знак от скринридера. */
+  .sheet-pair .sheet-calculated__pair-formula::before {
+    content: "ƒ ";
+    content: "ƒ " / "";
   }
 
   /* При ошибке числа вместо формулы виден текст ошибки (MSheetDnD). */

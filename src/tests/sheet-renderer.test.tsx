@@ -219,7 +219,6 @@ describe("pairs of a value and its modifier", () => {
     renderSheet({ readOnly: true });
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getByText(/floor/u)).toBeInTheDocument();
-    expect(screen.queryByText("из snapshot")).toBeNull();
     expect(screen.getByText("+3")).toBeInTheDocument();
   });
 });

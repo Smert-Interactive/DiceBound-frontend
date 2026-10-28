@@ -39,7 +39,7 @@ export default function SheetNumberField({
       className={`sheet-number${showCounter ? " sheet-number--counter" : ""}`}
       label={field.label}
       value={value}
-      inputMode="numeric"
+      inputMode="decimal"
       onChange={(event) =>
         onChange(sanitizeNumberInput(event.target.value, field))
       }

@@ -30,29 +30,43 @@ describe("reset", () => {
 });
 
 describe("toCharacterData", () => {
-  test("turns the draft back into numbers and adds the calculated values", () => {
+  test("turns the draft back into numbers and leaves calculated values out", () => {
     const data = getMockCharacterDetails(aldric.id)!.data;
     const draft = toDraft(schema, data);
     draft.str = "16";
-    const saved = toCharacterData(
-      schema,
-      draft,
-      recalculateSheet(schema, draft).values,
-    );
+    const saved = toCharacterData(schema, draft);
     expect(saved.str).toBe(16);
-    expect(saved.str_modifier).toBe(3);
     expect(saved.hp).toEqual(data.hp);
+    // Backend отвечает 422, если calculated пришёл в запросе: его считает сервер.
+    expect(saved).not.toHaveProperty("str_modifier");
+  });
+});
+
+describe("fractional values", () => {
+  test("a value typed with a comma is saved as a number and feeds the formula", () => {
+    const draft = toDraft(schema, getMockCharacterDetails(aldric.id)!.data);
+    draft.str = "16,5";
+
+    expect(toCharacterData(schema, draft).str).toBe(16.5);
+    expect(recalculateSheet(schema, draft).values.str_modifier).toBe(3);
   });
 });
 
 describe("saveMockCharacterVersion", () => {
+  // Запрос как у страницы: только пользовательские значения, без calculated.
+  function userData(name: string, str = "16") {
+    const draft = toDraft(schema, getMockCharacterDetails(aldric.id)!.data);
+    draft.name = name;
+    draft.str = str;
+    return toCharacterData(schema, draft);
+  }
+
   test("creates version N+1, makes it current and updates the sheet", async () => {
     const before = getMockCharacterDetails(aldric.id)!;
-    const data = { ...before.data, name: "Saved" };
 
     const created = await saveMockCharacterVersion(
       aldric.id,
-      data,
+      userData("Saved"),
       "alex@example.com",
     );
     expect(created).toBe(before.current_version_number + 1);
@@ -60,12 +74,34 @@ describe("saveMockCharacterVersion", () => {
     const after = getMockCharacterDetails(aldric.id)!;
     expect(after.current_version_number).toBe(created);
     expect(after.data.name).toBe("Saved");
+    // Формулы считает сервер: результат попадает в снимок, хотя в запросе его не было.
+    expect(after.data.str_modifier).toBe(3);
     const versions = getMockCharacterVersions(aldric.id, "alex@example.com")!;
     expect(versions[0]).toMatchObject({
       version_number: created,
       is_current: true,
     });
     expect(versions.filter((item) => item.is_current)).toHaveLength(1);
+  });
+
+  test("rejects a request that supplies calculated values, like the backend", async () => {
+    const data = { ...userData("Saved"), str_modifier: 3 };
+    await expect(
+      saveMockCharacterVersion(aldric.id, data, "alex@example.com"),
+    ).rejects.toThrow("VALIDATION_ERROR");
+  });
+
+  test("rejects a sheet whose formula cannot be calculated and creates no version", async () => {
+    const before = getMockCharacterDetails(aldric.id)!;
+    // Без str формула str_modifier не считается.
+    const data = userData("Saved");
+    delete data.str;
+    await expect(
+      saveMockCharacterVersion(aldric.id, data, "alex@example.com"),
+    ).rejects.toThrow("VALIDATION_ERROR");
+    expect(getMockCharacterDetails(aldric.id)!.current_version_number).toBe(
+      before.current_version_number,
+    );
   });
 
   test("a stranger cannot save", async () => {

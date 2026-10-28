@@ -1,4 +1,8 @@
-import { CALCULATION_FAILED, getDependencyError } from "./calculatedField";
+import {
+  CALCULATION_FAILED,
+  getDependencyError,
+  getDivisionByZeroError,
+} from "./calculatedField";
 import { calculate, getFormulaFieldIds } from "./formula/evaluate";
 import { parseNumber } from "./numberField";
 import type { SheetDraft } from "./sheetDraft";
@@ -36,6 +40,25 @@ export function recalculateSheet(
   // Поля, которые считаются прямо сейчас: повторный заход значит цикл.
   const inProgress = new Set<string>();
 
+  // Подписи полей-чисел, от которых зависит формула, в том числе через другие calculated:
+  // calculated человек не меняет, поэтому называем числа, из которых оно получается.
+  function getNumberLabels(
+    field: CalculatedField,
+    seen = new Set<string>(),
+  ): string[] {
+    const result: string[] = [];
+    for (const refId of getFormulaFieldIds(field.formula)) {
+      const reference = formulas.get(refId);
+      if (!reference) {
+        result.push(labels.get(refId) ?? refId);
+      } else if (!seen.has(refId)) {
+        seen.add(refId);
+        result.push(...getNumberLabels(reference, seen));
+      }
+    }
+    return [...new Set(result)];
+  }
+
   function resolve(id: string) {
     if (done.has(id) || inProgress.has(id)) return;
     const field = formulas.get(id);
@@ -58,10 +81,16 @@ export function recalculateSheet(
     } else {
       values[id] = undefined;
       const badId = result.error.fieldId;
-      errors[id] =
-        result.error.code === "not_a_number" && badId
-          ? getDependencyError([labels.get(badId) ?? badId])
-          : CALCULATION_FAILED;
+      const numberLabels =
+        result.error.code === "division_by_zero" ? getNumberLabels(field) : [];
+      if (result.error.code === "not_a_number" && badId) {
+        errors[id] = getDependencyError([labels.get(badId) ?? badId]);
+      } else if (numberLabels.length > 0) {
+        errors[id] = getDivisionByZeroError(numberLabels);
+      } else {
+        // Формула из одних констант или другой сбой: человеку исправлять нечего.
+        errors[id] = CALCULATION_FAILED;
+      }
     }
     done.add(id);
   }
