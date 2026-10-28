@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
 import { ROUTES } from "../constants/routes";
 import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";
+import { readJsonFile } from "../systems/readJsonFile";
 import { UploadIcon } from "../shared/icons";
 import { Banner, Button, Input, getButtonClassName } from "../shared/ui";
 
@@ -17,6 +18,46 @@ export default function ImportSystemPage() {
   const [systemName, setSystemName] = useState("Custom System");
   const [schemaName, setSchemaName] = useState(CUSTOM_SCHEMA.name);
   const [schemaText, setSchemaText] = useState(INITIAL_SCHEMA_TEXT);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileReadVersion = useRef(0);
+
+  useEffect(
+    () => () => {
+      // Завершившееся чтение не должно обновлять уже закрытую страницу.
+      fileReadVersion.current += 1;
+    },
+    [],
+  );
+
+  // Настоящий file-input скрыт, а выбор запускается доступной кнопкой из UI-kit.
+  function handleChooseFile() {
+    fileInputRef.current?.click();
+  }
+
+  // Текст меняется только после успешного чтения. Повторный выбор того же файла разрешён.
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    const version = ++fileReadVersion.current;
+    setFileError(null);
+    try {
+      const text = await readJsonFile(file);
+      // Более новый файл или ручная правка важнее запоздавшего результата чтения.
+      if (version !== fileReadVersion.current) return;
+      setSchemaText(text);
+    } catch {
+      if (version === fileReadVersion.current) setFileError(file.name);
+    }
+  }
+
+  // Ручной ввод отменяет применение ещё читающегося файла, сохраняя новый черновик.
+  function handleSchemaChange(text: string) {
+    fileReadVersion.current += 1;
+    setSchemaText(text);
+  }
 
   return (
     <div className="import-system">
@@ -51,16 +92,37 @@ export default function ImportSystemPage() {
               onChange={(event) => setSchemaName(event.target.value)}
             />
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            aria-label="Загрузить JSON-схему"
+            onChange={handleFileChange}
+            hidden
+          />
+          {fileError && (
+            <Banner
+              variant="error"
+              title={`Не удалось прочитать файл «${fileError}»`}
+            >
+              Выберите файл с расширением .json. Текст в редакторе не изменён.
+            </Banner>
+          )}
           <JsonSchemaEditor
             value={schemaText}
-            onChange={setSchemaText}
+            onChange={handleSchemaChange}
             actions={
-              <Button variant="ghost" size="sm" icon={<UploadIcon />} disabled>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<UploadIcon />}
+                onClick={handleChooseFile}
+              >
                 Выбрать .json файл
               </Button>
             }
           />
-          {/* Файл, проверка и импорт подключаются следующими пунктами; успешного ответа пока нет. */}
+          {/* Проверка и импорт подключаются следующими пунктами; успешного ответа пока нет. */}
           <div className="import-system__actions">
             <Button disabled>Проверить схему</Button>
             <Button variant="primary" disabled>

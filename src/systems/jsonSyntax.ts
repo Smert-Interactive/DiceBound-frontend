@@ -1,5 +1,6 @@
 import { visit } from "jsonc-parser";
 
+// Категория фрагмента определяет его цвет в редакторе.
 export type JsonTokenKind =
   | "plain"
   | "key"
@@ -22,14 +23,14 @@ export interface JsonAnalysis {
   syntax: { valid: true } | { valid: false; errorLine: number };
 }
 
-// Проверяет только синтаксис JSON и находит диапазоны для подсветки, не изменяя исходный текст.
-// Правила Sheet Schema и формулы здесь не проверяются и не исполняются.
+// Проверяет синтаксис и готовит подсветку без изменения текста и выполнения формул.
 export function analyzeJson(text: string): JsonAnalysis {
   const tokens: JsonToken[] = [];
+  // Всё до cursor уже добавлено в tokens.
   let cursor = 0;
   let errorLine: number | undefined;
 
-  // Пробелы и незаконченные фрагменты тоже сохраняем; пересекающиеся сообщения не дублируют текст.
+  // Сохраняем пробелы и исходную запись, не дублируя пересекающиеся диапазоны.
   function addToken(kind: JsonTokenKind, offset: number, length: number) {
     if (offset < cursor || length === 0) return;
     if (offset > cursor)
@@ -42,6 +43,7 @@ export function analyzeJson(text: string): JsonAnalysis {
     cursor = offset + length;
   }
 
+  // Парсер вызывает обработчики найденных скобок, свойств, значений и ошибок.
   visit(
     text,
     {
@@ -57,6 +59,7 @@ export function analyzeJson(text: string): JsonAnalysis {
       onLiteralValue: (value, offset, length, _line, _column, path) => {
         let kind: JsonTokenKind = "keyword";
         if (typeof value === "string") {
+          // Последний элемент пути — имя свойства; formula выделяем отдельным цветом.
           kind = path().at(-1) === "formula" ? "formula" : "string";
         } else if (typeof value === "number") {
           kind = "number";
@@ -64,18 +67,20 @@ export function analyzeJson(text: string): JsonAnalysis {
         addToken(kind, offset, length);
       },
       onError: (_error, offset, length, line) => {
-        // Парсер даёт положение независимо от текста ошибок конкретного браузера.
+        // Сохраняем первую ошибку и переводим номер строки из нуля в единицу.
         errorLine ??= line + 1;
         addToken("invalid", offset, length);
       },
     },
     {
+      // Строгий JSON: без комментариев, завершающих запятых и пустого документа.
       disallowComments: true,
       allowTrailingComma: false,
       allowEmptyContent: false,
     },
   );
 
+  // После ошибки необработанный остаток тоже должен остаться видимым.
   if (cursor < text.length)
     tokens.push({ offset: cursor, text: text.slice(cursor), kind: "plain" });
   return {
