@@ -1,0 +1,14 @@
+.revoke-access-modal__description {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.revoke-access-modal__error {
+  margin-top: var(--gap-form-fields);
+  padding: var(--padding-form-error);
+  border: 1px solid var(--tint-crimson-border);
+  border-radius: var(--radius-button);
+  background: var(--tint-banner-warning-bg);
+  color: var(--color-error);
+  font-size: var(--font-metadata);
+}

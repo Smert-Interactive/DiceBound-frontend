@@ -2,21 +2,23 @@ import type { CharacterData, CharacterDetails } from "../sheet/sheetTypes";
 import {
   getMockVersionCount,
   setMockVersionCount,
-  MOCK_CHARACTERS,
-  type CharacterSummary,
+  findMockCharacterSummary,
+  getMockCharacterList,
+  addMockCharacterSummary,
 } from "./characters";
-import { COC_SCHEMA_ID, DND_SCHEMA_ID } from "./sheetSchemas";
+import { COC_SCHEMA_ID, DND_SCHEMA_ID, CUSTOM_SCHEMA_ID } from "./sheetSchemas";
 
-// Тот же owner_id, что у Custom System в systems.ts; во frontend у User поля id нет.
-const MOCK_OWNER_ID = "a1e0c000-0000-4000-8000-000000000001";
+import { getStoredShares, getMockRecipientId } from "./characterSharesStore";
+import { createMockId } from "./mockId";
 
 interface MockSheet {
   schemaId: string;
   data: CharacterData;
+  createdAt?: string;
 }
 
 // Значения с досок SheetDnD и SheetCoC. Calculated лежат в data, как отдаёт backend.
-// Остальные персонажи списка пока без листа: Merlin (VIEW) — ветка 9, Viktor — ветка 10.
+// Merlin использует D&D-схему, Viktor — импортированную; режим задают права, а не система.
 const MOCK_SHEETS: Record<string, MockSheet> = {
   "c1a00000-0000-4000-8000-000000000001": {
     schemaId: DND_SCHEMA_ID,
@@ -65,35 +67,89 @@ const MOCK_SHEETS: Record<string, MockSheet> = {
       persuade: 30,
     },
   },
+  "c1a00000-0000-4000-8000-000000000003": {
+    schemaId: CUSTOM_SCHEMA_ID,
+    createdAt: "2026-09-20T16:30:00Z",
+    data: {
+      callsign: "Viktor",
+      role: "pilot",
+      rank: 4,
+      implant: true,
+      reflex: 12,
+      defense: 10,
+      energy: { current: 6, max: 10 },
+    },
+  },
+  "c1a00000-0000-4000-8000-000000000004": {
+    schemaId: DND_SCHEMA_ID,
+    data: {
+      name: "Merlin",
+      level: 5,
+      class: "wizard",
+      str: 8,
+      str_modifier: -1,
+      dex: 14,
+      dex_modifier: 2,
+      con: 12,
+      con_modifier: 1,
+      int: 18,
+      int_modifier: 4,
+      wis: 15,
+      wis_modifier: 2,
+      cha: 11,
+      cha_modifier: 0,
+      hp: { current: 22, max: 27 },
+      ac: 12,
+    },
+  },
 };
 
-function findSummary(characterId: string): CharacterSummary | undefined {
-  return [...MOCK_CHARACTERS.owned, ...MOCK_CHARACTERS.shared_view].find(
-    (character) => character.id === characterId,
-  );
-}
+// Копия из исходной EDIT-выдачи хранит собственное состояние, а не ссылку на оригинал.
+MOCK_SHEETS["c1a00000-0000-4000-8000-000000000005"] = {
+  schemaId: DND_SCHEMA_ID,
+  createdAt: "2026-09-24T12:00:00Z",
+  data: structuredClone(
+    MOCK_SHEETS["c1a00000-0000-4000-8000-000000000001"].data,
+  ),
+};
 
 // Повторяет GET /characters/{id}: undefined — когда персонажа нет или лист ещё не описан.
 export function getMockCharacterDetails(
   characterId: string,
+  viewerEmail?: string,
 ): CharacterDetails | undefined {
-  const summary = findSummary(characterId);
+  const summary = findMockCharacterSummary(characterId);
   const sheet = MOCK_SHEETS[characterId];
   if (!summary || !sheet) return undefined;
 
+  // Без viewerEmail сервисы получают исходные данные, страницы всегда передают текущий аккаунт.
+  const list = viewerEmail ? getMockCharacterList(viewerEmail) : undefined;
+  const access = list
+    ? [...list.owned, ...list.shared_view].find(
+        (item) => item.id === characterId,
+      )?.access
+    : summary.access;
+  if (!access) return undefined;
+  const viewShare = getStoredShares().find(
+    (share) =>
+      share.character_id === characterId &&
+      share.permission === "VIEW" &&
+      share.recipient_email ===
+        (viewerEmail ?? "alex@example.com").trim().toLowerCase(),
+  );
   return {
     id: summary.id,
-    owner_id: MOCK_OWNER_ID,
+    owner_id: getMockRecipientId(summary.owner_username),
     game_system_id: summary.game_system_id,
     sheet_schema_id: sheet.schemaId,
     name: summary.name,
     data: structuredClone(sheet.data),
-    created_at: "2026-09-01T10:00:00Z",
+    created_at: sheet.createdAt ?? "2026-09-01T10:00:00Z",
     updated_at: summary.updated_at,
     current_version_number: getMockVersionCount(summary.id),
-    access: summary.access,
-    can_edit: summary.access === "OWNER",
-    can_view_history: summary.access === "OWNER",
+    access,
+    can_edit: access === "OWNER",
+    can_view_history: access === "OWNER" || Boolean(viewShare?.history_visible),
     owner_username: summary.owner_username,
   };
 }
@@ -106,12 +162,40 @@ export function applyMockCharacterVersion(
   versionNumber: number,
   updatedAt: string,
 ): CharacterDetails {
-  const summary = findSummary(characterId);
+  const summary = findMockCharacterSummary(characterId);
   const sheet = MOCK_SHEETS[characterId];
   if (!summary || !sheet) throw new Error("NOT_FOUND_OR_FORBIDDEN");
 
   sheet.data = structuredClone(data);
   summary.updated_at = updatedAt;
   setMockVersionCount(characterId, versionNumber);
-  return getMockCharacterDetails(characterId)!;
+  return getMockCharacterDetails(characterId, summary.owner_username)!;
+}
+
+// EDIT фиксирует сохранённое состояние оригинала. Вложенные ресурсы не разделяются с копией.
+export function createMockCharacterCopy(
+  source: CharacterDetails,
+  recipientEmail: string,
+) {
+  const id = createMockId();
+  const createdAt = new Date().toISOString();
+  addMockCharacterSummary({
+    id,
+    name: `${source.name} (копия)`,
+    game_system_id: source.game_system_id,
+    game_system_name: getMockCharacterList(source.owner_username).owned.find(
+      (item) => item.id === source.id,
+    )!.game_system_name,
+    updated_at: createdAt,
+    access: "OWNER",
+    owner_username: recipientEmail,
+    copy_source_owner_name: source.owner_username,
+  });
+  MOCK_SHEETS[id] = {
+    schemaId: source.sheet_schema_id,
+    data: structuredClone(source.data),
+    createdAt,
+  };
+  setMockVersionCount(id, 1);
+  return id;
 }

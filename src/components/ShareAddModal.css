@@ -1,0 +1,149 @@
+.share-add-modal {
+  width: var(--width-modal-share);
+}
+
+/* Центрируем и при зарезервированной полосе прокрутки, как окно восстановления. */
+@media (min-width: 640px) {
+  .ui-modal.share-add-modal {
+    position: fixed;
+    left: calc(50vw + var(--ui-modal-scrollbar-width, 0px) / 2);
+    right: auto;
+    margin-inline: 0;
+    translate: -50% 0;
+  }
+}
+
+.share-add-modal__character {
+  margin: 0 0 var(--gap-modal-content);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.share-add-modal__form {
+  display: grid;
+  gap: var(--gap-form-fields);
+  min-width: 0;
+}
+
+.share-add-modal__permissions {
+  display: grid;
+  gap: var(--gap-actions);
+  min-width: 0;
+  margin: var(--gap-share-text) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.share-add-modal__permissions legend {
+  margin-bottom: var(--gap-inline-compact);
+  padding: 0;
+  color: var(--color-text-muted);
+  font: var(--font-caption) / 1.5 var(--mono);
+}
+
+.share-add-modal .ui-radio > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.share-add-modal .ui-radio__title {
+  font-size: var(--font-field);
+}
+
+.share-add-modal .ui-radio__description {
+  margin-top: var(--gap-share-text);
+}
+
+.share-add-modal__history {
+  gap: var(--gap-share-text);
+  padding: var(--padding-form-error);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-radio);
+  background: var(--color-bg-input);
+}
+
+.share-add-modal__history .ui-check {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.share-add-modal__history .ui-field__hint {
+  margin-top: 0;
+  font-size: var(--font-metadata);
+  margin-left: calc(var(--size-checkbox) + var(--gap-history-help));
+}
+
+.share-add-modal__warning.ui-banner {
+  align-items: start;
+}
+
+.share-add-modal__warning.ui-banner > svg {
+  margin-top: var(--gap-share-text);
+}
+
+.share-add-modal__warning .ui-banner__title {
+  font-weight: 400;
+}
+
+.share-add-modal__error {
+  padding: var(--padding-form-error);
+  border: 1px solid var(--tint-crimson-border);
+  border-radius: var(--radius-button);
+  background: var(--tint-banner-warning-bg);
+  color: var(--color-error);
+  font-size: var(--font-metadata);
+}
+
+/* До 640 px общий Modal становится нижним листом с кнопками на всю ширину. */
+@media (max-width: 639px) {
+  .ui-modal.share-add-modal {
+    width: calc(100vw + var(--ui-modal-scrollbar-width, 0px));
+  }
+
+  /* В нижнем листе подпись ближе к заголовку, а поля и варианты идут с шагом 10 px. */
+  .share-add-modal h2 {
+    margin-bottom: var(--gap-share-text);
+  }
+
+  .share-add-modal__character {
+    margin-bottom: var(--gap-card-content);
+    font-size: var(--font-button);
+  }
+
+  .share-add-modal__form,
+  .share-add-modal__permissions {
+    gap: var(--gap-history-help);
+  }
+
+  .share-add-modal__permissions {
+    margin-top: var(--gap-inline-compact);
+  }
+
+  .share-add-modal__permissions legend {
+    margin-bottom: var(--gap-history-help);
+  }
+
+  .share-add-modal .ui-modal__actions {
+    gap: var(--gap-actions);
+    margin-top: var(--gap-card-content);
+  }
+
+  .share-add-modal .ui-radio__title,
+  .share-add-modal__history .ui-check {
+    font-size: var(--font-ui);
+  }
+
+  .share-add-modal__history {
+    padding: var(--padding-share-history-touch);
+  }
+
+  .share-add-modal__history .ui-field__hint {
+    font-size: var(--font-explanation);
+  }
+
+  .share-add-modal .ui-button__rest {
+    white-space: normal;
+  }
+}

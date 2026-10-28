@@ -1,12 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import CharacterHistory from "../components/CharacterHistory";
+import CharacterAccess from "../components/CharacterAccess";
+import ShareAddModal from "../components/ShareAddModal";
+import RevokeAccessModal from "../components/RevokeAccessModal";
+import type { CreateShareRequest, ViewShare } from "../sharing/sharingTypes";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatRestoreNotice } from "../history/restoreNotice";
 import { getMockCharacterList } from "../mocks/characters";
+import {
+  createMockCharacterShare,
+  getMockCharacterShares,
+  revokeMockCharacterShare,
+} from "../mocks/characterShares";
 import {
   getMockCharacterVersions,
   restoreMockCharacterVersion,
@@ -23,12 +32,13 @@ import {
   hasSaveBlockers,
   type SavePhase,
 } from "../sheet/saveStatus";
-import { toCharacterData } from "../sheet/sheetDraft";
+import { getStoredCalculated, toCharacterData } from "../sheet/sheetDraft";
 import type { SheetDraftValue } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
 import { validateSheet } from "../sheet/validateSheet";
 import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
 import { NotFoundOrForbidden, SaveBar } from "../shared/states";
+import { formatDate } from "../shared/formatDate";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Tabs } from "../shared/ui";
 import type { TabItem } from "../shared/ui";
@@ -60,6 +70,38 @@ export default function CharacterPage() {
     versions: CharacterVersionSummary[];
   } | null>(null);
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareSession, setShareSession] = useState(0);
+  const [revokeTarget, setRevokeTarget] = useState<ViewShare | null>(null);
+  const [isRevokeOpen, setIsRevokeOpen] = useState(false);
+  const [revokeSession, setRevokeSession] = useState(0);
+  // После отзыва строка с прежней кнопкой исчезает; Modal вернёт фокус на выдачу доступа.
+  const addAccessButtonRef = useRef<HTMLButtonElement>(null);
+  // После mock-запроса перечитываем выдачи; цель остаётся для анимации закрытия окна.
+  const [, refreshShares] = useState(0);
+
+  // Каждый выбор открывает новое подтверждение без ошибки от прошлой попытки.
+  function handleRevokeRequest(share: ViewShare) {
+    setRevokeSession((session) => session + 1);
+    setRevokeTarget(share);
+    setIsRevokeOpen(true);
+  }
+
+  // Закрытие подтверждения не отзывает доступ.
+  function handleRevokeCancel() {
+    setIsRevokeOpen(false);
+  }
+
+  // Новое открытие сбрасывает форму; при закрытии содержимое остаётся до конца анимации.
+  function handleShareOpen() {
+    setShareSession((session) => session + 1);
+    setIsShareOpen(true);
+  }
+
+  // Возвращаем фокус к кнопке выдачи через общий Modal.
+  function handleShareCancel() {
+    setIsShareOpen(false);
+  }
   // Состояние маршрута общее для вкладок и хлебных крошек; сам URL не меняется.
   const tabId = getActiveTab(location.state) ?? "sheet";
 
@@ -73,9 +115,11 @@ export default function CharacterPage() {
 
   // Одной сессии недостаточно: прямой адрес не должен открывать чужого mock-персонажа.
   const list = user && getMockCharacterList(user.email);
-  const accessible =
-    list && [...list.owned, ...list.shared_view].some((item) => item.id === id);
-  const character = accessible ? getMockCharacterDetails(id) : undefined;
+  const summary =
+    list && [...list.owned, ...list.shared_view].find((item) => item.id === id);
+  const character = summary
+    ? getMockCharacterDetails(id, user!.email)
+    : undefined;
   const schema = character && getMockSheetSchema(character.sheet_schema_id);
   const system = MOCK_SYSTEMS.find(
     (item) => item.id === character?.game_system_id,
@@ -92,10 +136,17 @@ export default function CharacterPage() {
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
   if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
 
-  // «Доступ» — отдельная задача; история уже имеет свой список.
-  // calculated пересчитываются по черновику при каждой правке, сохранённые значения не нужны.
-  const calculation = recalculateSheet(schema.schema, sheet.draft);
-  const fieldErrors = validateSheet(schema.schema, sheet.draft);
+  // В VIEW берём сохранённые calculated; формулы исполняются только у редактируемого листа.
+  const calculation = character.can_edit
+    ? recalculateSheet(schema.schema, sheet.draft)
+    : {
+        values: getStoredCalculated(schema.schema, character.data),
+        errors: {},
+      };
+  const fieldErrors = character.can_edit
+    ? validateSheet(schema.schema, sheet.draft)
+    : {};
+  const isCopy = Boolean(summary?.copy_source_owner_name);
   const saveStatus = getSaveStatus({
     changedCount: sheet.changed.size,
     hasErrors: hasSaveBlockers(fieldErrors, calculation.errors),
@@ -104,6 +155,32 @@ export default function CharacterPage() {
 
   // Панель нужна тому, кто правит лист, и только на вкладке «Лист».
   const showSaveBar = character.can_edit && tabId === "sheet";
+
+  // Строка исчезает только после успешного ответа; ошибку показывает окно подтверждения.
+  async function handleRevokeConfirm() {
+    if (!revokeTarget) return;
+    await revokeMockCharacterShare(
+      revokeTarget.character_id,
+      revokeTarget.id,
+      user!.email,
+    );
+    // Одно уведомление заменяет предыдущее и закрывается общей кнопкой баннера.
+    setNotice(`Доступ ${revokeTarget.recipient_email} отозван`);
+    refreshShares((revision) => revision + 1);
+    setIsRevokeOpen(false);
+  }
+
+  // После выдачи обновляем владельцу список и показываем результат; отказ обрабатывает форма.
+  async function handleShareSubmit(request: CreateShareRequest) {
+    const result = await createMockCharacterShare(id, request, user!.email);
+    refreshShares((revision) => revision + 1);
+    setIsShareOpen(false);
+    setNotice(
+      result.share.permission === "VIEW"
+        ? `Доступ VIEW выдан ${result.share.recipient_email}`
+        : `Копия передана ${result.share.recipient_email}`,
+    );
+  }
 
   function handleSheetChange(fieldId: string, value: SheetDraftValue) {
     setSavePhase("idle");
@@ -199,7 +276,18 @@ export default function CharacterPage() {
   }
   // Вкладку «Доступ» видит только владелец, в том числе владелец EDIT-копии.
   if (character.access === "OWNER") {
-    tabs.push({ id: "access", label: "Доступ", content: null });
+    tabs.push({
+      id: "access",
+      label: "Доступ",
+      content: (
+        <CharacterAccess
+          addButtonRef={addAccessButtonRef}
+          shares={getMockCharacterShares(id, user.email) ?? []}
+          onAdd={handleShareOpen}
+          onRevoke={handleRevokeRequest}
+        />
+      ),
+    });
   }
 
   return (
@@ -220,13 +308,34 @@ export default function CharacterPage() {
           onClose={() => setNotice(null)}
         />
       )}
+      {character.access === "VIEW" && (
+        <Banner icon="eye" title="Только просмотр">
+          {character.can_view_history
+            ? `Персонажем поделился ${character.owner_username} вместе с историей версий. Изменять лист и восстанавливать версии может только владелец.`
+            : `Персонажем поделился ${character.owner_username}. Вы видите актуальное состояние листа, история версий скрыта владельцем.`}
+        </Banner>
+      )}
       <CharacterHeader
         name={character.name}
         systemName={system.name}
         schemaName={schema.name}
         updatedAt={character.updated_at}
         version={character.current_version_number}
+        ownerEmail={
+          character.access === "VIEW" ? character.owner_username : undefined
+        }
+        isCopy={isCopy}
       />
+      {isCopy && (
+        <Banner
+          icon="copy"
+          title={`Это ваша копия персонажа ${character.name.replace(/ \(копия\)$/u, "")} от ${summary!.copy_source_owner_name}`}
+        >
+          Создана {formatDate(character.created_at)} при выдаче доступа EDIT.
+          История версий копии начинается с v1. Ваши сохранения не меняют
+          оригинал, изменения оригинала сюда не приходят.
+        </Banner>
+      )}
       <Tabs
         items={tabs}
         value={tabId}
@@ -238,9 +347,32 @@ export default function CharacterPage() {
           status={saveStatus}
           changedCount={sheet.changed.size}
           version={character.current_version_number}
+          isCopy={isCopy}
           onSave={handleSave}
           onReset={handleSheetReset}
           onRetry={handleSave}
+        />
+      )}
+      {revokeTarget && character.access === "OWNER" && (
+        <RevokeAccessModal
+          key={`${revokeTarget.id}:${revokeSession}`}
+          open={isRevokeOpen}
+          recipientEmail={revokeTarget.recipient_email}
+          characterName={character.name}
+          onCancel={handleRevokeCancel}
+          onConfirm={handleRevokeConfirm}
+          fallbackFocusRef={addAccessButtonRef}
+        />
+      )}
+      {shareSession > 0 && character.access === "OWNER" && (
+        <ShareAddModal
+          key={`${id}:${shareSession}`}
+          open={isShareOpen}
+          characterName={character.name}
+          shares={getMockCharacterShares(id, user.email) ?? []}
+          systemName={system.name}
+          onCancel={handleShareCancel}
+          onSubmit={handleShareSubmit}
         />
       )}
       {restoreTarget && versions && character.access === "OWNER" && (

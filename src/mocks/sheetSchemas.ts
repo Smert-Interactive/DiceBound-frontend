@@ -3,10 +3,11 @@ import type {
   NumberField,
   SheetSchema,
 } from "../sheet/sheetTypes";
-import { COC_SYSTEM_ID, DND_SYSTEM_ID } from "./systems";
+import { COC_SYSTEM_ID, DND_SYSTEM_ID, CUSTOM_SYSTEM_ID } from "./systems";
 
 export const DND_SCHEMA_ID = "5c0a7c1e-0000-4000-8000-000000000001";
 export const COC_SCHEMA_ID = "5c0a7c1e-0000-4000-8000-000000000002";
+export const CUSTOM_SCHEMA_ID = "5c0a7c1e-0000-4000-8000-000000000003";
 
 function numberField(
   id: string,
@@ -149,7 +150,56 @@ export const COC_SCHEMA: SheetSchema = {
   },
 };
 
-export const MOCK_SHEET_SCHEMAS: SheetSchema[] = [DND_SCHEMA, COC_SCHEMA];
+// Та же схема Custom System с доски SheetCopy, без отдельного renderer для системы.
+export const CUSTOM_SCHEMA: SheetSchema = {
+  id: CUSTOM_SCHEMA_ID,
+  game_system_id: CUSTOM_SYSTEM_ID,
+  name: "Базовый лист",
+  created_at: "2026-09-10T09:00:00Z",
+  schema: {
+    sections: [
+      {
+        id: "dossier",
+        label: "Досье",
+        fields: [
+          { id: "callsign", type: "text", label: "Позывной", required: true },
+          {
+            id: "role",
+            type: "select",
+            label: "Роль",
+            options: [
+              { value: "pilot", label: "Пилот" },
+              { value: "engineer", label: "Инженер" },
+              { value: "medic", label: "Медик" },
+            ],
+          },
+          numberField("rank", "Ранг", 1, 10),
+          { id: "implant", type: "checkbox", label: "Имплант установлен" },
+        ],
+      },
+      {
+        id: "parameters",
+        label: "Параметры",
+        fields: [
+          numberField("reflex", "Реакция", 1, 20),
+          {
+            id: "defense",
+            type: "calculated",
+            label: "Защита",
+            formula: "floor(reflex / 2) + rank",
+          },
+          { id: "energy", type: "resource", label: "Энергия", min: 0 },
+        ],
+      },
+    ],
+  },
+};
+
+export const MOCK_SHEET_SCHEMAS: SheetSchema[] = [
+  DND_SCHEMA,
+  COC_SCHEMA,
+  CUSTOM_SCHEMA,
+];
 
 export function getMockSheetSchema(schemaId: string): SheetSchema | undefined {
   return MOCK_SHEET_SCHEMAS.find((schema) => schema.id === schemaId);

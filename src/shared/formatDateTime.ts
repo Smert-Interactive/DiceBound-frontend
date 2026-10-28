@@ -1,4 +1,4 @@
-// UTC оставляет одинаковые дату и время независимо от часового пояса браузера.
+// Показываем дату и время в часовом поясе пользователя, как и даты выдачи доступа.
 // hourCycle "h23" даёт 00:05 вместо 24:05 после полуночи.
 const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
@@ -7,12 +7,11 @@ const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
-  timeZone: "UTC",
 });
 
 const NO_BREAK_SPACE = " ";
 
-// "2026-09-24T18:42:00Z" → "24.09.2026 18:42". Неразрывный пробел не даёт времени
+// ISO-время → локальные дата и время. Неразрывный пробел не даёт времени
 // уехать на новую строку отдельно от даты. Запятую русского формата не используем.
 export function formatDateTime(iso: string) {
   const parts = new Map(

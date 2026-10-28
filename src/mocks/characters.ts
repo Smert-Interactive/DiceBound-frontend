@@ -1,4 +1,4 @@
-import { MOCK_USER } from "../auth/authContext";
+import { getStoredShares } from "./characterSharesStore";
 import {
   COC_SYSTEM_ID as COC_ID,
   CUSTOM_SYSTEM_ID as CUSTOM_ID,
@@ -66,7 +66,7 @@ export async function createMockCharacter(
 const MOCK_VERSION_COUNTS: Record<string, number> = {
   "c1a00000-0000-4000-8000-000000000001": 7,
   "c1a00000-0000-4000-8000-000000000002": 4,
-  "c1a00000-0000-4000-8000-000000000003": 2,
+  "c1a00000-0000-4000-8000-000000000003": 3,
 };
 
 // У любого персонажа есть минимум версия 1, она создаётся вместе с ним.
@@ -79,12 +79,58 @@ export function setMockVersionCount(characterId: string, count: number) {
   MOCK_VERSION_COUNTS[characterId] = count;
 }
 
-// Данные принадлежат только демонстрационному пользователю. Свежий аккаунт получает
-// пустой список (так он совпадает со счётчиками профиля), как отдаст настоящий backend.
-export function getMockCharacterList(email: string): CharacterList {
-  if (email === MOCK_USER.email) return MOCK_CHARACTERS;
+const copies: CharacterSummary[] = [
+  {
+    id: "c1a00000-0000-4000-8000-000000000005",
+    name: "Aldric (копия)",
+    game_system_id: DND_ID,
+    game_system_name: "D&D 5e",
+    updated_at: "2026-09-24T12:00:00Z",
+    access: "OWNER",
+    owner_username: "editor@example.com",
+    copy_source_owner_name: "alex@example.com",
+  },
+];
 
-  return { owned: [], shared_view: [] };
+// Исходные метаданные общие для владельца и VIEW: сохранение оригинала видно получателю.
+export function findMockCharacterSummary(id: string) {
+  return [
+    ...MOCK_CHARACTERS.owned,
+    ...MOCK_CHARACTERS.shared_view,
+    ...copies,
+  ].find((character) => character.id === id);
+}
+
+// EDIT-копия становится обычным своим персонажем другого аккаунта.
+export function addMockCharacterSummary(summary: CharacterSummary) {
+  copies.push({ ...summary });
+}
+
+// Список зависит от владельца и активных VIEW-выдач; EDIT в «Доступные мне» не попадает.
+export function getMockCharacterList(email: string): CharacterList {
+  const normalizedEmail = email.trim().toLowerCase();
+  const all = [
+    ...MOCK_CHARACTERS.owned,
+    ...MOCK_CHARACTERS.shared_view,
+    ...copies,
+  ];
+  const viewIds = new Set(
+    getStoredShares()
+      .filter(
+        (share) =>
+          share.permission === "VIEW" &&
+          share.recipient_email === normalizedEmail,
+      )
+      .map((share) => share.character_id),
+  );
+  return {
+    owned: all
+      .filter((item) => item.owner_username === normalizedEmail)
+      .map((item) => ({ ...item, access: "OWNER" })),
+    shared_view: all
+      .filter((item) => viewIds.has(item.id))
+      .map((item) => ({ ...item, access: "VIEW" })),
+  };
 }
 
 // Данные доски Characters холста. Владелец списка — alex@example.com (MOCK_USER).
