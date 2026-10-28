@@ -18,5 +18,11 @@ export type CharacterShare = ShareBase &
     | { permission: "EDIT"; history_visible: null }
   );
 
+// POST shares возвращает выдачу и ID новой копии только для EDIT.
+export interface ShareResult {
+  share: CharacterShare;
+  copy_character_id: string | null;
+}
+
 // Только VIEW может стать целью отзыва.
 export type ViewShare = Extract<CharacterShare, { permission: "VIEW" }>;

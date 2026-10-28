@@ -1,4 +1,5 @@
 import { MOCK_USER } from "./authContext";
+import { getMockCharacterList } from "../mocks/characters";
 import type { User } from "./authContext";
 
 export interface LoginCredentials {
@@ -18,7 +19,24 @@ export const MOCK_PASSWORD = "admin";
 const accounts = new Map<string, { user: User; password: string }>([
   [MOCK_USER.email, { user: { ...MOCK_USER }, password: MOCK_PASSWORD }],
 ]);
+for (const email of [
+  "user@example.com",
+  "player@example.com",
+  "editor@example.com",
+  "gm@example.com",
+  "mira@example.com",
+]) {
+  accounts.set(email, {
+    user: { ...MOCK_USER, email },
+    password: MOCK_PASSWORD,
+  });
+}
 const MOCK_REQUEST_DELAY = 500;
+
+// Mock-сервис выдачи проверяет только зарегистрированных получателей, без передачи паролей.
+export function hasMockAccount(email: string) {
+  return accounts.has(normalizeEmail(email));
+}
 
 // Одинаковая нормализация при регистрации и входе; регистр и пробелы пароля не меняются.
 function normalizeEmail(email: string) {
@@ -43,7 +61,13 @@ export async function mockSignIn({
   if (!account || account.password !== password) {
     throw new Error("INVALID_CREDENTIALS");
   }
-  return { ...account.user };
+  // После нового входа профиль учитывает полученные VIEW и EDIT-копии.
+  const list = getMockCharacterList(normalizedEmail);
+  return {
+    ...account.user,
+    owned_characters_count: list.owned.length,
+    shared_characters_count: list.shared_view.length,
+  };
 }
 
 export async function mockRegister({

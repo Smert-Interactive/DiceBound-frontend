@@ -71,7 +71,8 @@
     column-gap: var(--gap-page-heading);
   }
 
-  .character-header__version::before {
+  .character-header__version::before,
+  .character-header__owner::before {
     content: "·";
     margin-right: var(--gap-page-heading);
   }

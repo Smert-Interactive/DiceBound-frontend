@@ -1,58 +1,73 @@
-import { getMockCharacterList, MOCK_CHARACTERS } from "./characters";
-import type { CharacterShare } from "../sharing/sharingTypes";
+import { getMockCharacterList } from "./characters";
+import {
+  createMockCharacterCopy,
+  getMockCharacterDetails,
+} from "./characterDetails";
+import { hasMockAccount } from "../auth/mockAuth";
+import { createMockId } from "./mockId";
+import {
+  addStoredShare,
+  getMockRecipientId,
+  getStoredShares,
+  revokeStoredShare,
+} from "./characterSharesStore";
+import type {
+  CharacterShare,
+  CreateShareRequest,
+  ShareResult,
+} from "../sharing/sharingTypes";
 
-const characterId = MOCK_CHARACTERS.owned[0].id;
-
-// Данные досок Access, MAccess и TAccess. Остальные свои персонажи пока без выдач.
-const shares: readonly CharacterShare[] = [
-  {
-    id: "a1100000-0000-4000-8000-000000000001",
-    character_id: characterId,
-    user_id: "a1200000-0000-4000-8000-000000000001",
-    recipient_email: "user@example.com",
-    permission: "VIEW",
-    history_visible: true,
-    created_at: "2026-09-24T12:00:00Z",
-  },
-  {
-    id: "a1100000-0000-4000-8000-000000000002",
-    character_id: characterId,
-    user_id: "a1200000-0000-4000-8000-000000000002",
-    recipient_email: "player@example.com",
-    permission: "VIEW",
-    history_visible: false,
-    created_at: "2026-09-25T12:00:00Z",
-  },
-  {
-    id: "a1100000-0000-4000-8000-000000000003",
-    character_id: characterId,
-    user_id: "a1200000-0000-4000-8000-000000000003",
-    recipient_email: "editor@example.com",
-    permission: "EDIT",
-    history_visible: null,
-    created_at: "2026-09-24T12:00:00Z",
-  },
-];
-
-// Отзывы живут в памяти до перезагрузки, как изменения листа и истории.
-const revokedShareIds = new Set<string>();
-
-// Как GET /characters/{id}/shares: список доступен только владельцу.
-// undefined — нет доступа или персонажа; пустой массив — владелец ещё никому не выдал доступ.
+// Список выдач доступен только владельцу оригинала или своей EDIT-копии.
 export function getMockCharacterShares(
   id: string,
   email: string,
 ): CharacterShare[] | undefined {
-  if (!getMockCharacterList(email).owned.some((item) => item.id === id)) {
+  if (!getMockCharacterList(email).owned.some((item) => item.id === id))
     return undefined;
-  }
+  return getStoredShares().filter((share) => share.character_id === id);
+}
 
-  // Возвращаем копии записей, чтобы вызывающий код не изменил сохранённые mock-данные.
-  return shares
-    .filter(
-      (share) => share.character_id === id && !revokedShareIds.has(share.id),
-    )
-    .map((share) => ({ ...share }));
+// Ошибки имеют контрактный code, чтобы форма различала почту, конфликт и сеть.
+function shareError(code: string) {
+  return Object.assign(new Error(code), { code });
+}
+
+// VIEW открывает оригинал, EDIT атомарно создаёт независимую копию с историей от v1.
+export async function createMockCharacterShare(
+  characterId: string,
+  request: CreateShareRequest,
+  ownerEmail: string,
+): Promise<ShareResult> {
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+  const existing = getMockCharacterShares(characterId, ownerEmail);
+  const source = existing && getMockCharacterDetails(characterId, ownerEmail);
+  if (!source) throw shareError("NOT_FOUND_OR_FORBIDDEN");
+  const email = request.recipient_email.trim().toLowerCase();
+  if (email === ownerEmail.trim().toLowerCase() || !hasMockAccount(email))
+    throw shareError("SHARE_UNAVAILABLE");
+  if (existing!.some((share) => share.recipient_email === email))
+    throw shareError("CONFLICT");
+  const base = {
+    id: createMockId(),
+    character_id: characterId,
+    user_id: getMockRecipientId(email),
+    recipient_email: email,
+    created_at: new Date().toISOString(),
+  };
+  const share: CharacterShare =
+    request.permission === "VIEW"
+      ? {
+          ...base,
+          permission: "VIEW",
+          history_visible: request.history_visible,
+        }
+      : { ...base, permission: "EDIT", history_visible: null };
+  const copyId =
+    request.permission === "EDIT"
+      ? createMockCharacterCopy(source, email)
+      : null;
+  addStoredShare(share);
+  return { share: { ...share }, copy_character_id: copyId };
 }
 
 // Повторяет DELETE shares: проверяет владельца и запрещает отзыв переданной EDIT-копии.
@@ -67,5 +82,5 @@ export async function revokeMockCharacterShare(
   );
   if (!share) throw new Error("NOT_FOUND_OR_FORBIDDEN");
   if (share.permission === "EDIT") throw new Error("SHARE_IRREVOCABLE");
-  revokedShareIds.add(share.id);
+  revokeStoredShare(share.id);
 }

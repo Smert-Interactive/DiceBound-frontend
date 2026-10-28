@@ -73,9 +73,11 @@ const VERSION_CHANGES: Record<string, Record<number, CharacterData>> = {
 const snapshotsByCharacter = new Map<string, CharacterVersion[]>();
 // Используем число версий и даты самого персонажа, чтобы список не расходился с его шапкой.
 const versionsByCharacter = new Map<string, CharacterVersionSummary[]>();
-for (const summary of MOCK_CHARACTERS.owned) {
-  const character = getMockCharacterDetails(summary.id);
-  if (!character) continue;
+// История создаётся один раз, в том числе для копий, появившихся после запуска приложения.
+function ensureMockCharacterVersions(characterId: string) {
+  if (versionsByCharacter.has(characterId)) return;
+  const character = getMockCharacterDetails(characterId);
+  if (!character) return;
 
   const count = character.current_version_number;
   const createdAt = Date.parse(character.created_at);
@@ -90,28 +92,31 @@ for (const summary of MOCK_CHARACTERS.owned) {
     return {
       // UUID mock-версии: номер в первой группе, остальные группы — из ID персонажа.
       // Не требует HTTPS, в отличие от crypto.randomUUID(), и не меняется при перезагрузке.
-      id: `${version.toString(16).padStart(8, "0")}${summary.id.slice(8)}`,
+      id: `${version.toString(16).padStart(8, "0")}${characterId.slice(8)}`,
       version_number: version,
       created_at: new Date(timestamp).toISOString(),
       is_current: version === count,
     };
   });
-  versionsByCharacter.set(summary.id, versions.reverse());
+  versionsByCharacter.set(characterId, versions.reverse());
   snapshotsByCharacter.set(
-    summary.id,
+    characterId,
     versions.map(({ id, version_number, created_at }) => ({
       id,
-      character_id: summary.id,
+      character_id: characterId,
       version_number,
       created_at,
       // Разворачиваем полный снимок и копируем вложенные ресурсы, отделяя его от текущего листа.
       data: structuredClone({
         ...character.data,
-        ...VERSION_CHANGES[summary.id]?.[version_number],
+        ...VERSION_CHANGES[characterId]?.[version_number],
       }),
     })),
   );
 }
+
+for (const summary of MOCK_CHARACTERS.owned)
+  ensureMockCharacterVersions(summary.id);
 
 // Повторяет доступ к GET /characters/{id}/versions: нет доступа — тот же результат, что и у 404.
 // Пользователь с пустым списком не должен получить чужую историю, зная id персонажа.
@@ -123,9 +128,10 @@ export function getMockCharacterVersions(
   const summary = [...list.owned, ...list.shared_view].find(
     (character) => character.id === characterId,
   );
-  const character = summary && getMockCharacterDetails(characterId);
+  const character = summary && getMockCharacterDetails(characterId, email);
   if (!character?.can_view_history) return undefined;
 
+  ensureMockCharacterVersions(characterId);
   return versionsByCharacter
     .get(characterId)
     ?.map((version) => ({ ...version }));
@@ -163,6 +169,7 @@ export async function saveMockCharacterVersion(
   const owned = getMockCharacterList(email).owned.some(
     (item) => item.id === characterId,
   );
+  if (owned) ensureMockCharacterVersions(characterId);
   const versions = owned ? versionsByCharacter.get(characterId) : undefined;
   if (!versions) throw new Error("NOT_FOUND_OR_FORBIDDEN");
 

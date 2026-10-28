@@ -6,6 +6,7 @@ import CharacterHeader from "../components/CharacterHeader";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
 import { ROUTES } from "../constants/routes";
 import { formatRestoreNotice } from "../history/restoreNotice";
+import { getMockCharacterList } from "../mocks/characters";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import {
   getMockCharacterVersion,
@@ -36,7 +37,7 @@ export default function CharacterVersionPage() {
     user && /^[1-9]\d*$/u.test(version)
       ? getMockCharacterVersion(id, Number(version), user.email)
       : undefined;
-  const character = snapshot && getMockCharacterDetails(id);
+  const character = snapshot && getMockCharacterDetails(id, user!.email);
   const schema = character && getMockSheetSchema(character.sheet_schema_id);
   const system = MOCK_SYSTEMS.find(
     (item) => item.id === character?.game_system_id,
@@ -118,6 +119,13 @@ export default function CharacterVersionPage() {
         systemName={system.name}
         schemaName={schema.name}
         updatedAt={snapshot.created_at}
+        ownerEmail={
+          character.access === "VIEW" ? character.owner_username : undefined
+        }
+        isCopy={Boolean(
+          getMockCharacterList(user.email).owned.find((item) => item.id === id)
+            ?.copy_source_owner_name,
+        )}
         showDateOnMobile
       />
       {/* Снимок показывается как сохранён: calculated берём из данных версии, без пересчёта. */}

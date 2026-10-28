@@ -14,11 +14,12 @@ interface Props {
   onRevoke?: (share: CharacterShare & { permission: "VIEW" }) => void;
 }
 
-// Дата выдачи отображается в местном часовом поясе пользователя, как остальные даты по ui-ux.
+// UTC оставляет дату выдачи одинаковой независимо от часового пояса браузера.
 const dateFormat = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
+  timeZone: "UTC",
 });
 
 // Выданные доступы владельца: таблица на широком экране, карточки на телефоне и справка.
@@ -93,7 +94,6 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
             Выдать доступ
           </Button>
         </header>
-        {/* В пустом списке заголовков колонок нет: согласованное исключение из холста. */}
         {shares.length === 0 ? (
           <p className="character-access__empty">
             Персонажем пока ни с кем не поделились.
