@@ -42,9 +42,45 @@ test("scrolls numbers with the text and lets Tab leave the editor", async () => 
     transform: "translateY(-120px)",
   });
   expect(container.querySelector(".json-editor__numbers")?.scrollLeft).toBe(0);
+  expect(container.querySelector(".json-editor__highlight code")).toHaveStyle({
+    transform: "translate(-50px, -120px)",
+  });
   await user.click(input);
   await user.tab();
   expect(
     screen.getByRole("button", { name: "Следующее действие" }),
   ).toHaveFocus();
+});
+
+test("updates the syntax status and accessible field description while typing", () => {
+  render(<EditorExample />);
+  const input = screen.getByRole("textbox", { name: "JSON-схема" });
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Ошибка синтаксиса JSON · строка 1",
+  );
+  fireEvent.change(input, { target: { value: "\n{}\n" } });
+  expect(input).not.toHaveAttribute("aria-invalid");
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "JSON корректен · 3 строки",
+  );
+  expect(input).toHaveAccessibleDescription("JSON корректен · 3 строки");
+  fireEvent.change(input, { target: { value: '{\n  "field": ]\n}' } });
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Ошибка синтаксиса JSON · строка 2",
+  );
+  expect(input).toHaveValue('{\n  "field": ]\n}');
+});
+
+test("renders HTML-like strings as text without creating elements", () => {
+  const text = JSON.stringify({
+    html: '<img src=x onerror="alert(1)">',
+    formula: "floor(reflex / 2)",
+  });
+  const { container } = render(<EditorExample initial={text} />);
+  expect(container.querySelector(".json-editor__highlight img")).toBeNull();
+  expect(screen.getByRole("textbox", { name: "JSON-схема" })).toHaveValue(text);
+  expect(
+    container.querySelector(".json-editor__token--formula"),
+  ).toHaveTextContent('"floor(reflex / 2)"');
 });

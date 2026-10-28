@@ -32,7 +32,8 @@
 }
 
 .json-editor__numbers,
-.json-editor__input {
+.json-editor__input,
+.json-editor__highlight {
   box-sizing: border-box;
   margin: 0;
   font: 400 var(--font-metadata) / var(--line-code) var(--mono);
@@ -55,6 +56,8 @@
 }
 
 .json-editor__input {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
@@ -68,10 +71,105 @@
   outline: none;
   border-radius: 0;
   background: transparent;
-  color: var(--color-code-text);
+  color: transparent;
+  caret-color: var(--color-code-text);
+  -webkit-text-fill-color: transparent;
   white-space: pre;
 }
 
 .json-editor__input:focus-visible {
   outline: none;
+}
+
+/* Подсветка декоративная: ввод, выделение и копирование остаются у textarea. */
+.json-editor__code {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.json-editor__highlight {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--gap-form-fields) var(--gap-access-columns)
+    var(--gap-form-fields) 0;
+  overflow: hidden;
+  color: var(--color-code-text);
+  pointer-events: none;
+  user-select: none;
+}
+
+.json-editor__highlight code {
+  display: block;
+  width: max-content;
+  font: inherit;
+}
+
+.json-editor__token--key {
+  color: var(--color-code-key);
+}
+
+.json-editor__token--string {
+  color: var(--color-success-light);
+}
+
+.json-editor__token--number,
+.json-editor__token--keyword {
+  color: var(--color-code-number);
+}
+
+.json-editor__token--punctuation {
+  color: var(--color-text-faint);
+}
+
+.json-editor__token--formula {
+  color: var(--color-calculated-highlight);
+}
+
+.json-editor__token--invalid {
+  color: var(--color-error);
+}
+
+.json-editor__input::selection {
+  background: var(--tint-calculated-border);
+}
+
+.json-editor__status {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-actions);
+  margin: var(--gap-actions) 0 0;
+  color: var(--color-text-muted);
+  font: 400 var(--font-caption) / 1.5 var(--mono);
+}
+
+.json-editor__status[data-invalid] {
+  color: var(--color-error);
+}
+
+.json-editor__status-dot {
+  flex-shrink: 0;
+  width: var(--size-status-dot);
+  height: var(--size-status-dot);
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+}
+
+.json-editor__status[data-invalid] .json-editor__status-dot {
+  background: var(--color-error);
+}
+
+/* В контрастном режиме системный цвет текста сохраняет читаемость поля без слоя подсветки. */
+@media (forced-colors: active) {
+  .json-editor__input {
+    color: CanvasText;
+    caret-color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+  }
+
+  .json-editor__highlight {
+    display: none;
+  }
 }

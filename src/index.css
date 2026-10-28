@@ -23,6 +23,7 @@
   --color-code-gutter: #4a4a60;
   --color-code-text: #c9c5d2;
   --color-code-number: #e6c07b;
+  --color-code-key: #9dbbe8;
   --gradient-primary-hover: linear-gradient(180deg, #d33d59, #bb3047);
   --color-primary-pressed: #b02a40;
   --color-danger-hover: #c93450;
@@ -235,6 +236,7 @@
   --height-json-editor: 536px;
   --width-editor-gutter: 52px;
   --line-code: 1.65;
+  --size-status-dot: 6px;
 
   /* Список систем: ширины колонок и примечания по ui-ux. */
   --width-systems-source: 220px;
