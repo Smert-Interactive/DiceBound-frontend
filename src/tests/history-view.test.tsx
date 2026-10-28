@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -11,41 +11,17 @@ import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
-import * as characterDetails from "../mocks/characterDetails";
 import * as characters from "../mocks/characters";
 
 const characterId = characters.MOCK_CHARACTERS.owned[0].id;
 
-beforeEach(() => {
-  const character = characterDetails.getMockCharacterDetails(characterId)!;
-  const summary = characters.MOCK_CHARACTERS.owned[0];
-  // VIEW с открытой историей нужен только этим сценариям. Основные mock-персонажи не меняем.
-  vi.spyOn(characterDetails, "getMockCharacterDetails").mockImplementation(
-    (id) =>
-      id === characterId
-        ? {
-            ...character,
-            access: "VIEW",
-            can_edit: false,
-            can_view_history: true,
-          }
-        : undefined,
-  );
-  vi.spyOn(characters, "getMockCharacterList").mockImplementation((email) => ({
-    owned: [],
-    shared_view:
-      email === MOCK_USER.email ? [{ ...summary, access: "VIEW" }] : [],
-  }));
-});
-afterEach(() => {
-  cleanup();
-  vi.restoreAllMocks();
-});
+afterEach(cleanup);
 
-function renderView(path: string) {
+// Реальные выдачи: user@example.com видит историю Aldric, player@example.com — только лист.
+function renderView(path: string, email = "user@example.com") {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
-    <AuthProvider initialUser={MOCK_USER}>
+    <AuthProvider initialUser={{ ...MOCK_USER, email }}>
       <RouterProvider router={router} />
     </AuthProvider>,
   );
@@ -98,24 +74,18 @@ describe("VIEW history permissions", () => {
   });
 
   test("hides the tab when the owner does not share history", () => {
-    const character = characterDetails.getMockCharacterDetails(characterId)!;
-    vi.mocked(characterDetails.getMockCharacterDetails).mockReturnValue({
-      ...character,
-      can_view_history: false,
-    });
-    renderView(generatePath(ROUTES.character, { id: characterId }));
+    renderView(
+      generatePath(ROUTES.character, { id: characterId }),
+      "player@example.com",
+    );
     expect(screen.getByRole("heading", { name: "Aldric" })).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "История" })).toBeNull();
   });
 
   test("a direct version URL cannot bypass a closed history", () => {
-    const character = characterDetails.getMockCharacterDetails(characterId)!;
-    vi.mocked(characterDetails.getMockCharacterDetails).mockReturnValue({
-      ...character,
-      can_view_history: false,
-    });
     renderView(
       generatePath(ROUTES.characterVersion, { id: characterId, version: "4" }),
+      "player@example.com",
     );
     expect(
       screen.getByRole("heading", {
@@ -125,4 +95,28 @@ describe("VIEW history permissions", () => {
     expect(screen.queryByRole("heading", { name: "Aldric" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Восстановить/u })).toBeNull();
   });
+
+  test.each(["editor@example.com", "nobody@example.com"])(
+    "%s cannot open a source version without VIEW",
+    (email) => {
+      renderView(
+        generatePath(ROUTES.characterVersion, {
+          id: characterId,
+          version: "4",
+        }),
+        email,
+      );
+      expect(
+        screen.getByRole("heading", {
+          name: "Персонаж не найден или доступ закрыт",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Aldric" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Восстановить/u }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

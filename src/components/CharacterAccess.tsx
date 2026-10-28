@@ -1,6 +1,7 @@
 import { useId } from "react";
 
 import type { CharacterShare } from "../sharing/sharingTypes";
+import { formatDate } from "../shared/formatDate";
 import { LockIcon, PlusIcon } from "../shared/icons";
 import { useMediaQuery } from "../shared/states/useMediaQuery";
 import { Button, Chip } from "../shared/ui";
@@ -13,14 +14,6 @@ interface Props {
   onAdd?: () => void;
   onRevoke?: (share: CharacterShare & { permission: "VIEW" }) => void;
 }
-
-// UTC оставляет дату выдачи одинаковой независимо от часового пояса браузера.
-const dateFormat = new Intl.DateTimeFormat("ru-RU", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
 // Выданные доступы владельца: таблица на широком экране, карточки на телефоне и справка.
 export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
@@ -70,9 +63,7 @@ export default function CharacterAccess({ shares, onAdd, onRevoke }: Props) {
   // Показываем короткую дату, сохраняя исходную ISO-запись в атрибуте time.
   function date(share: CharacterShare) {
     return (
-      <time dateTime={share.created_at}>
-        {dateFormat.format(new Date(share.created_at))}
-      </time>
+      <time dateTime={share.created_at}>{formatDate(share.created_at)}</time>
     );
   }
 
