@@ -18,7 +18,7 @@ import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
 import { ROUTES } from "../constants/routes";
 
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockCharacterVersions } from "../mocks/characterVersions";
 import { MOCK_CHARACTERS } from "../mocks/characters";

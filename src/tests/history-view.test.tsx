@@ -9,7 +9,7 @@ import {
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import { ROUTES } from "../constants/routes";
 import * as characters from "../mocks/characters";
 

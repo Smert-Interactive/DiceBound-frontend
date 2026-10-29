@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { ApiError } from "../api/client";
+import { authErrorMessage } from "../auth/authErrorMessage";
 import { useAuth } from "../auth/authContext";
 import { Button, Input } from "../shared/ui";
 
@@ -8,6 +10,7 @@ import "./LoginForm.css";
 
 const LOGIN_ERROR = "Неверная почта или пароль";
 
+// Показывает форму входа с блокировкой на время запроса.
 export default function LoginForm() {
   const { signIn, pending } = useAuth();
   // Значения контролируемых полей хранятся в React и сохраняются после ошибки отправки.
@@ -15,13 +18,14 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
 
   // Общая ошибка входа и факт попытки отправки отвечают за разные состояния интерфейса.
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   // До первой отправки пустые поля не подсвечиваются. После неё обводка снимается при вводе.
   const emailMissing = submitted && email.trim().length === 0;
   const passwordMissing = submitted && password.length === 0;
 
+  // Отправляет данные входа без потери введённых значений при ошибке.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Обрабатываем отправку сами: страница не перезагружается, введённые значения остаются.
     event.preventDefault();
@@ -32,17 +36,21 @@ export default function LoginForm() {
     // Пустые поля получают состояние ошибки без дополнительного текста.
     // Почту из одних пробелов считаем пустой; пробелы в пароле не обрезаем.
     if (email.trim().length === 0 || password.length === 0) {
-      setLoginError(false);
+      setLoginError(null);
       return;
     }
 
-    setLoginError(false);
+    setLoginError(null);
     try {
       await signIn({ email, password });
       // После создания сессии LoginPage выполнит переход с учётом state.from.
-    } catch {
-      // Не уточняем, что именно неверно; значения остаются в полях для новой попытки.
-      setLoginError(true);
+    } catch (error) {
+      // Только 401 означает отказ учётных данных.
+      setLoginError(
+        error instanceof ApiError && error.status === 401
+          ? LOGIN_ERROR
+          : authErrorMessage(error),
+      );
     }
   }
 
@@ -69,7 +77,7 @@ export default function LoginForm() {
         onChange={(event) => {
           // При изменении данных старая общая ошибка больше не относится к новой попытке.
           setEmail(event.target.value);
-          setLoginError(false);
+          setLoginError(null);
         }}
         // Input использует aria-invalid для обводки ошибки и программ экранного доступа.
         aria-invalid={emailMissing || undefined}
@@ -84,14 +92,14 @@ export default function LoginForm() {
         value={password}
         onChange={(event) => {
           setPassword(event.target.value);
-          setLoginError(false);
+          setLoginError(null);
         }}
         aria-invalid={passwordMissing || undefined}
       />
       {/* role="alert" сообщает программам экранного доступа о появлении общей ошибки. */}
       {loginError && (
         <div className="login-form__error" role="alert">
-          {LOGIN_ERROR}
+          {loginError}
         </div>
       )}
       {/* submit запускает handleSubmit как по клику, так и при отправке формы клавишей Enter. */}

@@ -1,5 +1,5 @@
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   act,

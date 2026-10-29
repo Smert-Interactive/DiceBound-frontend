@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import AppSidebar from "../components/AppSidebar";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 
 // Link работает только внутри Router, поэтому оборачиваем Sidebar в MemoryRouter.
 // AuthProvider нужен мобильному меню: внизу оно показывает почту аккаунта.

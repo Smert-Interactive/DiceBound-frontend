@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import * as imports from "../mocks/systemImport";
 import * as validation from "../mocks/schemaValidation";
 import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";

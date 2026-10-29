@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import { ROUTES } from "../constants/routes";
 
 // Открывает /characters с готовой сессией. Данные списка зависят от почты пользователя:

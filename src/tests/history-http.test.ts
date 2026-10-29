@@ -12,7 +12,7 @@ test("loads mock history without randomUUID and keeps version IDs unique", async
   const { getMockCharacterVersions, getMockCharacterVersion } =
     await import("../mocks/characterVersions");
   const { MOCK_CHARACTERS } = await import("../mocks/characters");
-  const { MOCK_USER } = await import("../auth/authContext");
+  const { MOCK_USER } = await import("../mocks/authUser");
   const ids: string[] = [];
 
   for (const character of MOCK_CHARACTERS.owned) {

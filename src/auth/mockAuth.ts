@@ -1,4 +1,5 @@
-import { MOCK_USER } from "./authContext";
+import { MOCK_USER } from "../mocks/authUser";
+import { createMockId } from "../mocks/mockId";
 import { getMockCharacterList } from "../mocks/characters";
 import type { User } from "./authContext";
 
@@ -70,6 +71,7 @@ export async function mockSignIn({
   };
 }
 
+// Создаёт только демонстрационный аккаунт в памяти, не серверную сессию.
 export async function mockRegister({
   email,
   password,
@@ -87,6 +89,8 @@ export async function mockRegister({
   }
   // Сохраняем аккаунт лишь после всех проверок. Между страницами Map остаётся в памяти.
   const user: User = {
+    id: createMockId(),
+    username: normalizedEmail.split("@")[0],
     email: normalizedEmail,
     created_at: new Date().toISOString(),
     // Новый аккаунт получает пустой список. Позже показатели придут из /auth/me.

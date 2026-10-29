@@ -4,11 +4,12 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
+import { MOCK_USER } from "../mocks/authUser";
 import type { User } from "../auth/authContext";
 
 // Рисует приложение с настоящими маршрутами, но с «фальшивым» адресом вместо адресной строки.
 // По умолчанию пользователь вошёл (mock), user: null — не вошёл.
-function renderAt(path: string, user?: User | null) {
+function renderAt(path: string, user: User | null = MOCK_USER) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
 
   render(

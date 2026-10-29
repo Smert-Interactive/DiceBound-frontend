@@ -12,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import { ROUTES } from "../constants/routes";
 import DeleteSystemModal from "../components/DeleteSystemModal";
 import { MOCK_SYSTEMS, SPACE_FRONTIER_SYSTEM_ID } from "../mocks/systems";

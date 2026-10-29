@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 import type { User } from "../auth/authContext";
-import { MOCK_PASSWORD } from "../auth/mockAuth";
+const MOCK_PASSWORD = "admin";
 import { ROUTES } from "../constants/routes";
 
 function renderAt(path: string, initialUser: User | null = null) {
@@ -30,9 +30,59 @@ async function signIn(
   await user.click(screen.getByRole("button", { name: "Войти" }));
 }
 
-afterEach(cleanup);
+// Имитирует HTTP и cookie-сессию; production-провайдер не использует mockAuth.
+beforeEach(() => {
+  const accounts = new Map([
+    [MOCK_USER.email, { user: MOCK_USER, password: MOCK_PASSWORD }],
+  ]);
+  let session: User | null = MOCK_USER;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, options: RequestInit) => {
+      const body = options.body ? JSON.parse(String(options.body)) : {};
+      if (url.endsWith("/register")) {
+        if (accounts.has(body.email))
+          return Response.json(
+            { code: "CONFLICT", message: "Conflict" },
+            { status: 409 },
+          );
+        accounts.set(body.email, {
+          user: {
+            ...MOCK_USER,
+            email: body.email,
+            created_at: new Date().toISOString(),
+          },
+          password: body.password,
+        });
+        return Response.json(accounts.get(body.email)!.user, { status: 201 });
+      }
+      if (url.endsWith("/login")) {
+        const account = accounts.get(body.email);
+        if (!account || account.password !== body.password)
+          return Response.json(
+            { code: "UNAUTHORIZED", message: "Invalid email or password" },
+            { status: 401 },
+          );
+        session = account.user;
+        return Response.json(session);
+      }
+      if (url.endsWith("/logout")) {
+        session = null;
+        return new Response(null, { status: 204 });
+      }
+      return session
+        ? Response.json(session)
+        : Response.json({ code: "UNAUTHORIZED" }, { status: 401 });
+    }),
+  );
+});
 
-describe("authentication redirects with the real mock service", () => {
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+describe("authentication redirects through HTTP", () => {
   test("signs in and replaces the login page with the character list", async () => {
     const { user, router } = renderAt(ROUTES.login);
     await signIn(user);
@@ -100,6 +150,7 @@ describe("authentication redirects with the real mock service", () => {
     );
     await user.click(screen.getByRole("button", { name: "Выйти" }));
 
+    await screen.findByRole("form", { name: "Вход" });
     expect(router.state.location.pathname).toBe(ROUTES.login);
     expect(router.state.location.state).toBeNull();
     expect(router.state.historyAction).toBe("REPLACE");
@@ -160,6 +211,7 @@ describe("authentication redirects with the real mock service", () => {
     ).toEqual(["0", "0"]);
 
     await user.click(screen.getByRole("button", { name: "Выйти" }));
+    await screen.findByRole("form", { name: "Вход" });
     expect(router.state.location.pathname).toBe(ROUTES.login);
     await signIn(user, email, password);
     // После явного выхода новый вход открывает список; дата в профиле остаётся прежней.

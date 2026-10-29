@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 
 import AppHeader from "../components/AppHeader";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
+import { MOCK_USER } from "../mocks/authUser";
 
 vi.mock("../components/AppBreadcrumbs", () => ({
   default: () => <div>Breadcrumbs</div>,
