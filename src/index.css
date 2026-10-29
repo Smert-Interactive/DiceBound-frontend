@@ -21,7 +21,9 @@
   /* JSON редактор */
   --color-bg-editor: #101016;
   --color-code-gutter: #4a4a60;
+  --color-code-text: #c9c5d2;
   --color-code-number: #e6c07b;
+  --color-code-key: #9dbbe8;
   --gradient-primary-hover: linear-gradient(180deg, #d33d59, #bb3047);
   --color-primary-pressed: #b02a40;
   --color-danger-hover: #c93450;
@@ -229,6 +231,23 @@
   --width-access-history-narrow: 100px;
   --width-access-action-narrow: 168px;
   --height-access-action-touch: 44px;
+
+  /* JSON-редактор: высота, колонка номеров и интерлиньяж по ui-ux. */
+  --height-json-editor: 536px;
+  --width-editor-gutter: 52px;
+  --line-code: 1.65;
+  --size-status-dot: 6px;
+  --padding-validation-error: 11px 0;
+  --size-icon-validation: 15px;
+  --padding-validation-preview: 28px;
+
+  /* Список систем: ширины колонок и примечания по ui-ux. */
+  --width-systems-source: 220px;
+  --width-systems-count: 200px;
+  --width-systems-action: 230px;
+  --width-systems-note: 760px;
+  --width-system-label: 120px;
+  --gap-system-details: 3px;
 
   /* Колонки списка персонажей: метка, имя, система, изменён, действия. Планшет без «Изменён».
      Общие для строки CharacterCard и строки заголовков, чтобы колонки совпадали. */

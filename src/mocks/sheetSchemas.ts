@@ -3,7 +3,12 @@ import type {
   NumberField,
   SheetSchema,
 } from "../sheet/sheetTypes";
-import { COC_SYSTEM_ID, DND_SYSTEM_ID, CUSTOM_SYSTEM_ID } from "./systems";
+import {
+  COC_SYSTEM_ID,
+  DND_SYSTEM_ID,
+  CUSTOM_SYSTEM_ID,
+  SPACE_FRONTIER_SYSTEM_ID,
+} from "./systems";
 
 export const DND_SCHEMA_ID = "5c0a7c1e-0000-4000-8000-000000000001";
 export const COC_SCHEMA_ID = "5c0a7c1e-0000-4000-8000-000000000002";
@@ -195,10 +200,28 @@ export const CUSTOM_SCHEMA: SheetSchema = {
   },
 };
 
+// Лист демонстрационной Space Frontier переиспользует поля досье, без нового renderer.
+export const SPACE_FRONTIER_SCHEMA: SheetSchema = {
+  id: "5c0a7c1e-0000-4000-8000-000000000004",
+  game_system_id: SPACE_FRONTIER_SYSTEM_ID,
+  name: "Экипаж",
+  created_at: "2026-09-25T11:05:00Z",
+  schema: {
+    sections: [
+      {
+        id: "crew",
+        label: "Экипаж",
+        fields: structuredClone(CUSTOM_SCHEMA.schema.sections[0].fields),
+      },
+    ],
+  },
+};
+
 export const MOCK_SHEET_SCHEMAS: SheetSchema[] = [
   DND_SCHEMA,
   COC_SCHEMA,
   CUSTOM_SCHEMA,
+  SPACE_FRONTIER_SCHEMA,
 ];
 
 export function getMockSheetSchema(schemaId: string): SheetSchema | undefined {

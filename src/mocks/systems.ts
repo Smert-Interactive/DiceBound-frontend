@@ -1,13 +1,8 @@
-// Типы повторяют GameSystemSummary и SheetSchemaSummary из контракта GET /systems.
-export interface GameSystemSummary {
-  id: string;
-  owner_id: string | null;
-  name: string;
-  description: string | null;
-  source: "BUILT_IN" | "IMPORTED";
-  character_count: number;
-  created_at: string;
-}
+import { getMockRecipientId } from "./characterSharesStore";
+import type { GameSystemSummary } from "../systems/systemTypes";
+
+// Сохраняем прежний импорт типов для существующих компонентов.
+export type { GameSystemSummary } from "../systems/systemTypes";
 
 // sections в контракте нет: там названия секций лежат только в полной схеме (GET /schemas/{id}).
 // Пока берём их из моков; у встроенных систем строка постоянная, у импортированных зависит от схемы.
@@ -21,6 +16,7 @@ export interface SheetSchemaOption {
 
 export const DND_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000001";
 export const COC_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000002";
+export const SPACE_FRONTIER_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000004";
 export const CUSTOM_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000003";
 
 // Данные доски Create холста.
@@ -52,7 +48,56 @@ export const MOCK_SYSTEMS: GameSystemSummary[] = [
     character_count: 1,
     created_at: "2026-09-10T09:00:00Z",
   },
+  {
+    id: SPACE_FRONTIER_SYSTEM_ID,
+    owner_id: "a1e0c000-0000-4000-8000-000000000001",
+    name: "Space Frontier",
+    description: null,
+    source: "IMPORTED",
+    character_count: 0,
+    created_at: "2026-09-25T11:05:00Z",
+  },
 ];
+
+// Полные метаданные остаются в памяти даже после удаления из доступного списка.
+const deletedSystemIds = new Set<string>();
+
+// Повторяет GET /systems: встроенные и свои импортированные, кроме удалённых.
+export function getMockSystems(email: string): GameSystemSummary[] {
+  const ownerId = getMockRecipientId(email.trim().toLowerCase());
+  return MOCK_SYSTEMS.filter(
+    (system) =>
+      !deletedSystemIds.has(system.id) &&
+      (system.source === "BUILT_IN" || system.owner_id === ownerId),
+  ).map((system) => ({ ...system }));
+}
+
+// DELETE скрывает только свою импортированную систему, сохраняя схемы и персонажей.
+export async function deleteMockSystem(
+  systemId: string,
+  email: string,
+): Promise<void> {
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
+  const system = MOCK_SYSTEMS.find((item) => item.id === systemId);
+  if (
+    !system ||
+    deletedSystemIds.has(systemId) ||
+    (system.source === "IMPORTED" &&
+      system.owner_id !== getMockRecipientId(email.trim().toLowerCase()))
+  ) {
+    throw Object.assign(new Error("NOT_FOUND_OR_FORBIDDEN"), {
+      status: 404,
+      code: "NOT_FOUND_OR_FORBIDDEN",
+    });
+  }
+  if (system.source === "BUILT_IN") {
+    throw Object.assign(new Error("FORBIDDEN"), {
+      status: 403,
+      code: "FORBIDDEN",
+    });
+  }
+  deletedSystemIds.add(systemId);
+}
 
 export const MOCK_SCHEMAS: SheetSchemaOption[] = [
   {
@@ -75,6 +120,13 @@ export const MOCK_SCHEMAS: SheetSchemaOption[] = [
     name: "Базовый лист",
     created_at: "2026-09-10T09:00:00Z",
     sections: ["Досье", "Параметры", "Ресурсы"],
+  },
+  {
+    id: "5c0a7c1e-0000-4000-8000-000000000004",
+    game_system_id: SPACE_FRONTIER_SYSTEM_ID,
+    name: "Экипаж",
+    created_at: "2026-09-25T11:05:00Z",
+    sections: ["Экипаж"],
   },
 ];
 

@@ -1,14 +1,16 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link, generatePath, useNavigate } from "react-router-dom";
+import { Link, generatePath, useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
 import SystemCard from "../components/SystemCard";
 import { ROUTES } from "../constants/routes";
 import { createMockCharacter } from "../mocks/characters";
-import { MOCK_SYSTEMS, getMockSchemas } from "../mocks/systems";
+import { getMockSystems, getMockSchemas } from "../mocks/systems";
+import { getImportedSystem } from "../systems/importRouteState";
 import { UploadIcon } from "../shared/icons";
 import {
+  Banner,
   Button,
   ButtonLink,
   Input,
@@ -48,20 +50,39 @@ function StepCard({ number, title, hint, children, actions }: StepProps) {
 }
 
 export default function NewCharacterPage() {
-  // По умолчанию выбрана первая система, как на холсте.
-  const [systemId, setSystemId] = useState(MOCK_SYSTEMS[0].id);
+  const { user } = useAuth();
+  // Удалённые и чужие системы не участвуют в создании новых персонажей.
+  const systems = getMockSystems(user?.email ?? "");
+  const location = useLocation();
+  const imported = getImportedSystem(location.state);
+  // Предвыбор применяем только к своей доступной системе с действительно существующим листом.
+  const importedSystem = systems.find(
+    (item) =>
+      item.id === imported?.systemId &&
+      getMockSchemas(item.id).some((schema) => schema.id === imported.schemaId),
+  );
+  const [showImportNotice, setShowImportNotice] = useState(
+    Boolean(importedSystem),
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [systemId, setSystemId] = useState(importedSystem?.id ?? systems[0].id);
+  const system = systems.find((item) => item.id === systemId) ?? systems[0];
   // Лист хранится по id. Если он не из выбранной системы, берётся её первый лист:
   // так при смене системы выбор не нужно сбрасывать вручную.
-  const [schemaId, setSchemaId] = useState("");
-  const schemas = getMockSchemas(systemId);
+  const [schemaId, setSchemaId] = useState(
+    importedSystem ? imported!.schemaId : "",
+  );
+  const schemas = getMockSchemas(system.id);
   const schema = schemas.find((item) => item.id === schemaId) ?? schemas[0];
   const [name, setName] = useState("");
-  const system =
-    MOCK_SYSTEMS.find((item) => item.id === systemId) ?? MOCK_SYSTEMS[0];
-  const { user } = useAuth();
   const navigate = useNavigate();
   const hintId = useId();
   const [pending, setPending] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
+  const createErrorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (createFailed) createErrorRef.current?.focus();
+  }, [createFailed]);
   const isNameEmpty = name.trim().length === 0;
 
   async function handleCreate() {
@@ -69,6 +90,7 @@ export default function NewCharacterPage() {
     // приходит: отсекаем его здесь, как и повторное нажатие во время запроса.
     if (isNameEmpty || pending || !user) return;
     setPending(true);
+    setCreateFailed(false);
     try {
       const character = await createMockCharacter(
         {
@@ -79,6 +101,9 @@ export default function NewCharacterPage() {
         user.email,
       );
       navigate(generatePath(ROUTES.character, { id: character.id }));
+    } catch {
+      // Сохраняем имя и выбор листа; пользователь может повторить создание.
+      setCreateFailed(true);
     } finally {
       setPending(false);
     }
@@ -86,7 +111,20 @@ export default function NewCharacterPage() {
 
   return (
     <div className="new-character">
-      <h1>Новый персонаж</h1>
+      {showImportNotice && importedSystem && (
+        <Banner
+          variant="success"
+          notification
+          title={`Система «${importedSystem.name}» импортирована`}
+          onClose={() => {
+            setShowImportNotice(false);
+            headingRef.current?.focus();
+          }}
+        />
+      )}
+      <h1 ref={headingRef} tabIndex={-1}>
+        Новый персонаж
+      </h1>
       {/* Шаги слева, «Сводка» справа; на планшете и телефоне «Сводка» уходит вниз. */}
       <div className="new-character__layout">
         <div className="new-character__steps">
@@ -124,13 +162,13 @@ export default function NewCharacterPage() {
               role="radiogroup"
               aria-label="Игровая система"
             >
-              {MOCK_SYSTEMS.map((system) => (
+              {systems.map((item) => (
                 <SystemCard
-                  key={system.id}
-                  system={system}
-                  schemaCount={getMockSchemas(system.id).length}
+                  key={item.id}
+                  system={item}
+                  schemaCount={getMockSchemas(item.id).length}
                   name="game-system"
-                  checked={system.id === systemId}
+                  checked={item.id === system.id}
                   onSelect={setSystemId}
                 />
               ))}
@@ -196,6 +234,18 @@ export default function NewCharacterPage() {
             Поля листа заполнятся значениями по умолчанию из схемы. Состояние
             сразу сохранится как версия&nbsp;1.
           </p>
+          {createFailed && (
+            <div
+              className="new-character__failure"
+              ref={createErrorRef}
+              tabIndex={-1}
+            >
+              <Banner
+                variant="error"
+                title="Не удалось выполнить действие. Попробуйте ещё раз."
+              />
+            </div>
+          )}
           <div className="new-character__actions">
             {/* Пока создаётся персонаж, остальные кнопки недоступны (ui-ux). */}
             {pending ? (

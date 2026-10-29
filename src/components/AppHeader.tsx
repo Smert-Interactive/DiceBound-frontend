@@ -39,8 +39,12 @@ export default function AppHeader({
     });
   // Лист и его история возвращают к списку; снимок — к истории этого персонажа.
   // /characters/new тоже совпадает с :id, но не является страницей существующего листа.
+  const isSystemImport = location.pathname === ROUTES.importSystem;
+  const isSystemsList = location.pathname === ROUTES.systems;
   const backPath =
     historyPath ??
+    (isSystemImport ? ROUTES.systems : undefined) ??
+    (isSystemsList ? ROUTES.importSystem : undefined) ??
     (characterMatch && characterMatch.params.id !== "new"
       ? ROUTES.characters
       : undefined);
@@ -73,12 +77,24 @@ export default function AppHeader({
                 to={backPath}
                 state={historyPath ? { activeTab: "history" } : undefined}
                 className="mobile-header__button"
-                aria-label={historyPath ? "К истории" : "К персонажам"}
+                aria-label={
+                  isSystemImport
+                    ? "К игровым системам"
+                    : isSystemsList
+                      ? "К импорту системы"
+                      : historyPath
+                        ? "К истории"
+                        : "К персонажам"
+                }
               >
                 <ChevronLeftIcon />
               </Link>
               <span className="mobile-header__title">
-                {historyPath ? "История" : "Персонажи"}
+                {isSystemsList || isSystemImport
+                  ? "Импорт системы"
+                  : historyPath
+                    ? "История"
+                    : "Персонажи"}
               </span>
             </>
           ) : (

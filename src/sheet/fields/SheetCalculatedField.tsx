@@ -17,6 +17,7 @@ interface Props {
   // Ошибка зависимости (getDependencyError); значение тогда «—».
   error?: string;
   readOnly?: boolean;
+  showHint?: boolean;
   // Модификатор внутри пары «значение | модификатор»: плашка ниже, формула стоит под ней.
   inPair?: boolean;
 }
@@ -30,6 +31,7 @@ export default function SheetCalculatedField({
   dependsOn = [],
   error,
   readOnly,
+  showHint = true,
   inPair = false,
 }: Props) {
   const id = useId();
@@ -40,7 +42,10 @@ export default function SheetCalculatedField({
   const formulaText = field.formula;
   // В паре подсказка «пересчитывается при изменении…» не нужна: формула видна под плашкой.
   const note =
-    error ?? (readOnly || inPair ? undefined : getCalculatedHint(dependsOn));
+    error ??
+    (readOnly || inPair || !showHint
+      ? undefined
+      : getCalculatedHint(dependsOn));
   const describedBy = note ? noteId : inPair ? formulaId : undefined;
 
   // В режиме чтения число и формула пары стоят в одной плашке (решает CSS по ширине секции).

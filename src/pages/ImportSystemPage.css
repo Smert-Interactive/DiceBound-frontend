@@ -1,0 +1,168 @@
+.import-system {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.import-system__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-actions);
+}
+
+.import-system__heading {
+  min-width: 0;
+}
+
+.import-system__heading h1 {
+  margin-bottom: var(--gap-page-heading);
+}
+
+.import-system__heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-button);
+}
+
+.import-system__file-label-touch {
+  display: none;
+}
+
+.import-system__systems {
+  flex-shrink: 0;
+}
+
+.import-system__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--gap-access-columns);
+}
+
+.import-system__form {
+  display: grid;
+  gap: var(--gap-form-fields);
+  min-width: 0;
+}
+
+.import-system__names {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-sheet-fields);
+}
+
+.import-system__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--gap-actions);
+}
+
+.import-system__result {
+  display: grid;
+  gap: var(--gap-form-fields);
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .import-system__header {
+    flex-wrap: wrap;
+    gap: var(--gap-content-touch);
+  }
+
+  .import-system__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .import-system {
+    gap: var(--gap-content-touch);
+  }
+
+  .import-system__names {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .import-system__systems,
+  .import-system__file-label {
+    display: none;
+  }
+
+  .import-system__file-label-touch {
+    display: inline;
+  }
+
+  /* Одна разметка сохраняет черновик при повороте экрана; меняется только порядок блоков. */
+  .import-system__layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gap-content-touch);
+  }
+
+  .import-system__form,
+  .import-system__actions,
+  .import-system__result {
+    display: contents;
+  }
+
+  .import-system__names {
+    order: 0;
+    gap: var(--gap-content-touch);
+  }
+
+  .import-system__form > .ui-banner {
+    order: 1;
+  }
+
+  .import-system__form > .json-editor {
+    order: 2;
+  }
+
+  .import-system__check {
+    order: 3;
+  }
+
+  .import-system__result > :not(.schema-preview) {
+    order: 4;
+  }
+
+  .import-system__import {
+    order: 5;
+  }
+
+  .import-system__result > .schema-preview {
+    order: 6;
+  }
+
+  .import-system__check,
+  .import-system__import {
+    width: 100%;
+    min-width: 0;
+    padding-inline: var(--gap-actions);
+  }
+
+  .import-system__check .ui-button__rest,
+  .import-system__import .ui-button__rest {
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (max-width: 639px) {
+  .import-system__form > .import-system__failure {
+    order: 5;
+  }
+
+  .import-system__import {
+    order: 6;
+  }
+
+  .import-system__result > .schema-preview {
+    order: 7;
+  }
+}

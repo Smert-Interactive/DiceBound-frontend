@@ -1,0 +1,110 @@
+.schema-preview {
+  min-width: 0;
+}
+
+.schema-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--gap-actions);
+  margin-bottom: var(--gap-sheet-title);
+}
+
+.schema-preview__header h2 {
+  margin: 0;
+  color: var(--color-text-muted);
+  font: 400 var(--font-metadata) / 1.5 var(--mono);
+}
+
+/* В компактном предпросмотре секции идут внутри общей карточки, как на холсте. */
+.schema-preview .sheet {
+  gap: var(--gap-sheet-title);
+}
+
+.schema-preview .sheet-section {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: var(--gap-sheet-pair-touch);
+}
+
+.schema-preview .sheet-section__head {
+  margin-bottom: 0;
+}
+
+.schema-preview .sheet-section__title {
+  font-family: var(--sans);
+}
+
+.schema-preview .sheet-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-sheet-pair);
+}
+
+.schema-preview__mobile-caption {
+  display: none;
+}
+
+/* Desktop: флажок стоит в сетке без отдельной плашки, как на Import. */
+.schema-preview .ui-check {
+  gap: var(--gap-actions);
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+@media (max-width: 639px) {
+  /* MImport: заголовок снаружи, каждая секция получает собственную карточку. */
+  .schema-preview {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .schema-preview__header {
+    margin-top: var(--gap-inline-compact);
+    margin-bottom: var(--gap-sheet-pair);
+  }
+
+  .schema-preview__header .ui-chip {
+    display: none;
+  }
+
+  .schema-preview__mobile-caption {
+    display: inline;
+  }
+
+  .schema-preview .sheet {
+    gap: var(--gap-sheet-pair);
+  }
+
+  .schema-preview .sheet-section {
+    padding: var(--padding-card-touch);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-card);
+    background: var(--color-bg-surface);
+    gap: var(--gap-sheet-title);
+  }
+
+  .schema-preview .sheet-section__title {
+    font-family: var(--mono);
+  }
+
+  .schema-preview .ui-check {
+    padding-inline: var(--gap-sheet-fields);
+    border-color: var(--color-border-strong);
+    background: var(--color-bg-input);
+    font-size: var(--font-button);
+  }
+
+  .schema-preview .sheet-calculated__formula {
+    display: none;
+  }
+
+  .schema-preview .sheet-calculated__box {
+    justify-content: center;
+  }
+}

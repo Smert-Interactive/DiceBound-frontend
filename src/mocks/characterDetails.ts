@@ -1,4 +1,10 @@
-import type { CharacterData, CharacterDetails } from "../sheet/sheetTypes";
+import { recalculateSheet } from "../sheet/recalculate";
+import { toDraft } from "../sheet/sheetDraft";
+import type {
+  CharacterData,
+  CharacterDetails,
+  SheetSchema,
+} from "../sheet/sheetTypes";
 import {
   getMockVersionCount,
   setMockVersionCount,
@@ -198,4 +204,44 @@ export function createMockCharacterCopy(
   };
   setMockVersionCount(id, 1);
   return id;
+}
+
+// Новый персонаж получает собственный лист; значения строятся по типам полей любой схемы.
+export function initializeMockCharacterSheet(
+  id: string,
+  schema: SheetSchema,
+  createdAt: string,
+) {
+  const data: CharacterData = {};
+  for (const field of schema.schema.sections.flatMap(
+    (section) => section.fields,
+  )) {
+    switch (field.type) {
+      case "text":
+        data[field.id] = "";
+        break;
+      case "number":
+        data[field.id] = field.min ?? Math.min(0, field.max ?? 0);
+        break;
+      case "select":
+        data[field.id] = field.options[0]?.value ?? "";
+        break;
+      case "checkbox":
+        data[field.id] = false;
+        break;
+      case "resource":
+        data[field.id] = { current: field.min ?? 0, max: field.min ?? 0 };
+        break;
+      case "calculated":
+        break;
+    }
+  }
+  const calculation = recalculateSheet(
+    schema.schema,
+    toDraft(schema.schema, data),
+  );
+  for (const [fieldId, value] of Object.entries(calculation.values)) {
+    if (value !== undefined) data[fieldId] = value;
+  }
+  MOCK_SHEETS[id] = { schemaId: schema.id, data, createdAt };
 }

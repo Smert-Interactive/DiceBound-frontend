@@ -11,7 +11,11 @@ import type { ResourceDraft } from "./resourceField";
 import type { SheetDraft, SheetDraftValue } from "./sheetDraft";
 import { FunctionIcon } from "../shared/icons";
 import { useMediaQuery } from "../shared/states/useMediaQuery";
-import { buildSheetLayout, type SheetPair } from "./sheetLayout";
+import {
+  buildSheetLayout,
+  type SheetBlock,
+  type SheetPair,
+} from "./sheetLayout";
 import type { SheetField, SheetSchemaBody, SheetSection } from "./sheetTypes";
 
 import "./DynamicSheetRenderer.css";
@@ -27,6 +31,10 @@ interface Props {
   changed?: ReadonlySet<string>;
   // Тот же renderer показывает версию и лист получателя VIEW: поля только для чтения.
   readOnly?: boolean;
+  // Компактный предпросмотр показывает number и calculated отдельными полями.
+  groupPairs?: boolean;
+  // В предпросмотре формула уже видна в поле; пояснение под ним не занимает место.
+  showCalculatedHints?: boolean;
   onChange?: (fieldId: string, value: SheetDraftValue) => void;
 }
 
@@ -50,6 +58,8 @@ export default function DynamicSheetRenderer({
   errors = NO_ERRORS,
   changed = NO_CHANGES,
   readOnly = false,
+  groupPairs = true,
+  showCalculatedHints = true,
   onChange,
 }: Props) {
   const isPhone = useMediaQuery("(max-width: 639px)");
@@ -134,6 +144,7 @@ export default function DynamicSheetRenderer({
           <SheetCalculatedField
             field={field}
             value={calculated[field.id]}
+            showHint={showCalculatedHints}
             dependsOn={getFormulaFieldIds(field.formula).map(
               (id) => labels.get(id) ?? id,
             )}
@@ -169,6 +180,7 @@ export default function DynamicSheetRenderer({
           key={section.id}
           section={section}
           isPhone={isPhone}
+          groupPairs={groupPairs}
           renderField={renderField}
           renderPair={renderPair}
         />
@@ -180,6 +192,7 @@ export default function DynamicSheetRenderer({
 interface SectionProps {
   section: SheetSection;
   isPhone: boolean;
+  groupPairs: boolean;
   renderField: (field: SheetField) => ReactNode;
   renderPair: (pair: SheetPair) => ReactNode;
 }
@@ -189,11 +202,14 @@ interface SectionProps {
 function SheetSectionCard({
   section,
   isPhone,
+  groupPairs,
   renderField,
   renderPair,
 }: SectionProps) {
   const titleId = useId();
-  const blocks = buildSheetLayout(section.fields);
+  const blocks: SheetBlock[] = groupPairs
+    ? buildSheetLayout(section.fields)
+    : [{ type: "fields", fields: section.fields }];
   const hasPairs = blocks.some((block) => block.type === "pairs");
 
   return (

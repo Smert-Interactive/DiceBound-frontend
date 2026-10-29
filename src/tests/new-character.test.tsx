@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, test } from "vitest";
+import * as characters from "../mocks/characters";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   cleanup,
   render,
@@ -28,7 +29,10 @@ function renderNewCharacter() {
   return { router, user: userEvent.setup() };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("new character without a name", () => {
   test("the create button is unavailable, explained by the hint, and clicking does nothing", async () => {
@@ -98,4 +102,31 @@ describe("leaving the page", () => {
 
     expect(router.state.location.pathname).toBe(ROUTES.characters);
   });
+});
+
+test("creates an openable character from the Space Frontier demo schema", async () => {
+  const { router, user } = renderNewCharacter();
+  await user.click(screen.getByRole("radio", { name: /Space Frontier/u }));
+  await user.type(screen.getByLabelText("Имя персонажа"), "Nova");
+  await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
+  await screen.findByRole("heading", { name: "Экипаж" });
+  expect(router.state.location.pathname).toMatch(/^\/characters\/(?!new)/u);
+  expect(screen.getByRole("textbox", { name: "Позывной" })).toBeInTheDocument();
+});
+
+test("shows a creation failure, retains the draft and allows retry", async () => {
+  const create = vi
+    .spyOn(characters, "createMockCharacter")
+    .mockRejectedValueOnce(new Error("offline"));
+  const { user } = renderNewCharacter();
+  await user.type(screen.getByLabelText("Имя персонажа"), "Retry hero");
+  await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
+  const error = await screen.findByText(
+    "Не удалось выполнить действие. Попробуйте ещё раз.",
+  );
+  expect(error.closest(".new-character__failure")).toHaveFocus();
+  expect(screen.getByLabelText("Имя персонажа")).toHaveValue("Retry hero");
+  await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
+  await screen.findByRole("heading", { name: "Retry hero" });
+  expect(create).toHaveBeenCalledTimes(2);
 });

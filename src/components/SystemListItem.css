@@ -1,0 +1,148 @@
+.system-list-item > th,
+.system-list-item > td {
+  padding: var(--padding-access-cell);
+  border-top: 1px solid var(--color-border-divider);
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.system-list-item__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sheet-fields);
+  min-width: 0;
+}
+
+.system-list-item__description {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.system-list-item__description b {
+  font-weight: 500;
+}
+
+.system-list-item__description > span {
+  color: var(--color-text-muted);
+  font: 400 var(--font-metadata) / 1.5 var(--sans);
+}
+
+.system-list-item__source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--gap-system-details);
+  min-width: 0;
+}
+
+.system-list-item__source .ui-chip {
+  line-height: 1.5;
+}
+
+.system-list-item__source time {
+  display: block;
+  color: var(--color-text-muted);
+  font: 400 var(--font-caption) / 1.5 var(--mono);
+}
+
+.system-list-item__count {
+  color: var(--color-text-secondary);
+  font-size: var(--font-button);
+}
+
+.system-list-item__count[data-empty] {
+  color: var(--color-text-muted);
+}
+
+.system-list-item__action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.system-list-item__lock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-inline-compact);
+  color: var(--color-text-muted);
+  font: 400 var(--font-caption) / 1.5 var(--sans);
+}
+
+.system-list-item__lock svg {
+  flex-shrink: 0;
+  width: var(--font-button);
+  height: var(--font-button);
+}
+
+@media (max-width: 639px) {
+  .system-list-item--card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sheet-fields);
+    min-width: 0;
+    padding: var(--padding-card-touch);
+  }
+
+  .system-list-item__identity {
+    align-items: flex-start;
+  }
+
+  .system-list-item__description {
+    gap: var(--gap-system-details);
+    overflow-wrap: anywhere;
+  }
+
+  .system-list-item__description b {
+    font-size: var(--font-access-title);
+  }
+
+  .system-list-item__description > span {
+    font-size: var(--font-explanation);
+  }
+
+  .system-list-item__source {
+    align-items: center;
+    gap: var(--gap-inline-compact);
+  }
+
+  /* Фиксированная колонка подписи сохраняет положение значения, как в ui-ux. */
+  .system-list-item__characters {
+    display: grid;
+    grid-template-columns: minmax(0, var(--width-system-label)) minmax(0, 1fr);
+    gap: var(--gap-history-help);
+    margin: 0;
+    font-size: var(--font-button);
+  }
+
+  .system-list-item__characters dt {
+    padding-top: 1px;
+    color: var(--color-text-muted);
+    font: 400 var(--font-caption) / 1.5 var(--mono);
+  }
+
+  .system-list-item__characters dd {
+    margin: 0;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .system-list-item__action {
+    justify-content: flex-start;
+  }
+
+  .system-list-item__action .ui-button {
+    width: 100%;
+    height: var(--size-button-sm-touch);
+  }
+
+  .system-list-item__lock {
+    font-size: var(--font-explanation);
+  }
+
+  .system-list-item__lock svg {
+    width: var(--font-ui);
+    height: var(--font-ui);
+  }
+}
