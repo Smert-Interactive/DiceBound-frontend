@@ -19,7 +19,7 @@ interface Props {
 // Элемент li лежит в списке ul, который собирает страница.
 export default function CharacterCard({ character, onDelete }: Props) {
   const isViewOnly = character.access === "VIEW";
-  const systemKind = getSystemKind();
+  const systemKind = getSystemKind(undefined, character.game_system_id);
   const href = generatePath(ROUTES.character, { id: character.id });
 
   let note: string | null = null;

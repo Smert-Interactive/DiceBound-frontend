@@ -1,3 +1,21 @@
+.profile-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-actions) var(--gap-form-fields);
+  margin-bottom: var(--gap-content);
+}
+
+.profile-page__header h1 {
+  margin: 0;
+}
+
+.profile-page__refresh {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+}
+
 .profile-page__card {
   box-sizing: border-box;
   width: 100%;
@@ -82,6 +100,10 @@
 }
 
 @media (max-width: 639px) {
+  .profile-page__header {
+    margin-bottom: var(--gap-content-touch);
+  }
+
   .profile-page__actions .ui-button {
     width: 100%;
   }

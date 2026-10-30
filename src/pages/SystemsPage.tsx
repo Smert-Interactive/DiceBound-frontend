@@ -8,9 +8,9 @@ import { deleteSystem, getCreationCatalog } from "../api/systems";
 import { useApiQuery } from "../api/useApiQuery";
 import { LoadingSkeleton, LoadErrorState } from "../shared/states";
 import type { GameSystemSummary } from "../systems/systemTypes";
-import { CloseIcon, UploadIcon } from "../shared/icons";
+import { UploadIcon } from "../shared/icons";
 import { useMediaQuery } from "../shared/states/useMediaQuery";
-import { Banner, Button, getButtonClassName } from "../shared/ui";
+import { Banner, getButtonClassName } from "../shared/ui";
 
 import "./SystemsPage.css";
 
@@ -26,6 +26,7 @@ export default function SystemsPage() {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
+  const [noticeId, setNoticeId] = useState(0);
   const systems = query.data?.systems ?? [];
 
   // Новое подтверждение сбрасывает прошлую ошибку; цель сохраняется до конца закрытия.
@@ -48,6 +49,7 @@ export default function SystemsPage() {
         ...previous,
         systems: previous.systems.filter((system) => system.id !== target.id),
       }));
+      setNoticeId((value) => value + 1);
       setNotice(`Система «${target.name}» удалена из списка игровых систем.`);
       setOpen(false);
     } catch (error) {
@@ -67,23 +69,13 @@ export default function SystemsPage() {
     <div className="systems-page">
       {notice && (
         <Banner
+          key={noticeId}
           variant="success"
           title={notice}
           notification
           className="systems-page__notice"
-          onClose={isPhone ? undefined : handleNoticeClose}
-          actions={
-            isPhone ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                icon={<CloseIcon />}
-                aria-label="Закрыть уведомление"
-                onClick={handleNoticeClose}
-              />
-            ) : undefined
-          }
+          onClose={handleNoticeClose}
+          closeIconOnly={isPhone}
         />
       )}
       <div className="systems-page__header">

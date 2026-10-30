@@ -106,7 +106,10 @@ function VersionSnapshot({ id, version }: { id: string; version: number }) {
     </>
   );
   return (
-    <div className="character-version-page" data-system={getSystemKind()}>
+    <div
+      className="character-version-page"
+      data-system={getSystemKind(undefined, character.game_system_id)}
+    >
       {restore.preparationError && (
         <Banner variant="error" title={restore.preparationError}>
           <Button onClick={query.retry}>Обновить данные</Button>
@@ -125,6 +128,7 @@ function VersionSnapshot({ id, version }: { id: string; version: number }) {
         <div className="character-version-page__actions">{back}</div>
       )}
       <CharacterHeader
+        systemId={character.game_system_id}
         name={character.name}
         systemName={summary?.game_system_name ?? "Игровая система"}
         schemaName={schema.name}

@@ -7,6 +7,7 @@ import "./CharacterHeader.css";
 interface Props {
   name: string;
   systemName: string;
+  systemId?: string;
   schemaName: string;
   updatedAt: string;
   // В снимке номер уже показан в баннере, поэтому повтор в метаданных не нужен.
@@ -22,6 +23,7 @@ interface Props {
 export default function CharacterHeader({
   name,
   systemName,
+  systemId,
   schemaName,
   updatedAt,
   version,
@@ -29,7 +31,7 @@ export default function CharacterHeader({
   isCopy = false,
   showDateOnMobile = false,
 }: Props) {
-  const systemKind = getSystemKind();
+  const systemKind = getSystemKind(undefined, systemId);
 
   return (
     <header

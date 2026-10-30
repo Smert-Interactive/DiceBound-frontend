@@ -11,7 +11,10 @@ import type { User } from "./authContext";
 import * as authApi from "../api/auth";
 import { ApiError } from "../api/client";
 import type { LoginCredentials, RegisterCredentials } from "../api/types";
-import { LoadErrorState, LoadingSkeleton } from "../shared/states";
+import { LoadErrorState } from "../shared/states";
+import logo from "../assets/logo.svg";
+
+import "./AuthProvider.css";
 
 interface Props {
   // Явная сессия нужна тестам; приложение при запуске всегда проверяет /me.
@@ -129,15 +132,27 @@ export default function AuthProvider({ initialUser, children }: Props) {
   }
 
   if (sessionState === "loading")
-    return <LoadingSkeleton variant="list" label="Проверка сессии" />;
+    return (
+      <main className="auth-session-loading" aria-busy="true">
+        <div role="status" aria-label="Проверка сессии">
+          <img
+            className="auth-session-loading__logo"
+            src={logo}
+            alt="DiceBound"
+          />
+        </div>
+      </main>
+    );
   if (sessionState === "error")
     return (
-      <LoadErrorState
-        onRetry={() => {
-          setSessionState("loading");
-          setAttempt((value) => value + 1);
-        }}
-      />
+      <main className="auth-session-error">
+        <LoadErrorState
+          onRetry={() => {
+            setSessionState("loading");
+            setAttempt((value) => value + 1);
+          }}
+        />
+      </main>
     );
   return (
     <AuthContext.Provider

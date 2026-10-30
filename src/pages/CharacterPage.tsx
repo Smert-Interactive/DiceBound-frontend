@@ -51,6 +51,7 @@ function CharacterSheet({ id }: { id: string }) {
   const navigate = useNavigate();
   const incomingNotice = getRestoreNotice(location.state);
   const [notice, setNotice] = useState<string | null>(incomingNotice);
+  const [noticeId, setNoticeId] = useState(0);
   const pageRef = useRef<HTMLDivElement>(null);
   // Уведомление из снимка одноразовое и не повторяется при возврате браузером.
   useEffect(() => {
@@ -140,6 +141,7 @@ function CharacterSheet({ id }: { id: string }) {
     setServerErrors({});
     setSaveError(null);
     setPhase("idle");
+    setNoticeId((value) => value + 1);
     setNotice(formatRestoreNotice(result));
     navigate(`${location.pathname}${location.search}${location.hash}`, {
       replace: true,
@@ -214,10 +216,11 @@ function CharacterSheet({ id }: { id: string }) {
           ? "character-page character-page--with-savebar"
           : "character-page"
       }
-      data-system={getSystemKind()}
+      data-system={getSystemKind(undefined, character.game_system_id)}
     >
       {notice && (
         <Banner
+          key={noticeId}
           variant="success"
           notification
           title={notice}
@@ -232,6 +235,7 @@ function CharacterSheet({ id }: { id: string }) {
         </Banner>
       )}
       <CharacterHeader
+        systemId={character.game_system_id}
         name={character.name}
         systemName={summary?.game_system_name ?? "Игровая система"}
         schemaName={schema.name}

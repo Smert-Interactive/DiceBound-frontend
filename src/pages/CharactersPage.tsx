@@ -92,6 +92,7 @@ export default function CharactersPage() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const deletion = useRef<AbortController | null>(null);
   const [deleteSession, setDeleteSession] = useState(0);
+  const [noticeId, setNoticeId] = useState(0);
   useEffect(() => () => deletion.current?.abort(), []);
   useEffect(() => {
     if (createdName)
@@ -142,6 +143,7 @@ export default function CharactersPage() {
         ...list,
         owned: list.owned.filter((item) => item.id !== deleteTarget.id),
       }));
+      setNoticeId((value) => value + 1);
       setNotice(`Персонаж «${deleteTarget.name}» удалён`);
       setIsDeleteOpen(false);
     } catch (error) {
@@ -179,9 +181,9 @@ export default function CharactersPage() {
           </Link>
         )}
       </header>
-      {/* Баннер не исчезает сам: закрывается кнопкой (ui-ux). */}
       {notice && (
         <Banner
+          key={noticeId}
           variant="success"
           notification
           title={notice}

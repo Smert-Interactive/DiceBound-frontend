@@ -87,9 +87,13 @@
 }
 
 @media (max-width: 639px) {
-  .import-system__systems,
   .import-system__file-label {
     display: none;
+  }
+
+  .import-system__header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .import-system__file-label-touch {

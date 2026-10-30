@@ -1,6 +1,14 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
-import { AlertIcon, CheckIcon, ClockIcon, CopyIcon, EyeIcon } from "../icons";
+import {
+  AlertIcon,
+  CheckIcon,
+  ClockIcon,
+  CloseIcon,
+  CopyIcon,
+  EyeIcon,
+} from "../icons";
 import { Button } from "./Button";
+import { useBannerDismiss } from "./useBannerDismiss";
 
 import { SYSTEM_TONES, type SystemKind } from "../systemKind";
 
@@ -94,9 +102,22 @@ interface BannerProps {
   actions?: ReactNode;
   onClose?: () => void;
   className?: string;
+  autoCloseMs?: number;
+  closeIconOnly?: boolean;
 }
 
-export function Banner({
+// Новое уведомление получает собственный таймер, даже если заменило прежний баннер на странице.
+export function Banner(props: BannerProps) {
+  return (
+    <BannerContent
+      key={`${props.variant ?? "info"}:${props.title}`}
+      {...props}
+    />
+  );
+}
+
+// Успешные уведомления с закрытием исчезают через четыре секунды; остальные баннеры постоянны.
+function BannerContent({
   title,
   children,
   variant = "info",
@@ -105,7 +126,12 @@ export function Banner({
   actions,
   onClose,
   className = "",
+  autoCloseMs,
+  closeIconOnly = false,
 }: BannerProps) {
+  const delay =
+    autoCloseMs ?? (notification && variant === "success" ? 4000 : undefined);
+  const { elementRef, closing, dismiss } = useBannerDismiss(onClose, delay);
   const appearance = bannerAppearance[variant];
   const SelectedIcon = bannerIcons[icon ?? appearance.icon];
   let role: "alert" | "status" | undefined;
@@ -118,6 +144,8 @@ export function Banner({
 
   return (
     <div
+      ref={elementRef}
+      data-closing={closing || undefined}
       className={`ui-banner ui-banner--${variant} ui-tone--${appearance.tone} ${children ? "" : "ui-banner--single"} ${className}`}
       role={role}
     >
@@ -132,9 +160,17 @@ export function Banner({
           className="ui-banner__close"
           variant="ghost"
           size="sm"
-          onClick={onClose}
+          {...(closeIconOnly
+            ? {
+                iconOnly: true as const,
+                icon: <CloseIcon />,
+                "aria-label": "Закрыть уведомление",
+              }
+            : { iconOnly: false as const })}
+          disabled={closing}
+          onClick={dismiss}
         >
-          Закрыть
+          {closeIconOnly ? undefined : "Закрыть"}
         </Button>
       )}
     </div>

@@ -1,4 +1,4 @@
-/* Без стабильного кода API нельзя приписывать системе цвет D&D или CoC. */
+/* Неизвестные встроенные системы сохраняют нейтральный цвет. */
 [data-system="builtin"],
 [data-system="unknown"] {
   --sheet-resource-fill: var(--color-text-secondary);

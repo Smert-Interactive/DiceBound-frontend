@@ -44,7 +44,10 @@ export default function SystemCard({
         checked={checked}
         onChange={() => onSelect(system.id)}
       />
-      <SystemBadge name={system.name} system={getSystemKind(system.source)} />
+      <SystemBadge
+        name={system.name}
+        system={getSystemKind(system.source, system.id)}
+      />
       <span className="system-card__text">
         <span className="system-card__name">{system.name}</span>
         <span className="system-card__meta">{meta}</span>

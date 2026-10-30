@@ -61,10 +61,17 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <h1>Профиль</h1>
-      {loadState === "loading" && (
-        <Banner icon="clock" title="Обновление профиля…" notification />
-      )}
+      <div className="profile-page__header">
+        <h1>Профиль</h1>
+        {loadState === "loading" && (
+          <Banner
+            className="profile-page__refresh"
+            icon="clock"
+            title="Обновление профиля…"
+            notification
+          />
+        )}
+      </div>
       {loadState === "error" && (
         <Banner
           variant="error"
