@@ -1,6 +1,4 @@
 import { describe, expect, test } from "vitest";
-
-import { COC_SCHEMA, DND_SCHEMA } from "../mocks/sheetSchemas";
 import { buildSheetLayout } from "../sheet/sheetLayout";
 import type { SheetField } from "../sheet/sheetTypes";
 
@@ -85,42 +83,5 @@ describe("buildSheetLayout", () => {
 
   test("an empty section has no blocks", () => {
     expect(buildSheetLayout([])).toEqual([]);
-  });
-});
-
-describe("buildSheetLayout on the mock schemas", () => {
-  const sections = (schema: typeof DND_SCHEMA) => schema.schema.sections;
-
-  test("D&D abilities are six pairs", () => {
-    const abilities = sections(DND_SCHEMA).find(
-      (section) => section.id === "abilities",
-    )!;
-    const blocks = buildSheetLayout(abilities.fields);
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].type).toBe("pairs");
-    expect(blocks[0].type === "pairs" && blocks[0].pairs).toHaveLength(6);
-  });
-
-  test("CoC has no pairs", () => {
-    for (const section of sections(COC_SCHEMA)) {
-      const blocks = buildSheetLayout(section.fields);
-      expect(blocks.every((block) => block.type === "fields")).toBe(true);
-    }
-  });
-
-  test("no field is lost or repeated", () => {
-    for (const schema of [DND_SCHEMA, COC_SCHEMA]) {
-      for (const section of sections(schema)) {
-        const ids = buildSheetLayout(section.fields).flatMap((block) =>
-          block.type === "fields"
-            ? block.fields.map((field) => field.id)
-            : block.pairs.flatMap((pair) => [
-                pair.number.id,
-                pair.calculated.id,
-              ]),
-        );
-        expect(ids).toEqual(section.fields.map((field) => field.id));
-      }
-    }
   });
 });

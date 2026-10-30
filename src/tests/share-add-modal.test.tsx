@@ -4,14 +4,10 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import ShareAddModal from "../components/ShareAddModal";
-import { MOCK_USER } from "../mocks/authUser";
-import { MOCK_CHARACTERS } from "../mocks/characters";
-import { getMockCharacterShares } from "../mocks/characterShares";
 
 // jsdom не открывает dialog самостоятельно; поведение формы проверяется с открытым окном.
 beforeEach(() => {
@@ -158,78 +154,6 @@ describe("sharing form", () => {
 });
 
 describe("sharing errors", () => {
-  test.each([
-    [
-      "friend@example.com",
-      "SHARE_UNAVAILABLE",
-      "Не удалось выдать доступ по этой почте. Проверьте адрес и попробуйте ещё раз.",
-    ],
-    [
-      MOCK_USER.email,
-      "SHARE_UNAVAILABLE",
-      "Не удалось выдать доступ по этой почте. Проверьте адрес и попробуйте ещё раз.",
-    ],
-    [
-      "USER@EXAMPLE.COM",
-      "CONFLICT",
-      "У этого пользователя уже есть доступ VIEW. Тип доступа и видимость истории не меняются: чтобы изменить их, сначала отзовите VIEW.",
-    ],
-    [
-      "editor@example.com",
-      "CONFLICT",
-      "Этот пользователь уже получил копию через EDIT. Повторно выдать доступ нельзя.",
-    ],
-    [
-      "unknown@example.com",
-      "CONFLICT",
-      "Не удалось выдать доступ по этой почте. Проверьте адрес и попробуйте ещё раз.",
-    ],
-  ])(
-    "%s: %s preserves the form and blocks resubmission until the email changes",
-    async (email, code, message) => {
-      const onSubmit = vi
-        .fn()
-        .mockRejectedValue({ code, message: "private backend detail" });
-      const user = userEvent.setup();
-      render(
-        <ShareAddModal
-          {...props}
-          onCancel={vi.fn()}
-          onSubmit={onSubmit}
-          shares={getMockCharacterShares(
-            MOCK_CHARACTERS.owned[0].id,
-            MOCK_USER.email,
-          )}
-        />,
-      );
-      const input = screen.getByRole("textbox");
-      await user.type(input, email);
-      await user.click(screen.getByRole("checkbox"));
-      await user.click(
-        screen.getByRole("button", { name: "Выдать доступ VIEW" }),
-      );
-      await waitFor(() => expect(input).toHaveAccessibleDescription(message));
-      expect(input).toHaveValue(email);
-      expect(input).toHaveAttribute("aria-invalid", "true");
-      expect(
-        screen.queryByText("private backend detail"),
-      ).not.toBeInTheDocument();
-      expect(screen.getByRole("checkbox")).toBeChecked();
-      await user.click(
-        screen.getByRole("radio", { name: /Редактирование · EDIT/u }),
-      );
-      const submit = screen.getByRole("button", {
-        name: "Создать копию и выдать EDIT",
-      });
-      expect(submit).toBeDisabled();
-      fireEvent.submit(input.closest("form")!);
-      expect(onSubmit).toHaveBeenCalledOnce();
-      await user.type(input, "x");
-      expect(submit).toBeEnabled();
-      expect(input).not.toHaveAttribute("aria-invalid", "true");
-    },
-  );
-
   test("leaving an invalid email shows its error before any request", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

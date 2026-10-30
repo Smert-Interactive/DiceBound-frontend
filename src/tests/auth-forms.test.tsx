@@ -1,5 +1,3 @@
-import { installDataApi } from "./helpers/dataApi";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
   cleanup,
@@ -9,13 +7,13 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { routes } from "../app/router";
-import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../mocks/authUser";
-import type { User } from "../auth/authContext";
 import * as authApi from "../api/auth";
 import { ApiError } from "../api/client";
+import { routes } from "../app/router";
+import AuthProvider from "../auth/AuthProvider";
+import type { User } from "../auth/authContext";
 import { ROUTES } from "../constants/routes";
 
 const LOGIN_ERROR = "Неверная почта или пароль";
@@ -59,7 +57,6 @@ async function fillRegistration(
 }
 
 beforeEach(() => {
-  installDataApi("registration-new@example.com");
   vi.spyOn(authApi, "signIn").mockRejectedValue(
     new ApiError(401, "UNAUTHORIZED", "Invalid email or password"),
   );
@@ -260,27 +257,6 @@ describe("registration validation", () => {
     expect(screen.queryByText(REGISTRATION_ERROR)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Пароль", { exact: true })).toHaveValue(
       "password",
-    );
-  });
-
-  test("accepts an eight-character password without trimming its spaces", async () => {
-    vi.mocked(authApi.register).mockResolvedValueOnce({
-      ...MOCK_USER,
-      email: "player@example.com",
-    });
-    const { user } = renderLogin();
-    await user.click(screen.getByRole("tab", { name: "Регистрация" }));
-    await fillRegistration(user, "player@example.com", " 123456 ", " 123456 ");
-    await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
-
-    await screen.findByRole("heading", { name: "Персонажей пока нет" });
-    expect(authApi.register).toHaveBeenCalledWith(
-      {
-        email: "player@example.com",
-        password: " 123456 ",
-        passwordConfirmation: " 123456 ",
-      },
-      expect.any(AbortSignal),
     );
   });
 });

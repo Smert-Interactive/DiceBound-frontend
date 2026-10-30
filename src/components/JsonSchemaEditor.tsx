@@ -32,6 +32,8 @@ export default function JsonSchemaEditor({
     [analysis, value],
   );
   const numbersRef = useRef<HTMLPreElement>(null);
+  // Пустой черновик ещё не проверяется: ошибка появляется только у введённого JSON.
+  const isEmpty = value.trim().length === 0;
   // Пустой документ и пустая строка после последнего переноса тоже имеют номер.
   const numbers = Array.from({ length: lineCount }, (_, index) => index + 1);
   const schemaLines = [
@@ -39,11 +41,12 @@ export default function JsonSchemaEditor({
       errors.flatMap((error) => (error.line === null ? [] : [error.line])),
     ),
   ].sort((a, b) => a - b);
-  const errorLines = new Set(schemaLines);
-  if (!syntax.valid) errorLines.add(syntax.errorLine);
-  const invalid = !syntax.valid || errors.length > 0;
+  const errorLines = new Set(isEmpty ? [] : schemaLines);
+  if (!isEmpty && !syntax.valid) errorLines.add(syntax.errorLine);
+  const invalid = !isEmpty && (!syntax.valid || errors.length > 0);
   let statusText: string;
-  if (!syntax.valid)
+  if (isEmpty) statusText = "Введите JSON или загрузите файл";
+  else if (!syntax.valid)
     statusText = `Ошибка синтаксиса JSON · строка ${syntax.errorLine}`;
   else if (errors.length) {
     const lines = new Intl.ListFormat("ru", { type: "conjunction" }).format(
@@ -135,6 +138,7 @@ export default function JsonSchemaEditor({
         id={statusId}
         className="json-editor__status"
         data-invalid={invalid || undefined}
+        data-empty={isEmpty || undefined}
         role="status"
         aria-atomic="true"
       >

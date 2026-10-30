@@ -1,5 +1,4 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { MOCK_SHEET_SCHEMAS } from "../mocks/sheetSchemas";
 import { getFormulaFunction } from "../sheet/formula/functions";
 import { validateSchema } from "../systems/validateSchema";
 
@@ -27,23 +26,6 @@ function errorsFor(value: unknown) {
 }
 
 afterEach(() => vi.restoreAllMocks());
-
-test.each(MOCK_SHEET_SCHEMAS)(
-  "accepts the existing $name schema",
-  ({ schema }) => {
-    const result = validateSchema(JSON.stringify(schema));
-    expect(result).toEqual({
-      valid: true,
-      errors: [],
-      schema,
-      summary: {
-        sections_count: schema.sections.length,
-        fields_count: schema.sections.flatMap((section) => section.fields)
-          .length,
-      },
-    });
-  },
-);
 
 test("accepts all six field types with optional constraints omitted", () => {
   const schema = schemaWith(

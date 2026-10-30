@@ -6,14 +6,12 @@ import {
   CONTRACT_LIMITS,
   isSchemaTextWithinLimit,
 } from "../api/contractLimits";
-import { importMockSystem } from "../mocks/systemImport";
+import { importSystem, validateSystemSchema } from "../api/systems";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
 import SchemaValidationFeedback from "../components/SchemaValidationFeedback";
 import SchemaPreview from "../components/SchemaPreview";
 import { ROUTES } from "../constants/routes";
-import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";
-import { validateMockSchema } from "../mocks/schemaValidation";
 import { analyzeJson } from "../systems/jsonSyntax";
 import type { SchemaValidationResult } from "../systems/schemaValidationTypes";
 import { readJsonFile } from "../systems/readJsonFile";
@@ -22,19 +20,18 @@ import { Banner, Button, Input, getButtonClassName } from "../shared/ui";
 
 import "./ImportSystemPage.css";
 
-// Используем уже существующую примерную схему, не создавая вторую версию её полей.
-const INITIAL_SCHEMA_TEXT = JSON.stringify(CUSTOM_SCHEMA.schema, null, 2);
-
 // Черновик импорта хранится на странице: названия и JSON не зависят от состояния редактора.
 export default function ImportSystemPage() {
-  const { user } = useAuth();
+  const { user, handleUnauthorized } = useAuth();
+  const validationRequest = useRef<AbortController | null>(null);
+  const importRequest = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const importingRef = useRef(false);
   const [importing, setImporting] = useState(false);
-  const [importFailed, setImportFailed] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const [systemName, setSystemName] = useState("Custom System");
-  const [schemaName, setSchemaName] = useState(CUSTOM_SCHEMA.name);
-  const [schemaText, setSchemaText] = useState(INITIAL_SCHEMA_TEXT);
+  const [schemaName, setSchemaName] = useState("Базовый лист");
+  const [schemaText, setSchemaText] = useState("");
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileReadVersion = useRef(0);
@@ -56,18 +53,21 @@ export default function ImportSystemPage() {
       // Завершившееся чтение не должно обновлять уже закрытую страницу.
       fileReadVersion.current += 1;
       validationVersion.current += 1;
+      validationRequest.current?.abort();
+      importRequest.current?.abort();
     },
     [],
   );
 
   // Любая замена JSON отменяет применение старого ответа и снимает прежние ошибки схемы.
   function resetValidation() {
+    validationRequest.current?.abort();
     validationVersion.current += 1;
     checkingRef.current = false;
     setChecking(false);
     setResult(null);
     setRequestFailed(false);
-    setImportFailed(false);
+    setImportError(null);
   }
 
   // Отправляем исходный текст один раз; исправлять его во время запроса разрешено.
@@ -84,15 +84,26 @@ export default function ImportSystemPage() {
     )
       return;
     const version = ++validationVersion.current;
+    const controller = new AbortController();
+    validationRequest.current = controller;
     checkingRef.current = true;
     setChecking(true);
     setResult(null);
     setRequestFailed(false);
     try {
-      const response = await validateMockSchema({ schema_text: schemaText });
-      if (version === validationVersion.current) setResult(response);
-    } catch {
-      if (version === validationVersion.current) setRequestFailed(true);
+      const response = await validateSystemSchema(
+        { schema_text: schemaText },
+        controller.signal,
+      );
+      if (!controller.signal.aborted && version === validationVersion.current)
+        setResult(response);
+    } catch (error) {
+      if (
+        !controller.signal.aborted &&
+        version === validationVersion.current &&
+        !handleUnauthorized(error)
+      )
+        setRequestFailed(true);
     } finally {
       if (version === validationVersion.current) {
         checkingRef.current = false;
@@ -116,18 +127,21 @@ export default function ImportSystemPage() {
       return;
     importingRef.current = true;
     setImporting(true);
-    setImportFailed(false);
+    setImportError(null);
     const version = validationVersion.current;
+    const controller = new AbortController();
+    importRequest.current = controller;
     try {
-      const imported = await importMockSystem(
+      const imported = await importSystem(
         {
           system_name: systemName,
           sheet_schema_name: schemaName,
           schema_text: schemaText,
         },
-        user.email,
+        controller.signal,
       );
-      if (version !== validationVersion.current) return;
+      if (controller.signal.aborted || version !== validationVersion.current)
+        return;
       navigate(ROUTES.newCharacter, {
         state: {
           importedSystemId: imported.system.id,
@@ -136,8 +150,18 @@ export default function ImportSystemPage() {
         },
       });
     } catch (error) {
-      if (version === validationVersion.current) {
-        setImportFailed(true);
+      if (
+        !controller.signal.aborted &&
+        version === validationVersion.current &&
+        !handleUnauthorized(error)
+      ) {
+        setImportError(
+          error instanceof ApiError && error.status === 403
+            ? "Сервер запретил импорт системы."
+            : error instanceof ApiError && [400, 413].includes(error.status)
+              ? "Проверьте названия и размер JSON: сервер отклонил запрос."
+              : "Не удалось выполнить действие. Попробуйте ещё раз.",
+        );
         if (
           error instanceof ApiError &&
           error.status === 422 &&
@@ -170,6 +194,7 @@ export default function ImportSystemPage() {
 
   // Текст меняется только после успешного чтения. Повторный выбор того же файла разрешён.
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    if (importingRef.current) return;
     const input = event.currentTarget;
     const file = input.files?.[0];
     input.value = "";
@@ -192,6 +217,7 @@ export default function ImportSystemPage() {
 
   // Ручной ввод отменяет применение ещё читающегося файла, сохраняя новый черновик.
   function handleSchemaChange(text: string) {
+    if (importingRef.current) return;
     fileReadVersion.current += 1;
     setReadingFile(false);
     resetValidation();
@@ -300,13 +326,13 @@ export default function ImportSystemPage() {
               </Button>
             }
           />
-          {importFailed && (
+          {importError && (
             <Banner
               className="import-system__failure"
               variant="error"
               title="Не удалось импортировать систему"
             >
-              Не удалось выполнить действие. Попробуйте ещё раз.
+              {importError}
             </Banner>
           )}
           <div className="import-system__actions">
