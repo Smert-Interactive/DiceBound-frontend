@@ -14,15 +14,18 @@ interface Props {
   versions: readonly CharacterVersionSummary[];
   ownerName: string;
   canRestore: boolean;
+  restoreDisabled?: boolean;
   // Окно подтверждения подключается отдельно; без обработчика восстановление недоступно.
   onRestore?: (version: CharacterVersionSummary) => void;
 }
 
+// Показывает серверные метаданные и доступные действия, сохраняя номера и порядок версий.
 export default function CharacterHistory({
   characterId,
   versions,
   ownerName,
   canRestore,
+  restoreDisabled = false,
   onRestore,
 }: Props) {
   const helpId = useId();
@@ -84,7 +87,7 @@ export default function CharacterHistory({
                     <Button
                       size="sm"
                       icon={<RestoreIcon />}
-                      disabled={!onRestore}
+                      disabled={!onRestore || restoreDisabled}
                       onClick={() => onRestore?.(version)}
                       aria-label={`Восстановить версию ${version.version_number}`}
                     >

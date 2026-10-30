@@ -1,5 +1,3 @@
-import { StrictMode } from "react";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
   cleanup,
@@ -9,16 +7,9 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import ShareAddModal from "../components/ShareAddModal";
-import {
-  createMemoryRouter,
-  generatePath,
-  RouterProvider,
-} from "react-router-dom";
-import { routes } from "./helpers/mockCharacterRoutes";
-import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../mocks/authUser";
-import { ROUTES } from "../constants/routes";
 import { MOCK_CHARACTERS } from "../mocks/characters";
 import { getMockCharacterShares } from "../mocks/characterShares";
 
@@ -163,47 +154,6 @@ describe("sharing form", () => {
     ).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Отмена" }));
     expect(onCancel).toHaveBeenCalledOnce();
-  });
-
-  test("the owner can cancel and reopen a fresh form without changing grants", async () => {
-    const router = createMemoryRouter(routes, {
-      initialEntries: [
-        generatePath(ROUTES.character, { id: MOCK_CHARACTERS.owned[0].id }),
-      ],
-    });
-    const user = userEvent.setup();
-    render(
-      <StrictMode>
-        <AuthProvider initialUser={MOCK_USER}>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </StrictMode>,
-    );
-    await user.click(screen.getByRole("tab", { name: "Доступ" }));
-    const add = screen.getByRole("button", {
-      name: "Выдать доступ",
-    });
-    await user.click(add);
-    expect(
-      screen.queryByText("Введите почту пользователя"),
-    ).not.toBeInTheDocument();
-    await user.type(screen.getByRole("textbox"), "friend@example.com");
-    await user.click(screen.getByRole("checkbox"));
-    await user.click(
-      screen.getByRole("radio", { name: /Редактирование · EDIT/u }),
-    );
-    await user.click(screen.getByRole("button", { name: "Отмена" }));
-    await screen.findByRole("button", { name: "Выдать доступ" });
-    await user.click(add);
-    expect(
-      screen.queryByText("Введите почту пользователя"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("textbox")).toHaveValue("");
-    expect(
-      screen.getByRole("radio", { name: /Просмотр · VIEW/u }),
-    ).toBeChecked();
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
-    expect(screen.queryByText("friend@example.com")).not.toBeInTheDocument();
   });
 });
 

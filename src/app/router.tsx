@@ -5,7 +5,7 @@ import LoginPage from "../pages/LoginPage";
 import CharactersPage from "../pages/CharactersPage";
 import NewCharacterPage from "../pages/NewCharacterPage";
 import CharacterPage from "../pages/CharacterPage";
-import { NotFoundOrForbidden } from "../shared/states";
+import CharacterVersionPage from "../pages/CharacterVersionPage";
 import SystemsPage from "../pages/SystemsPage";
 import ImportSystemPage from "../pages/ImportSystemPage";
 import ProfilePage from "../pages/ProfilePage";
@@ -48,7 +48,7 @@ export const routes: RouteObject[] = [
 
           {
             path: ROUTES.characterVersion,
-            element: <NotFoundOrForbidden />,
+            element: <CharacterVersionPage />,
           },
 
           {

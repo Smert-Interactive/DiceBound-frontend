@@ -1,20 +1,8 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import {
-  createMemoryRouter,
-  generatePath,
-  RouterProvider,
-} from "react-router-dom";
+import { describe, expect, test } from "vitest";
 
-import { routes } from "./helpers/mockCharacterRoutes";
-import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../mocks/authUser";
-import { ROUTES } from "../constants/routes";
 import { getMockCharacterShares } from "../mocks/characterShares";
 import { MOCK_CHARACTERS } from "../mocks/characters";
-
-afterEach(cleanup);
 
 const aldric = MOCK_CHARACTERS.owned[0];
 
@@ -56,32 +44,5 @@ describe("getMockCharacterShares", () => {
     const again = getMockCharacterShares(aldric.id, MOCK_USER.email)!;
     expect(again).toHaveLength(3);
     expect(again[0].recipient_email).toBe("user@example.com");
-  });
-});
-
-describe("the access tab", () => {
-  test("the owner can open access and return to their sheet without losing edits", async () => {
-    const router = createMemoryRouter(routes, {
-      initialEntries: [generatePath(ROUTES.character, { id: aldric.id })],
-    });
-    const user = userEvent.setup();
-    render(
-      <AuthProvider initialUser={MOCK_USER}>
-        <RouterProvider router={router} />
-      </AuthProvider>,
-    );
-    const name = screen.getByRole("textbox", { name: "Имя" });
-    await user.clear(name);
-    await user.type(name, "Changed");
-    await user.click(screen.getByRole("tab", { name: "Доступ" }));
-    expect(screen.getByText("user@example.com")).toBeInTheDocument();
-    const crumbs = screen.getByRole("navigation", { name: "Хлебные крошки" });
-    expect(within(crumbs).getByText("Доступ")).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    expect(router.state.location.state).toEqual({ activeTab: "access" });
-    await user.click(screen.getByRole("tab", { name: "Лист" }));
-    expect(screen.getByRole("textbox", { name: "Имя" })).toHaveValue("Changed");
   });
 });

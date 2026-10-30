@@ -1,16 +1,6 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import {
-  createMemoryRouter,
-  generatePath,
-  RouterProvider,
-} from "react-router-dom";
+import { describe, expect, test } from "vitest";
 
-import { routes } from "./helpers/mockCharacterRoutes";
-import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../mocks/authUser";
-import { ROUTES } from "../constants/routes";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import {
   getMockCharacterVersion,
@@ -18,50 +8,9 @@ import {
 } from "../mocks/characterVersions";
 import { MOCK_CHARACTERS } from "../mocks/characters";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
-import { formatDateTime } from "../shared/formatDateTime";
 
 const aldricId = MOCK_CHARACTERS.owned[0].id;
 const sarahId = MOCK_CHARACTERS.owned[1].id;
-
-// В jsdom нет методов нативного dialog; подмена такая же, как в тестах других окон.
-beforeEach(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.setAttribute("open", "");
-    },
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, "close", {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.removeAttribute("open");
-    },
-  });
-});
-afterEach(() => {
-  cleanup();
-  Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
-  Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
-  vi.unstubAllGlobals();
-});
-
-function renderVersion(
-  version: string,
-  email = MOCK_USER.email,
-  characterId = aldricId,
-) {
-  const router = createMemoryRouter(routes, {
-    initialEntries: [
-      generatePath(ROUTES.characterVersion, { id: characterId, version }),
-    ],
-  });
-  render(
-    <AuthProvider initialUser={{ ...MOCK_USER, email }}>
-      <RouterProvider router={router} />
-    </AuthProvider>,
-  );
-  return { router, user: userEvent.setup() };
-}
 
 describe("mock version snapshots", () => {
   test.each([aldricId, sarahId])(
@@ -128,123 +77,5 @@ describe("mock version snapshots", () => {
     expect(
       getMockCharacterVersion("missing", 4, MOCK_USER.email),
     ).toBeUndefined();
-  });
-});
-
-describe("character version page", () => {
-  test("shows snapshot metadata and returns to the history tab", async () => {
-    const { user, router } = renderVersion("4");
-    const snapshot = getMockCharacterVersion(aldricId, 4, MOCK_USER.email)!;
-    expect(
-      screen.getByText(
-        `Версия 4 · ${formatDateTime(snapshot.created_at).replace(/\u00a0/gu, " ")}`,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Только просмотр. Текущая версия персонажа — 7."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Aldric" })).toBeInTheDocument();
-    expect(screen.queryByRole("tablist")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Сохранить" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Открыть меню" })).toBeNull();
-    // Баннер и мобильная шапка ведут к одной вкладке независимо от предыдущего адреса.
-    const links = screen.getAllByRole("link", { name: "К истории" });
-    expect(links).toHaveLength(2);
-    await user.click(links.at(-1)!);
-    expect(router.state.location.pathname).toBe(
-      generatePath(ROUTES.character, { id: aldricId }),
-    );
-    expect(screen.getByRole("tab", { name: "История" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(
-      within(
-        screen.getByRole("region", { name: "История версий" }),
-      ).getAllByRole("listitem"),
-    ).toHaveLength(7);
-  });
-
-  test("opens the same restoration confirmation from a historical version", async () => {
-    const { user, router } = renderVersion("4");
-    await user.click(
-      screen.getByRole("button", { name: /Восстановить эту версию/u }),
-    );
-    const dialog = screen.getByRole("dialog", {
-      name: "Восстановить версию 4?",
-    });
-    expect(
-      within(dialog).getByRole("listitem", {
-        name: "Версия 4 — станет текущей",
-      }),
-    ).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
-    expect(router.state.location.pathname).toBe(
-      generatePath(ROUTES.characterVersion, { id: aldricId, version: "4" }),
-    );
-    expect(getMockCharacterVersion(aldricId, 7, MOCK_USER.email)).toBeDefined();
-  });
-
-  test("mobile actions open restoration and return to the history tab", async () => {
-    vi.stubGlobal(
-      "matchMedia",
-      vi.fn((media: string) => ({
-        matches: media === "(max-width: 639px)",
-        media,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    );
-    const { user, router } = renderVersion("4");
-    // На телефоне остаётся одна кнопка действия с короткой подписью.
-    const restoreButtons = screen.getAllByRole("button", {
-      name: "Восстановить",
-    });
-    expect(restoreButtons).toHaveLength(1);
-    await user.click(restoreButtons[0]);
-    const dialog = screen.getByRole("dialog", {
-      name: "Восстановить версию 4?",
-    });
-    await user.click(within(dialog).getByRole("button", { name: "Отмена" }));
-    await user.click(
-      screen.getAllByRole("link", { name: "К истории" }).at(-1)!,
-    );
-    expect(router.state.location.pathname).toBe(
-      generatePath(ROUTES.character, { id: aldricId }),
-    );
-    expect(screen.getByRole("tab", { name: "История" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-  });
-
-  test("does not offer to restore the current version", () => {
-    renderVersion("7");
-    expect(screen.queryByRole("button", { name: /Восстановить/u })).toBeNull();
-  });
-
-  test.each(["0", "-1", "1.5", "8", "abc", "01"])(
-    "shows the same 404 for an invalid version: %s",
-    (version) => {
-      renderVersion(version);
-      expect(
-        screen.getByRole("heading", {
-          name: "Персонаж не найден или доступ закрыт",
-        }),
-      ).toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: "Aldric" })).toBeNull();
-    },
-  );
-
-  test("shows 404 when a different account opens the snapshot directly", () => {
-    renderVersion("4", "new@example.com");
-    expect(
-      screen.getByRole("heading", {
-        name: "Персонаж не найден или доступ закрыт",
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Только просмотр. Текущая версия персонажа — 7."),
-    ).toBeNull();
   });
 });

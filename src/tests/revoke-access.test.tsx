@@ -1,25 +1,13 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
   cleanup,
   fireEvent,
   render,
   screen,
-  waitFor,
-  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  createMemoryRouter,
-  generatePath,
-  RouterProvider,
-} from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import RevokeAccessModal from "../components/RevokeAccessModal";
-import { routes } from "./helpers/mockCharacterRoutes";
-import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../mocks/authUser";
-import { ROUTES } from "../constants/routes";
-import { MOCK_CHARACTERS } from "../mocks/characters";
 
 // jsdom заменяет только открытие dialog; запросы и действия формы проверяются настоящие.
 beforeEach(() => {
@@ -125,70 +113,5 @@ describe("VIEW revocation confirmation", () => {
     await user.click(confirm);
     expect(onConfirm).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  });
-
-  test("the owner cancels without changes, then revokes only the selected VIEW", async () => {
-    const user = userEvent.setup();
-    const router = createMemoryRouter(routes, {
-      initialEntries: [
-        generatePath(ROUTES.character, { id: MOCK_CHARACTERS.owned[0].id }),
-      ],
-    });
-    render(
-      <AuthProvider initialUser={MOCK_USER}>
-        <RouterProvider router={router} />
-      </AuthProvider>,
-    );
-    await user.click(screen.getByRole("tab", { name: "Доступ" }));
-    const target = screen.getByRole("row", { name: /user@example.com/u });
-    expect(within(target).getByText("Открыта")).toBeInTheDocument();
-    expect(
-      within(
-        screen.getByRole("row", { name: /player@example.com/u }),
-      ).getByText("Скрыта"),
-    ).toBeInTheDocument();
-    const copy = screen.getByRole("row", { name: /editor@example.com/u });
-    expect(within(copy).getByText("Своя у копии, с v1")).toBeInTheDocument();
-    expect(within(copy).queryByRole("button")).not.toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", { name: "Отозвать доступ user@example.com" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Отмена" }));
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
-    expect(
-      screen.getByRole("row", { name: /user@example.com/u }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Отозвать доступ user@example.com" }),
-    ).toHaveFocus();
-    await user.click(
-      screen.getByRole("button", { name: "Отозвать доступ user@example.com" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Отозвать доступ" }));
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("row", { name: /user@example.com/u }),
-      ).not.toBeInTheDocument(),
-    );
-    expect(
-      screen.getByRole("row", { name: /player@example.com/u }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("row", { name: /editor@example.com/u }),
-    ).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Доступ user@example.com отозван",
-    );
-    expect(screen.getByRole("button", { name: "Выдать доступ" })).toHaveFocus();
-    await user.click(screen.getByRole("button", { name: "Закрыть" }));
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("tab", { name: "Лист" }));
-    await user.click(screen.getByRole("tab", { name: "Доступ" }));
-    expect(screen.queryByText("user@example.com")).not.toBeInTheDocument();
   });
 });

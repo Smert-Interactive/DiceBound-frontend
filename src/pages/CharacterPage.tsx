@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
-import { getCharacter, getCharacters, saveCharacter } from "../api/characters";
-import { getSheetSchema } from "../api/systems";
+import { saveCharacter } from "../api/characters";
+import { getCharacterSheet } from "../api/characterSheet";
+import CharacterHistoryPanel from "../history/CharacterHistoryPanel";
+import { formatRestoreNotice } from "../history/restoreNotice";
+import type { RestoreResult } from "../history/historyTypes";
+import { getActiveTab, getRestoreNotice } from "../shared/characterRouteState";
 import { useApiQuery } from "../api/useApiQuery";
 import { getCharacterFieldErrors } from "../api/validationErrors";
 import { useAuth } from "../auth/authContext";
@@ -43,21 +47,34 @@ export default function CharacterPage() {
 // Загружает лист и его опубликованную схему, в том числе после архивации системы.
 function CharacterSheet({ id }: { id: string }) {
   const { handleUnauthorized } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const incomingNotice = getRestoreNotice(location.state);
+  const [notice, setNotice] = useState<string | null>(incomingNotice);
+  const pageRef = useRef<HTMLDivElement>(null);
+  // Уведомление из снимка одноразовое и не повторяется при возврате браузером.
+  useEffect(() => {
+    if (incomingNotice)
+      navigate(`${location.pathname}${location.search}${location.hash}`, {
+        replace: true,
+        state: null,
+      });
+  }, [
+    incomingNotice,
+    location.pathname,
+    location.search,
+    location.hash,
+    navigate,
+  ]);
   const request = useCallback(
-    async (signal: AbortSignal) => {
-      const character = await getCharacter(id, signal);
-      const [schema, list] = await Promise.all([
-        getSheetSchema(character.sheet_schema_id, signal),
-        getCharacters(signal),
-      ]);
-      const summary = [...list.owned, ...list.shared_view].find(
-        (item) => item.id === id,
-      );
-      return { character, schema, summary };
-    },
+    (signal: AbortSignal) => getCharacterSheet(id, signal),
     [id],
   );
   const query = useApiQuery(request, id);
+  // После восстановления исходная кнопка исчезает; фокус остаётся на обновлённом листе.
+  useEffect(() => {
+    if (notice && !query.loading) pageRef.current?.focus();
+  }, [notice, query.loading]);
   const { character, schema, summary } = query.data ?? {};
   useCharacterLabel(id, character?.name);
   const sheet = useSheetDraft(
@@ -101,6 +118,34 @@ function CharacterSheet({ id }: { id: string }) {
     phase,
   });
   const isCopy = Boolean(summary?.copy_source_owner_name);
+  const tabId =
+    character.can_view_history && getActiveTab(location.state) === "history"
+      ? "history"
+      : "sheet";
+
+  // Сохраняет вкладку для крошек и возврата со снимка, не добавляя шаг в историю браузера.
+  function handleTabChange(activeTab: string) {
+    navigate(`${location.pathname}${location.search}${location.hash}`, {
+      replace: true,
+      state: { activeTab },
+    });
+  }
+
+  // Полный ответ восстановления заменяет базу черновика, сохраняя серверные права пользователя.
+  function handleRestored(result: RestoreResult) {
+    query.update((previous) => ({
+      ...previous,
+      character: { ...previous.character, ...result.character },
+    }));
+    setServerErrors({});
+    setSaveError(null);
+    setPhase("idle");
+    setNotice(formatRestoreNotice(result));
+    navigate(`${location.pathname}${location.search}${location.hash}`, {
+      replace: true,
+      state: null,
+    });
+  }
 
   // Новая правка снимает ошибки предыдущего запроса, не затрагивая другие значения.
   function handleChange(fieldId: string, value: SheetDraftValue) {
@@ -162,13 +207,23 @@ function CharacterSheet({ id }: { id: string }) {
 
   return (
     <div
+      ref={pageRef}
+      tabIndex={-1}
       className={
-        character.can_edit
+        character.can_edit && tabId === "sheet"
           ? "character-page character-page--with-savebar"
           : "character-page"
       }
       data-system={getSystemKind()}
     >
+      {notice && (
+        <Banner
+          variant="success"
+          notification
+          title={notice}
+          onClose={() => setNotice(null)}
+        />
+      )}
       {saveError && <Banner variant="error" title={saveError} />}
       {character.access === "VIEW" && (
         <Banner icon="eye" title="Только просмотр">
@@ -219,12 +274,32 @@ function CharacterSheet({ id }: { id: string }) {
               </div>
             ),
           },
+          ...(character.can_view_history
+            ? [
+                {
+                  id: "history",
+                  label: "История",
+                  content: (
+                    <CharacterHistoryPanel
+                      characterId={id}
+                      revision={`${character.current_version_number}:${character.updated_at}`}
+                      ownerName={character.owner_username}
+                      isOwner={character.access === "OWNER"}
+                      onRestored={handleRestored}
+                      onRefresh={query.retry}
+                      fallbackFocusRef={pageRef}
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
-        value="sheet"
-        onChange={() => {}}
+        value={tabId}
+        onChange={handleTabChange}
+        disabled={phase === "saving"}
         label="Разделы персонажа"
       />
-      {character.can_edit && (
+      {character.can_edit && tabId === "sheet" && (
         <SaveBar
           status={status}
           changedCount={sheet.changed.size}

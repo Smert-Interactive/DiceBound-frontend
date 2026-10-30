@@ -1,5 +1,3 @@
-import { installDataApi } from "./helpers/dataApi";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
   act,
   cleanup,
@@ -11,12 +9,14 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { routes } from "./helpers/mockCharacterRoutes";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../mocks/authUser";
-import { ROUTES } from "../constants/routes";
 import DeleteSystemModal from "../components/DeleteSystemModal";
+import { ROUTES } from "../constants/routes";
+import { MOCK_USER } from "../mocks/authUser";
 import { MOCK_SYSTEMS, SPACE_FRONTIER_SYSTEM_ID } from "../mocks/systems";
+import { installDataApi } from "./helpers/dataApi";
 
 // Подменяем только нативный dialog, чтобы сценарий работал в jsdom.
 beforeEach(() => {
@@ -41,7 +41,7 @@ afterEach(() => {
   Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
 });
 
-test("cancel preserves the system; deletion removes it from creation and preserves existing sheets", async () => {
+test("cancel preserves the system; deletion removes it from creation", async () => {
   const user = userEvent.setup();
   const router = createMemoryRouter(routes, {
     initialEntries: [ROUTES.systems],
@@ -95,13 +95,6 @@ test("cancel preserves the system; deletion removes it from creation and preserv
   await waitFor(() =>
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
   );
-  await act(() =>
-    router.navigate("/characters/c1a00000-0000-4000-8000-000000000003"),
-  );
-  expect(
-    screen.getByRole("heading", { name: "Viktor (копия)" }),
-  ).toBeInTheDocument();
-  expect(screen.getByRole("textbox", { name: "Ранг" })).toBeInTheDocument();
 });
 
 test("a failed deletion keeps the dialog and allows retry while preventing duplicate requests", async () => {

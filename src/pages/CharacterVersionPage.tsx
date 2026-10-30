@@ -1,81 +1,85 @@
-import { useState } from "react";
+import { useCallback } from "react";
 import { generatePath, Link, useNavigate, useParams } from "react-router-dom";
-
-import { useCharacterLabel } from "../components/useCharacterName";
+import { getCharacterVersion } from "../api/characterHistory";
+import { getCharacterSheet } from "../api/characterSheet";
+import { ApiError } from "../api/client";
+import { useApiQuery } from "../api/useApiQuery";
 import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
-import { ROUTES } from "../constants/routes";
+import { useCharacterRestore } from "../history/useCharacterRestore";
 import { formatRestoreNotice } from "../history/restoreNotice";
-import { getMockCharacterList } from "../mocks/characters";
-import { getMockCharacterDetails } from "../mocks/characterDetails";
-import {
-  getMockCharacterVersion,
-  getMockCharacterVersions,
-  restoreMockCharacterVersion,
-} from "../mocks/characterVersions";
-import { getMockSheetSchema } from "../mocks/sheetSchemas";
-import { getStoredCalculated, toDraft } from "../sheet/sheetDraft";
+import { useCharacterLabel } from "../components/useCharacterName";
+import { ROUTES } from "../constants/routes";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
+import { getStoredCalculated, toDraft } from "../sheet/sheetDraft";
 import { formatDateTime } from "../shared/formatDateTime";
 import { ChevronLeftIcon, RestoreIcon } from "../shared/icons";
-import { NotFoundOrForbidden } from "../shared/states";
+import {
+  LoadingSkeleton,
+  LoadErrorState,
+  NotFoundOrForbidden,
+} from "../shared/states";
 import { useMediaQuery } from "../shared/states/useMediaQuery";
 import { getSystemKind } from "../shared/systemKind";
 import { Banner, Button, getButtonClassName } from "../shared/ui";
-
 import "./CharacterVersionPage.css";
 
-// Снимок открывается по доступному персонажу и его схеме, даже если система скрыта из выбора.
+// Проверяет номер до запроса; отдельный экземпляр не принимает ответ от предыдущего адреса.
 export default function CharacterVersionPage() {
   const { id = "", version = "" } = useParams();
   const { user } = useAuth();
-  const [isRestoreOpen, setIsRestoreOpen] = useState(false);
-  const navigate = useNavigate();
-  const isMobile = useMediaQuery("(max-width: 639px)");
-  // Принимаем только положительный целый номер. Неизвестный снимок и запрет выглядят как 404.
-  const snapshot =
-    user && /^[1-9]\d*$/u.test(version)
-      ? getMockCharacterVersion(id, Number(version), user.email)
-      : undefined;
-  const character = snapshot && getMockCharacterDetails(id, user!.email);
-  useCharacterLabel(id, character?.name);
-  const schema = character && getMockSheetSchema(character.sheet_schema_id);
-  const list = user && getMockCharacterList(user.email);
-  const summary =
-    list && [...list.owned, ...list.shared_view].find((item) => item.id === id);
-  if (!user || !snapshot || !character || !schema || !summary)
+  if (!/^[1-9]\d*$/u.test(version) || Number(version) > 2147483647)
     return <NotFoundOrForbidden />;
+  return (
+    <VersionSnapshot
+      key={`${user?.id}:${id}:${version}`}
+      id={id}
+      version={Number(version)}
+    />
+  );
+}
 
-  const versions = getMockCharacterVersions(id, user.email)!;
-  const restoreTarget = versions.find(
-    (item) => item.version_number === snapshot.version_number,
-  )!;
-  const historyPath = generatePath(ROUTES.character, { id });
-  const canRestore =
-    character.access === "OWNER" &&
-    snapshot.version_number !== character.current_version_number;
-
-  async function handleRestoreConfirm() {
-    if (!user || !snapshot) return;
-    const result = await restoreMockCharacterVersion(
-      id,
-      snapshot.version_number,
-      user.email,
-    );
-    // Новый адрес открывает вкладку «Лист»; баннер берёт числа из ответа сервиса.
-    navigate(historyPath, {
-      state: {
-        restoreNotice: formatRestoreNotice(result),
-      },
+// Показывает серверный снимок без пересчёта формул и без редактирования текущего листа.
+function VersionSnapshot({ id, version }: { id: string; version: number }) {
+  const navigate = useNavigate();
+  const restore = useCharacterRestore(id, (result) => {
+    navigate(generatePath(ROUTES.character, { id }), {
+      replace: true,
+      state: { restoreNotice: formatRestoreNotice(result) },
     });
+  });
+  const request = useCallback(
+    async (signal: AbortSignal) => {
+      const snapshot = await getCharacterVersion(id, version, signal);
+      const sheet = await getCharacterSheet(id, signal);
+      return { snapshot, ...sheet };
+    },
+    [id, version],
+  );
+  const query = useApiQuery(request, `${id}:${version}`);
+  const { character, schema, summary, snapshot } = query.data ?? {};
+  useCharacterLabel(
+    id,
+    character?.can_view_history ? character.name : undefined,
+  );
+  const isMobile = useMediaQuery("(max-width: 639px)");
+  if (query.loading)
+    return <LoadingSkeleton variant="sheet" label="Версия загружается" />;
+  if (query.error) {
+    if (
+      query.error instanceof ApiError &&
+      [400, 403, 404].includes(query.error.status)
+    )
+      return <NotFoundOrForbidden />;
+    return <LoadErrorState onRetry={query.retry} />;
   }
-
-  // Одна группа действий: desktop — внутри баннера, телефон — отдельной строкой под ним.
-  const versionActions = (
+  if (!character?.can_view_history || !schema || !snapshot)
+    return <NotFoundOrForbidden />;
+  const back = (
     <>
       <Link
-        to={historyPath}
+        to={generatePath(ROUTES.character, { id })}
         state={{ activeTab: "history" }}
         className={getButtonClassName({
           size: "sm",
@@ -86,61 +90,66 @@ export default function CharacterVersionPage() {
           <ChevronLeftIcon />К истории
         </span>
       </Link>
-      {canRestore && (
-        <Button
-          variant="primary"
-          size="sm"
-          icon={<RestoreIcon />}
-          onClick={() => setIsRestoreOpen(true)}
-        >
-          {isMobile ? "Восстановить" : "Восстановить эту версию"}
-        </Button>
-      )}
+      {character.access === "OWNER" &&
+        snapshot.version_number !== character.current_version_number && (
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<RestoreIcon />}
+            loading={restore.preparing}
+            loadingText="Загрузка истории…"
+            onClick={() => void restore.begin(snapshot.version_number)}
+          >
+            {isMobile ? "Восстановить" : "Восстановить эту версию"}
+          </Button>
+        )}
     </>
   );
-
   return (
     <div className="character-version-page" data-system={getSystemKind()}>
+      {restore.preparationError && (
+        <Banner variant="error" title={restore.preparationError}>
+          <Button onClick={query.retry}>Обновить данные</Button>
+        </Banner>
+      )}
       <Banner
         className="character-version-page__notice"
         icon="clock"
         title={`Версия ${snapshot.version_number} · ${formatDateTime(snapshot.created_at)}`}
-        actions={isMobile ? undefined : versionActions}
+        actions={isMobile ? undefined : back}
       >
         Только просмотр. Текущая версия персонажа —{" "}
         {character.current_version_number}.
       </Banner>
       {isMobile && (
-        <div className="character-version-page__actions">{versionActions}</div>
+        <div className="character-version-page__actions">{back}</div>
       )}
       <CharacterHeader
         name={character.name}
-        systemName={summary.game_system_name}
+        systemName={summary?.game_system_name ?? "Игровая система"}
         schemaName={schema.name}
         updatedAt={snapshot.created_at}
         ownerName={
           character.access === "VIEW" ? character.owner_username : undefined
         }
-        isCopy={Boolean(
-          getMockCharacterList(user.email).owned.find((item) => item.id === id)
-            ?.copy_source_owner_name,
-        )}
+        isCopy={Boolean(summary?.copy_source_owner_name)}
         showDateOnMobile
       />
-      {/* Снимок показывается как сохранён: calculated берём из данных версии, без пересчёта. */}
       <DynamicSheetRenderer
         schema={schema.schema}
         draft={toDraft(schema.schema, snapshot.data)}
         calculated={getStoredCalculated(schema.schema, snapshot.data)}
         readOnly
       />
-      {canRestore && (
+      {character.access === "OWNER" && restore.target && (
         <RestoreConfirmModal
-          open={isRestoreOpen}
-          version={restoreTarget}
-          versions={versions}
-          onConfirm={handleRestoreConfirm}
-          onCancel={() => setIsRestoreOpen(false)}
+          key={restore.target.session}
+          open={restore.open}
+          version={restore.target.version}
+          versions={restore.target.versions}
+          onCancel={restore.cancel}
+          onConfirm={restore.confirm}
+          onRefresh={query.retry}
         />
       )}
     </div>

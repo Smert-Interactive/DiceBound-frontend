@@ -36,7 +36,7 @@
 
 .login-page__title {
   margin: 0;
-  font-family: var(--heading);
+  font-family: var(--sans);
   font-size: var(--font-login-title);
   font-weight: 600;
   line-height: var(--line-login-title);
