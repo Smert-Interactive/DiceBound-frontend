@@ -10,32 +10,19 @@ import {
   MOCK_SYSTEMS,
 } from "./systems";
 
-// Типы повторяют CharacterSummary и CharacterList из контракта GET /characters.
-// Версии в CharacterSummary нет: количество версий понадобится только в модалке удаления.
-export interface CharacterSummary {
-  id: string;
-  name: string;
-  game_system_id: string;
-  game_system_name: string;
-  updated_at: string;
-  access: "OWNER" | "VIEW";
-  // В контракте это owner_username, а в ui-ux показывается почта; в моках лежит почта.
-  owner_username: string;
-  // Не null только у копий, полученных через EDIT.
-  copy_source_owner_name: string | null;
-}
-
-export interface CharacterList {
-  owned: CharacterSummary[];
-  shared_view: CharacterSummary[];
-}
-
-// Поля повторяют CreateCharacterRequest из контракта POST /characters.
-export interface CreateCharacterRequest {
-  name: string;
-  game_system_id: string;
-  sheet_schema_id: string;
-}
+import type { Character } from "../sheet/sheetTypes";
+import type {
+  CharacterSummary,
+  CharacterList,
+  CreateCharacterRequest,
+} from "../api/characterTypes";
+import { getMockCharacterDetails } from "./characterDetails";
+import { CONTRACT_LIMITS } from "../api/contractLimits";
+export type {
+  CharacterSummary,
+  CharacterList,
+  CreateCharacterRequest,
+} from "../api/characterTypes";
 
 const MOCK_REQUEST_DELAY = 500;
 
@@ -44,10 +31,12 @@ const MOCK_REQUEST_DELAY = 500;
 export async function createMockCharacter(
   request: CreateCharacterRequest,
   ownerEmail: string,
-): Promise<CharacterSummary> {
+): Promise<Character> {
   await new Promise<void>((resolve) =>
     window.setTimeout(resolve, MOCK_REQUEST_DELAY),
   );
+  if (!request.name.trim() || request.name.trim().length > CONTRACT_LIMITS.name)
+    throw new Error("BAD_REQUEST");
   const system = getMockSystems(ownerEmail).find(
     (item) => item.id === request.game_system_id,
   );
@@ -70,7 +59,18 @@ export async function createMockCharacter(
   addMockCharacterSummary(character);
   const storedSystem = MOCK_SYSTEMS.find((item) => item.id === system.id)!;
   storedSystem.character_count += 1;
-  return character;
+  const details = getMockCharacterDetails(character.id, ownerEmail)!;
+  return {
+    id: details.id,
+    owner_id: details.owner_id,
+    game_system_id: details.game_system_id,
+    sheet_schema_id: details.sheet_schema_id,
+    name: details.name,
+    data: details.data,
+    created_at: details.created_at,
+    updated_at: details.updated_at,
+    current_version_number: details.current_version_number,
+  };
 }
 
 // Числа версий для окна удаления. В CharacterSummary поля нет (см. открытые вопросы в плане),

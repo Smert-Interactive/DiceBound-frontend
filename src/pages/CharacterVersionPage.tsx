@@ -14,7 +14,6 @@ import {
   restoreMockCharacterVersion,
 } from "../mocks/characterVersions";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
-import { MOCK_SYSTEMS } from "../mocks/systems";
 import { getStoredCalculated, toDraft } from "../sheet/sheetDraft";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { formatDateTime } from "../shared/formatDateTime";
@@ -26,6 +25,7 @@ import { Banner, Button, getButtonClassName } from "../shared/ui";
 
 import "./CharacterVersionPage.css";
 
+// Снимок открывается по доступному персонажу и его схеме, даже если система скрыта из выбора.
 export default function CharacterVersionPage() {
   const { id = "", version = "" } = useParams();
   const { user } = useAuth();
@@ -39,10 +39,10 @@ export default function CharacterVersionPage() {
       : undefined;
   const character = snapshot && getMockCharacterDetails(id, user!.email);
   const schema = character && getMockSheetSchema(character.sheet_schema_id);
-  const system = MOCK_SYSTEMS.find(
-    (item) => item.id === character?.game_system_id,
-  );
-  if (!user || !snapshot || !character || !schema || !system)
+  const list = user && getMockCharacterList(user.email);
+  const summary =
+    list && [...list.owned, ...list.shared_view].find((item) => item.id === id);
+  if (!user || !snapshot || !character || !schema || !summary)
     return <NotFoundOrForbidden />;
 
   const versions = getMockCharacterVersions(id, user.email)!;
@@ -98,10 +98,7 @@ export default function CharacterVersionPage() {
   );
 
   return (
-    <div
-      className="character-version-page"
-      data-system={getSystemKind(system.name)}
-    >
+    <div className="character-version-page" data-system={getSystemKind()}>
       <Banner
         className="character-version-page__notice"
         icon="clock"
@@ -116,10 +113,10 @@ export default function CharacterVersionPage() {
       )}
       <CharacterHeader
         name={character.name}
-        systemName={system.name}
+        systemName={summary.game_system_name}
         schemaName={schema.name}
         updatedAt={snapshot.created_at}
-        ownerEmail={
+        ownerName={
           character.access === "VIEW" ? character.owner_username : undefined
         }
         isCopy={Boolean(

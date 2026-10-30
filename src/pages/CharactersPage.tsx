@@ -5,8 +5,8 @@ import { useAuth } from "../auth/authContext";
 import CharacterCard from "../components/CharacterCard";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import { ROUTES } from "../constants/routes";
-import { getMockCharacterList, getMockVersionCount } from "../mocks/characters";
-import type { CharacterSummary } from "../mocks/characters";
+import { getMockCharacterList } from "../mocks/characters";
+import type { CharacterSummary } from "../api/characterTypes";
 import { EyeIcon, PlusIcon, UsersIcon } from "../shared/icons";
 import { Banner, Chip, EmptyState, getButtonClassName } from "../shared/ui";
 
@@ -184,7 +184,6 @@ export default function CharactersPage() {
         <DeleteConfirmModal
           open={isDeleteOpen}
           characterName={deleteTarget.name}
-          versionCount={getMockVersionCount(deleteTarget.id)}
           onCancel={() => setIsDeleteOpen(false)}
           onConfirm={handleDeleteConfirm}
         />

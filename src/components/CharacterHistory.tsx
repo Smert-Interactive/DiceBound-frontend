@@ -12,7 +12,7 @@ import "./CharacterHistory.css";
 interface Props {
   characterId: string;
   versions: readonly CharacterVersionSummary[];
-  ownerEmail: string;
+  ownerName: string;
   canRestore: boolean;
   // Окно подтверждения подключается отдельно; без обработчика восстановление недоступно.
   onRestore?: (version: CharacterVersionSummary) => void;
@@ -21,7 +21,7 @@ interface Props {
 export default function CharacterHistory({
   characterId,
   versions,
-  ownerEmail,
+  ownerName,
   canRestore,
   onRestore,
 }: Props) {
@@ -30,7 +30,7 @@ export default function CharacterHistory({
   return (
     <div className="character-history">
       {!canRestore && (
-        <Banner title={`${ownerEmail} открыл вам историю версий.`}>
+        <Banner title={`${ownerName} открыл вам историю версий.`}>
           Открывать старые версии можно, восстанавливать — только владельцу.
         </Banner>
       )}

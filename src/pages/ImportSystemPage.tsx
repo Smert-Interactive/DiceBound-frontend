@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
+import { ApiError } from "../api/client";
+import {
+  CONTRACT_LIMITS,
+  isSchemaTextWithinLimit,
+} from "../api/contractLimits";
 import { importMockSystem } from "../mocks/systemImport";
 
 import JsonSchemaEditor from "../components/JsonSchemaEditor";
@@ -43,6 +48,7 @@ export default function ImportSystemPage() {
     system: false,
     schema: false,
   });
+  const schemaTooLarge = !isSchemaTextWithinLimit(schemaText);
   const analysis = useMemo(() => analyzeJson(schemaText), [schemaText]);
 
   useEffect(
@@ -71,6 +77,7 @@ export default function ImportSystemPage() {
       !systemName.trim() ||
       !schemaName.trim() ||
       !analysis.syntax.valid ||
+      schemaTooLarge ||
       readingFile ||
       checkingRef.current ||
       importingRef.current
@@ -128,8 +135,26 @@ export default function ImportSystemPage() {
           importedSystemName: imported.system.name,
         },
       });
-    } catch {
-      if (version === validationVersion.current) setImportFailed(true);
+    } catch (error) {
+      if (version === validationVersion.current) {
+        setImportFailed(true);
+        if (
+          error instanceof ApiError &&
+          error.status === 422 &&
+          error.details?.length
+        ) {
+          setResult({
+            valid: false,
+            schema: null,
+            summary: null,
+            errors: error.details.map((detail) => ({
+              path: detail.path ?? detail.field ?? "schema_text",
+              message: detail.message,
+              line: detail.line ?? null,
+            })),
+          });
+        }
+      }
     } finally {
       if (version === validationVersion.current) {
         importingRef.current = false;
@@ -198,6 +223,7 @@ export default function ImportSystemPage() {
             <Input
               label="Название системы"
               value={systemName}
+              maxLength={CONTRACT_LIMITS.name}
               disabled={importing}
               required
               error={
@@ -213,6 +239,7 @@ export default function ImportSystemPage() {
             <Input
               label="Название листа"
               value={schemaName}
+              maxLength={CONTRACT_LIMITS.name}
               disabled={importing}
               required
               error={
@@ -241,6 +268,12 @@ export default function ImportSystemPage() {
               title={`Не удалось прочитать файл «${fileError}»`}
             >
               Выберите файл с расширением .json. Текст в редакторе не изменён.
+            </Banner>
+          )}
+          {schemaTooLarge && (
+            <Banner variant="error" title="JSON превышает допустимый размер">
+              Максимальный размер схемы — 64 KiB в UTF-8. Сократите JSON перед
+              проверкой.
             </Banner>
           )}
           <JsonSchemaEditor
@@ -281,7 +314,12 @@ export default function ImportSystemPage() {
               className="import-system__check"
               icon={<CheckIcon />}
               onClick={handleValidate}
-              disabled={!analysis.syntax.valid || readingFile || importing}
+              disabled={
+                !analysis.syntax.valid ||
+                schemaTooLarge ||
+                readingFile ||
+                importing
+              }
               loading={checking}
               loadingText="Проверка…"
             >

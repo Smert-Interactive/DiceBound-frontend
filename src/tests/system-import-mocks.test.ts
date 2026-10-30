@@ -56,7 +56,7 @@ test("imports linked system and full schema privately, without sharing mutable r
     schema: JSON.parse(schemaText),
   });
   expect(systems.getMockSchemas(id)).toEqual([
-    expect.objectContaining({ id: schemaId, sections: ["Экипаж"] }),
+    expect.objectContaining({ id: schemaId, game_system_id: id }),
   ]);
   expect(
     systems.getMockSystems("alex@example.com").some((s) => s.id === id),
@@ -76,7 +76,7 @@ test.each([
   { ...request, system_name: " " },
   { ...request, sheet_schema_name: " " },
   { ...request, schema_text: "{" },
-  { ...request, schema_text: '{"sections":[]}' },
+  { ...request, schema_text: '{"sections":null}' },
 ])("rejects invalid imports atomically: %j", async (invalid) => {
   const { importMockSystem } = await import("../mocks/systemImport");
   const { MOCK_SYSTEMS, MOCK_SCHEMAS } = await import("../mocks/systems");
@@ -88,7 +88,9 @@ test.each([
   ];
   const rejection = expect(
     importMockSystem(invalid, "alex@example.com"),
-  ).rejects.toMatchObject({ status: 422 });
+  ).rejects.toMatchObject({
+    status: invalid.schema_text === request.schema_text ? 400 : 422,
+  });
   await vi.runAllTimersAsync();
   await rejection;
   expect([
@@ -126,7 +128,7 @@ test("creates an openable character and version from an imported schema; deletio
   expect(details).toMatchObject({
     sheet_schema_id: imported.sheet_schema.id,
     current_version_number: 1,
-    data: { alias: "", power: 2, output: 6 },
+    data: { alias: "" },
   });
   expect(
     getMockCharacterVersions(character.id, "alex@example.com"),
@@ -139,4 +141,75 @@ test("creates an openable character and version from an imported schema; deletio
   expect(getMockCharacterDetails(character.id, "alex@example.com")).toEqual(
     details,
   );
+});
+
+test("creation returns Character with empty optional values and available constant calculations", async () => {
+  const { importMockSystem } = await import("../mocks/systemImport");
+  const { createMockCharacter } = await import("../mocks/characters");
+  const imported = await respond(
+    importMockSystem(
+      {
+        ...request,
+        schema_text: JSON.stringify({
+          sections: [
+            {
+              id: "s",
+              label: "S",
+              fields: [
+                { id: "text", type: "text", label: "T", required: true },
+                { id: "flag", type: "checkbox", label: "F" },
+                { id: "score", type: "number", label: "N", min: 10 },
+                {
+                  id: "choice",
+                  type: "select",
+                  label: "S",
+                  options: [{ value: "a", label: "A" }],
+                },
+                { id: "hp", type: "resource", label: "R", min: 0 },
+                {
+                  id: "derived",
+                  type: "calculated",
+                  label: "D",
+                  formula: "constant + 1",
+                },
+                {
+                  id: "constant",
+                  type: "calculated",
+                  label: "C",
+                  formula: "2 * 3",
+                },
+                {
+                  id: "pending",
+                  type: "calculated",
+                  label: "P",
+                  formula: "score + derived",
+                },
+              ],
+            },
+          ],
+        }),
+      },
+      "alex@example.com",
+    ),
+  );
+  const created = await respond(
+    createMockCharacter(
+      {
+        name: "Fresh",
+        game_system_id: imported.system.id,
+        sheet_schema_id: imported.sheet_schema.id,
+      },
+      "alex@example.com",
+    ),
+  );
+  expect(created.data).toEqual({
+    text: "",
+    flag: false,
+    constant: 6,
+    derived: 7,
+  });
+  expect(created.current_version_number).toBe(1);
+  expect(created).not.toHaveProperty("game_system_name");
+  expect(created).not.toHaveProperty("access");
+  expect(created.owner_id).toBeDefined();
 });

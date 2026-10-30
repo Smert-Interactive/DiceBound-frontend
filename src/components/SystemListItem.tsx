@@ -72,7 +72,7 @@ export default function SystemListItem({
   );
   const identity = (
     <div className="system-list-item__identity">
-      <SystemBadge name={system.name} system={getSystemKind(system.name)} />
+      <SystemBadge name={system.name} system={getSystemKind(system.source)} />
       <div className="system-list-item__description">
         <b>{system.name}</b>
         <span>{sheets}</span>

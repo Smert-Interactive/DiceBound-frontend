@@ -6,6 +6,8 @@ import { useAuth } from "../auth/authContext";
 import SystemCard from "../components/SystemCard";
 import { ROUTES } from "../constants/routes";
 import { createMockCharacter } from "../mocks/characters";
+import { getMockSheetSchema } from "../mocks/sheetSchemas";
+import { CONTRACT_LIMITS } from "../api/contractLimits";
 import { getMockSystems, getMockSchemas } from "../mocks/systems";
 import { getImportedSystem } from "../systems/importRouteState";
 import { UploadIcon } from "../shared/icons";
@@ -49,6 +51,7 @@ function StepCard({ number, title, hint, children, actions }: StepProps) {
   );
 }
 
+// Создаёт персонажа из доступных DTO; пустой список систем или схем не приводит к ошибке страницы.
 export default function NewCharacterPage() {
   const { user } = useAuth();
   // Удалённые и чужие системы не участвуют в создании новых персонажей.
@@ -65,14 +68,16 @@ export default function NewCharacterPage() {
     Boolean(importedSystem),
   );
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const [systemId, setSystemId] = useState(importedSystem?.id ?? systems[0].id);
+  const [systemId, setSystemId] = useState(
+    importedSystem?.id ?? systems[0]?.id ?? "",
+  );
   const system = systems.find((item) => item.id === systemId) ?? systems[0];
   // Лист хранится по id. Если он не из выбранной системы, берётся её первый лист:
   // так при смене системы выбор не нужно сбрасывать вручную.
   const [schemaId, setSchemaId] = useState(
     importedSystem ? imported!.schemaId : "",
   );
-  const schemas = getMockSchemas(system.id);
+  const schemas = system ? getMockSchemas(system.id) : [];
   const schema = schemas.find((item) => item.id === schemaId) ?? schemas[0];
   const [name, setName] = useState("");
   const navigate = useNavigate();
@@ -84,11 +89,24 @@ export default function NewCharacterPage() {
     if (createFailed) createErrorRef.current?.focus();
   }, [createFailed]);
   const isNameEmpty = name.trim().length === 0;
+  const nameError =
+    name.trim().length > CONTRACT_LIMITS.name
+      ? "Не длиннее 255 символов"
+      : undefined;
+  const unavailable = !system || !schema;
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
+  // Переходит к созданному Character только пока пользователь остаётся на странице.
   async function handleCreate() {
     // Кнопка недоступна через aria-disabled, а не disabled, поэтому клик по ней всё равно
     // приходит: отсекаем его здесь, как и повторное нажатие во время запроса.
-    if (isNameEmpty || pending || !user) return;
+    if (isNameEmpty || nameError || unavailable || pending || !user) return;
     setPending(true);
     setCreateFailed(false);
     try {
@@ -100,12 +118,13 @@ export default function NewCharacterPage() {
         },
         user.email,
       );
+      if (!mounted.current) return;
       navigate(generatePath(ROUTES.character, { id: character.id }));
     } catch {
       // Сохраняем имя и выбор листа; пользователь может повторить создание.
-      setCreateFailed(true);
+      if (mounted.current) setCreateFailed(true);
     } finally {
-      setPending(false);
+      if (mounted.current) setPending(false);
     }
   }
 
@@ -157,6 +176,9 @@ export default function NewCharacterPage() {
               </>
             }
           >
+            {systems.length === 0 && (
+              <p>Доступных систем пока нет. Импортируйте систему из JSON.</p>
+            )}
             <div
               className="new-character__systems"
               role="radiogroup"
@@ -168,7 +190,7 @@ export default function NewCharacterPage() {
                   system={item}
                   schemaCount={getMockSchemas(item.id).length}
                   name="game-system"
-                  checked={item.id === system.id}
+                  checked={item.id === system?.id}
                   onSelect={setSystemId}
                 />
               ))}
@@ -180,6 +202,9 @@ export default function NewCharacterPage() {
             title="Лист персонажа"
             hint="Sheet Schema выбранной системы"
           >
+            {schemas.length === 0 && (
+              <p>У выбранной системы нет доступных листов.</p>
+            )}
             <div
               className="new-character__schemas"
               role="radiogroup"
@@ -191,8 +216,10 @@ export default function NewCharacterPage() {
                   name="sheet-schema"
                   value={item.id}
                   label={item.name}
-                  description={item.sections.join(" · ")}
-                  checked={item.id === schema.id}
+                  description={getMockSheetSchema(item.id)
+                    ?.schema.sections.map((section) => section.label)
+                    .join(" · ")}
+                  checked={item.id === schema?.id}
                   onChange={() => setSchemaId(item.id)}
                 />
               ))}
@@ -207,6 +234,8 @@ export default function NewCharacterPage() {
               autoComplete="off"
               disabled={pending}
               value={name}
+              error={nameError}
+              maxLength={CONTRACT_LIMITS.name}
               onChange={(event) => setName(event.target.value)}
               // На телефоне эту подсказку CSS скрывает: там она стоит над кнопкой в нижней панели.
               hint={isNameEmpty ? NAME_HINT : undefined}
@@ -219,11 +248,11 @@ export default function NewCharacterPage() {
           <dl className="new-character__summary-list">
             <div>
               <dt>Система</dt>
-              <dd>{system.name}</dd>
+              <dd>{system?.name ?? "—"}</dd>
             </div>
             <div>
               <dt>Лист</dt>
-              <dd>{schema.name}</dd>
+              <dd>{schema?.name ?? "—"}</dd>
             </div>
             <div>
               <dt>Имя</dt>
@@ -231,8 +260,8 @@ export default function NewCharacterPage() {
             </div>
           </dl>
           <p className="new-character__summary-note">
-            Поля листа заполнятся значениями по умолчанию из схемы. Состояние
-            сразу сохранится как версия&nbsp;1.
+            Будет создан пустой лист с начальным состоянием полей и
+            версией&nbsp;1.
           </p>
           {createFailed && (
             <div
@@ -264,7 +293,9 @@ export default function NewCharacterPage() {
               variant="primary"
               loading={pending}
               loadingText="Создание…"
-              aria-disabled={isNameEmpty || undefined}
+              aria-disabled={
+                isNameEmpty || Boolean(nameError) || unavailable || undefined
+              }
               aria-describedby={isNameEmpty ? hintId : undefined}
               onClick={handleCreate}
             >

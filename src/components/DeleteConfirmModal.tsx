@@ -6,7 +6,7 @@ import { Button, Modal } from "../shared/ui";
 interface Props {
   open: boolean;
   characterName: string;
-  versionCount: number;
+  versionCount?: number;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -20,15 +20,17 @@ export default function DeleteConfirmModal({
   onConfirm,
 }: Props) {
   // «все 1 версию» звучит неправильно, поэтому для одной версии отдельная фраза.
-  const versionsWord = pluralize(versionCount, {
+  const versionsWord = pluralize(versionCount ?? 0, {
     one: "версию",
     few: "версии",
     many: "версий",
   });
   const historyText =
-    versionCount === 1
-      ? "единственная версия истории"
-      : `все${NO_BREAK_SPACE}${versionCount}${NO_BREAK_SPACE}${versionsWord} истории`;
+    versionCount === undefined
+      ? "вся история версий"
+      : versionCount === 1
+        ? "единственная версия истории"
+        : `все${NO_BREAK_SPACE}${versionCount}${NO_BREAK_SPACE}${versionsWord} истории`;
 
   return (
     <Modal

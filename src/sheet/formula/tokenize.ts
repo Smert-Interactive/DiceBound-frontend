@@ -1,12 +1,13 @@
 import { FormulaError, type Token } from "./types";
+import { CONTRACT_LIMITS } from "../../api/contractLimits";
 
-const NUMBER_START = /[0-9]/;
-const NUMBER_PART = /[0-9.]/;
 const NAME_START = /[A-Za-z_]/;
 const NAME_PART = /[A-Za-z0-9_]/;
 
 // Режет формулу на токены. Ничего не вычисляет и не знает про поля и функции.
 export function tokenize(source: string): Token[] {
+  if (source.length > CONTRACT_LIMITS.formulaLength)
+    throw new FormulaError("syntax", "Формула длиннее 2048 символов");
   const tokens: Token[] = [];
   let pos = 0;
 
@@ -15,14 +16,14 @@ export function tokenize(source: string): Token[] {
 
     if (/\s/.test(char)) {
       pos += 1;
-    } else if (NUMBER_START.test(char)) {
+    } else if (/[0-9.]/.test(char)) {
       const start = pos;
-      while (pos < source.length && NUMBER_PART.test(source[pos])) pos += 1;
-      const text = source.slice(start, pos);
-      // «1.2.3» не число: проверяем, что вся запись разобралась целиком.
-      if (!/^[0-9]+(\.[0-9]+)?$/.test(text)) {
-        throw new FormulaError("syntax", `Неверное число «${text}»`);
-      }
+      const text = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/.exec(
+        source.slice(pos),
+      )?.[0];
+      if (!text || !Number.isFinite(Number(text)))
+        throw new FormulaError("syntax", "Ожидается конечное число");
+      pos += text.length;
       tokens.push({ type: "number", value: Number(text), pos: start });
     } else if (NAME_START.test(char)) {
       const start = pos;
@@ -47,6 +48,8 @@ export function tokenize(source: string): Token[] {
         `Недопустимый символ «${char}» в позиции ${pos + 1}`,
       );
     }
+    if (tokens.length > CONTRACT_LIMITS.formulaTokens)
+      throw new FormulaError("syntax", "В формуле больше 512 токенов");
   }
 
   return tokens;

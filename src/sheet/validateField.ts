@@ -10,6 +10,15 @@ export function validateField(
   field: SheetField,
   value: FieldValue | ResourceDraft | undefined,
 ): string | undefined {
+  // Полностью пустое необязательное поле опускается в PUT. Частичный ресурс проверяется дальше.
+  const empty =
+    value === undefined ||
+    value === "" ||
+    (typeof value === "object" &&
+      value !== null &&
+      value.current === "" &&
+      value.max === "");
+  if (empty && !field.required) return undefined;
   switch (field.type) {
     case "text": {
       const text = typeof value === "string" ? value : "";
@@ -30,7 +39,8 @@ export function validateField(
       }
       // Пустое поле без границ: текст «Нужно число», как у resource.
       const rangeMessage = getRangeMessage(field);
-      if (number === undefined) return rangeMessage ?? "Нужно число";
+      if (number === undefined || !Number.isFinite(number))
+        return rangeMessage ?? "Нужно число";
       if (field.min !== undefined && number < field.min) return rangeMessage;
       if (field.max !== undefined && number > field.max) return rangeMessage;
       return undefined;
@@ -47,6 +57,9 @@ export function validateField(
       const isKnown = field.options.some((option) => option.value === value);
       return isKnown ? undefined : "Значение не из списка options";
     }
+
+    case "checkbox":
+      return typeof value === "boolean" ? undefined : "Нужно true или false";
 
     default:
       return undefined;

@@ -1,5 +1,5 @@
-import { recalculateSheet } from "../sheet/recalculate";
-import { toDraft } from "../sheet/sheetDraft";
+import { evaluateFormulaNode } from "../sheet/formula/evaluate";
+import { parseFormula } from "../sheet/formula/parse";
 import type {
   CharacterData,
   CharacterDetails,
@@ -220,28 +220,30 @@ export function initializeMockCharacterSheet(
       case "text":
         data[field.id] = "";
         break;
-      case "number":
-        data[field.id] = field.min ?? Math.min(0, field.max ?? 0);
-        break;
-      case "select":
-        data[field.id] = field.options[0]?.value ?? "";
-        break;
       case "checkbox":
         data[field.id] = false;
-        break;
-      case "resource":
-        data[field.id] = { current: field.min ?? 0, max: field.min ?? 0 };
         break;
       case "calculated":
         break;
     }
   }
-  const calculation = recalculateSheet(
-    schema.schema,
-    toDraft(schema.schema, data),
+  const formulas = new Map(
+    schema.schema.sections
+      .flatMap((section) => section.fields)
+      .filter((field) => field.type === "calculated")
+      .map((field) => [field.id, field]),
   );
-  for (const [fieldId, value] of Object.entries(calculation.values)) {
+  const visited = new Set<string>();
+  // При создании считаются только доступные зависимости; отсутствующее число не заменяется нулём.
+  function resolve(fieldId: string): number | undefined {
+    if (typeof data[fieldId] === "number") return data[fieldId];
+    const field = formulas.get(fieldId);
+    if (!field || visited.has(fieldId)) return undefined;
+    visited.add(fieldId);
+    const value = evaluateFormulaNode(parseFormula(field.formula), resolve);
     if (value !== undefined) data[fieldId] = value;
+    return value;
   }
+  for (const fieldId of formulas.keys()) resolve(fieldId);
   MOCK_SHEETS[id] = { schemaId: schema.id, data, createdAt };
 }

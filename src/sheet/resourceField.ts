@@ -1,4 +1,4 @@
-import { getRangeMessage, parseNumber } from "./numberField";
+import { formatNumberInput, getRangeMessage, parseNumber } from "./numberField";
 import type { ResourceField, ResourceValue } from "./sheetTypes";
 
 // То, что набрано в двух полях ресурса: строки, пока человек печатает (как у number).
@@ -15,12 +15,21 @@ export interface ResourceError {
   target: "current" | "max";
 }
 
+// Числа из API остаются редактируемыми, включая очень большие и малые значения.
 export function toResourceDraft(value: ResourceValue): ResourceDraft {
-  return { current: String(value.current), max: String(value.max) };
+  return {
+    current: formatNumberInput(value.current),
+    max: formatNumberInput(value.max),
+  };
 }
 
+// Ресурс принимает только конечные числа, как серверный Character.data.
 function toNumber(value: number | string): number | undefined {
-  return typeof value === "number" ? value : parseNumber(value);
+  return typeof value === "number"
+    ? Number.isFinite(value)
+      ? value
+      : undefined
+    : parseNumber(value);
 }
 
 // Ошибки по ui-ux и контракту: min <= current <= max, max не меньше min.

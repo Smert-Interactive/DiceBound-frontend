@@ -1,6 +1,8 @@
+import { ApiError } from "../api/client";
+import { validateField } from "../sheet/validateField";
 import { recalculateSheet } from "../sheet/recalculate";
 import { toDraft } from "../sheet/sheetDraft";
-import type { CharacterData } from "../sheet/sheetTypes";
+import type { CharacterDetails, CharacterData } from "../sheet/sheetTypes";
 import type {
   CharacterVersion,
   CharacterVersionSummary,
@@ -170,17 +172,69 @@ function withCalculatedValues(
   const schema = details && getMockSheetSchema(details.sheet_schema_id);
   if (!schema) throw new Error("NOT_FOUND_OR_FORBIDDEN");
 
+  const fields = schema.schema.sections.flatMap((section) => section.fields);
+  const known = new Set(fields.map((field) => field.id));
+  const issues: { field: string; message: string }[] = [];
+  // Mock принимает те же JSON-типы, что PUT, без приведения строк и лишних ключей.
+  for (const id of Object.keys(data))
+    if (!known.has(id))
+      issues.push({ field: `data.${id}`, message: "Неизвестное поле" });
+  for (const field of fields) {
+    if (field.type === "calculated") continue;
+    const value = data[field.id];
+    const present = Object.hasOwn(data, field.id);
+    if (!present) {
+      if (field.required)
+        issues.push({
+          field: `data.${field.id}`,
+          message: "Обязательное поле",
+        });
+      continue;
+    }
+    const type =
+      field.type === "text" || field.type === "select"
+        ? "string"
+        : field.type === "number"
+          ? "number"
+          : field.type === "checkbox"
+            ? "boolean"
+            : "object";
+    const badResource =
+      field.type === "resource" &&
+      (value === null ||
+        typeof value !== "object" ||
+        Object.keys(value).length !== 2 ||
+        !Object.hasOwn(value, "current") ||
+        !Object.hasOwn(value, "max") ||
+        typeof value.current !== "number" ||
+        typeof value.max !== "number");
+    const message =
+      typeof value !== type ||
+      badResource ||
+      (field.type === "select" && value === "")
+        ? "Неверный тип значения"
+        : validateField(field, value);
+    if (message) issues.push({ field: `data.${field.id}`, message });
+  }
+  if (issues.length)
+    throw new ApiError(
+      422,
+      "VALIDATION_ERROR",
+      "VALIDATION_ERROR",
+      issues.slice(0, 50),
+    );
+
   const calculatedIds = schema.schema.sections
     .flatMap((section) => section.fields)
     .filter((field) => field.type === "calculated")
     .map((field) => field.id);
   if (calculatedIds.some((id) => id in data)) {
-    throw new Error("VALIDATION_ERROR");
+    throw new ApiError(422, "VALIDATION_ERROR", "VALIDATION_ERROR");
   }
 
   const result = recalculateSheet(schema.schema, toDraft(schema.schema, data));
   if (Object.keys(result.errors).length > 0) {
-    throw new Error("VALIDATION_ERROR");
+    throw new ApiError(422, "VALIDATION_ERROR", "VALIDATION_ERROR");
   }
 
   const saved = { ...data };
@@ -197,7 +251,7 @@ export async function saveMockCharacterVersion(
   characterId: string,
   data: CharacterData,
   email: string,
-): Promise<number> {
+): Promise<CharacterDetails> {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
 
   // Сохранять может только владелец; проверяем в сервисе, а не видимостью кнопки.
@@ -231,7 +285,7 @@ export async function saveMockCharacterVersion(
     created_at: createdAt,
     data: structuredClone(saved),
   });
-  return versionNumber;
+  return getMockCharacterDetails(characterId, email)!;
 }
 
 // Повторяет POST restore. Как остальные mock-запросы, хранит результат только в памяти.

@@ -4,15 +4,8 @@ import type { GameSystemSummary } from "../systems/systemTypes";
 // Сохраняем прежний импорт типов для существующих компонентов.
 export type { GameSystemSummary } from "../systems/systemTypes";
 
-// sections в контракте нет: там названия секций лежат только в полной схеме (GET /schemas/{id}).
-// Пока берём их из моков; у встроенных систем строка постоянная, у импортированных зависит от схемы.
-export interface SheetSchemaOption {
-  id: string;
-  game_system_id: string;
-  name: string;
-  created_at: string;
-  sections: string[];
-}
+import type { SheetSchemaSummary } from "../systems/systemTypes";
+export type SheetSchemaOption = SheetSchemaSummary;
 
 export const DND_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000001";
 export const COC_SYSTEM_ID = "5e0a7c1e-2d4b-4f6a-9c3e-0d5e5f000002";
@@ -105,28 +98,24 @@ export const MOCK_SCHEMAS: SheetSchemaOption[] = [
     game_system_id: DND_SYSTEM_ID,
     name: "Базовый лист",
     created_at: "2026-01-01T12:00:00Z",
-    sections: ["Основное", "Характеристики", "Ресурсы"],
   },
   {
     id: "5c0a7c1e-0000-4000-8000-000000000002",
     game_system_id: COC_SYSTEM_ID,
     name: "Сыщик",
     created_at: "2026-01-01T12:00:00Z",
-    sections: ["Основное", "Характеристики", "Ресурсы", "Навыки"],
   },
   {
     id: "5c0a7c1e-0000-4000-8000-000000000003",
     game_system_id: CUSTOM_SYSTEM_ID,
     name: "Базовый лист",
     created_at: "2026-09-10T09:00:00Z",
-    sections: ["Досье", "Параметры", "Ресурсы"],
   },
   {
     id: "5c0a7c1e-0000-4000-8000-000000000004",
     game_system_id: SPACE_FRONTIER_SYSTEM_ID,
     name: "Экипаж",
     created_at: "2026-09-25T11:05:00Z",
-    sections: ["Экипаж"],
   },
 ];
 

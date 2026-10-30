@@ -2,6 +2,11 @@ import type {
   ImportGameSystemRequest,
   ImportedSystemResult,
 } from "../systems/systemImportTypes";
+import {
+  CONTRACT_LIMITS,
+  isSchemaTextWithinLimit,
+} from "../api/contractLimits";
+import { ApiError } from "../api/client";
 import { validateSchema } from "../systems/validateSchema";
 import { createMockId } from "./mockId";
 import { getMockRecipientId } from "./characterSharesStore";
@@ -14,18 +19,22 @@ export async function importMockSystem(
   email: string,
 ): Promise<ImportedSystemResult> {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 500));
-  const checked = validateSchema(request.schema_text);
   if (
+    !isSchemaTextWithinLimit(request.schema_text) ||
     !request.system_name.trim() ||
     !request.sheet_schema_name.trim() ||
-    !checked.valid
-  ) {
-    throw Object.assign(new Error("VALIDATION_ERROR"), {
-      status: 422,
-      code: "VALIDATION_ERROR",
-      errors: checked.errors,
-    });
-  }
+    request.system_name.trim().length > CONTRACT_LIMITS.name ||
+    request.sheet_schema_name.trim().length > CONTRACT_LIMITS.name
+  )
+    throw new ApiError(400, "BAD_REQUEST", "Проверьте названия и размер JSON.");
+  const checked = validateSchema(request.schema_text);
+  if (!checked.valid)
+    throw new ApiError(
+      422,
+      "VALIDATION_ERROR",
+      "Невалидная схема листа",
+      checked.errors,
+    );
   if (!email.trim())
     throw Object.assign(new Error("UNAUTHORIZED"), { status: 401 });
   const createdAt = new Date().toISOString();
@@ -53,7 +62,6 @@ export async function importMockSystem(
     game_system_id: system.id,
     name: sheetSchema.name,
     created_at: createdAt,
-    sections: checked.schema.sections.map((section) => section.label),
   });
   return structuredClone({ system, sheet_schema: sheetSchema });
 }

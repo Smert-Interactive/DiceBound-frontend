@@ -10,11 +10,11 @@ interface FieldBase {
   // Уникален в пределах схемы и служит ключом в Character.data.
   id: string;
   label: string;
+  required?: boolean;
 }
 
 export interface TextField extends FieldBase {
   type: "text";
-  required?: boolean;
   maxLength?: number;
 }
 

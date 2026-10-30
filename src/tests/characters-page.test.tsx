@@ -125,7 +125,7 @@ describe("deleting a character", () => {
     const dialog = await screen.findByRole("dialog", {
       name: "Удалить персонажа Aldric?",
     });
-    expect(dialog).toHaveTextContent("все 7 версий истории");
+    expect(dialog).toHaveTextContent("вся история версий");
     await user.click(
       within(dialog).getByRole("button", { name: "Удалить персонажа" }),
     );

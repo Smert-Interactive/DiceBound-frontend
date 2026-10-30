@@ -1,10 +1,11 @@
 import { tokenize } from "./tokenize";
 import { FormulaError, type FormulaNode, type Token } from "./types";
+import { CONTRACT_LIMITS } from "../../api/contractLimits";
 
 // Грамматика (приоритет растёт сверху вниз):
 //   expression = term (("+" | "-") term)*
 //   term       = unary (("*" | "/") unary)*
-//   unary      = "-" unary | primary
+//   unary      = ("+" | "-") unary | primary
 //   primary    = number | name "(" [expression ("," expression)*] ")" | name | "(" expression ")"
 export function parseFormula(source: string): FormulaNode {
   const tokens = tokenize(source);
@@ -39,35 +40,57 @@ export function parseFormula(source: string): FormulaNode {
     }
   }
 
-  function expression(): FormulaNode {
-    let left = term();
+  // Передаёт глубину вложенности, чтобы совпадать с пределом серверного парсера.
+  function expression(depth = 0): FormulaNode {
+    let left = term(depth);
     while (isOperator(peek(), ["+", "-"])) {
       const operator = next();
       if (operator.type !== "operator") break;
-      left = { type: "binary", operator: operator.value, left, right: term() };
+      left = {
+        type: "binary",
+        operator: operator.value,
+        left,
+        right: term(depth),
+      };
     }
     return left;
   }
 
-  function term(): FormulaNode {
-    let left = unary();
+  // Умножение и деление имеют больший приоритет, чем сложение.
+  function term(depth: number): FormulaNode {
+    let left = unary(depth);
     while (isOperator(peek(), ["*", "/"])) {
       const operator = next();
       if (operator.type !== "operator") break;
-      left = { type: "binary", operator: operator.value, left, right: unary() };
+      left = {
+        type: "binary",
+        operator: operator.value,
+        left,
+        right: unary(depth),
+      };
     }
     return left;
   }
 
-  function unary(): FormulaNode {
-    if (isOperator(peek(), ["-"])) {
-      next();
-      return { type: "negate", operand: unary() };
+  // Унарный плюс разрешён API и не меняет значение операнда.
+  function unary(depth: number): FormulaNode {
+    if (depth > CONTRACT_LIMITS.formulaDepth)
+      throw new FormulaError(
+        "syntax",
+        "В формуле больше 64 уровней вложенности",
+      );
+    if (isOperator(peek(), ["-", "+"])) {
+      const operator = next();
+      const operand = unary(depth + 1);
+      return operator.type === "operator" && operator.value === "-"
+        ? { type: "negate", operand }
+        : operand;
     }
-    return primary();
+    return primary(depth);
   }
 
-  function primary(): FormulaNode {
+  // Разбирает число, ссылку, вызов функции или выражение в скобках.
+  function primary(depth: number): FormulaNode {
     const token = next();
 
     if (token.type === "number") return { type: "number", value: token.value };
@@ -83,10 +106,10 @@ export function parseFormula(source: string): FormulaNode {
       if (close?.type === "paren" && close.value === ")") {
         next();
       } else {
-        args.push(expression());
+        args.push(expression(depth + 1));
         while (peek()?.type === "comma") {
           next();
-          args.push(expression());
+          args.push(expression(depth + 1));
         }
         expect(")");
       }
@@ -94,7 +117,7 @@ export function parseFormula(source: string): FormulaNode {
     }
 
     if (token.type === "paren" && token.value === "(") {
-      const inner = expression();
+      const inner = expression(depth + 1);
       expect(")");
       return inner;
     }

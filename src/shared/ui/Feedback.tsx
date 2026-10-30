@@ -2,6 +2,8 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import { AlertIcon, CheckIcon, ClockIcon, CopyIcon, EyeIcon } from "../icons";
 import { Button } from "./Button";
 
+import { SYSTEM_TONES, type SystemKind } from "../systemKind";
+
 import "./animations.css";
 import "./Feedback.css";
 
@@ -20,11 +22,12 @@ export function Chip({
 
 interface SystemBadgeProps {
   name: string;
-  system?: "dnd" | "coc" | "imported";
+  system?: SystemKind;
   size?: "list" | "sheet";
   viewOnly?: boolean;
 }
 
+// Метка использует переданный вид и не распознаёт систему по пользовательскому названию.
 export function SystemBadge({
   name,
   system = "imported",
@@ -46,7 +49,7 @@ export function SystemBadge({
       .toUpperCase();
   }
 
-  const tone = { dnd: "crimson", coc: "ok", imported: "violet" }[system];
+  const tone = SYSTEM_TONES[system];
   const accessibleName = viewOnly ? `${name}, только просмотр` : name;
 
   return (

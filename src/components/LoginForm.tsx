@@ -1,3 +1,4 @@
+import { CONTRACT_LIMITS } from "../api/contractLimits";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
@@ -68,6 +69,7 @@ export default function LoginForm() {
         label="Почта"
         name="email"
         type="email"
+        maxLength={CONTRACT_LIMITS.email}
         autoComplete="email"
         inputMode="email"
         placeholder="you@example.com"
@@ -86,6 +88,7 @@ export default function LoginForm() {
         label="Пароль"
         name="password"
         type="password"
+        maxLength={CONTRACT_LIMITS.password}
         autoComplete="current-password"
         required
         disabled={pending}

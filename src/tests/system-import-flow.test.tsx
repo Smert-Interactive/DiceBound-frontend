@@ -95,9 +95,9 @@ test("imports a validated schema and creates a character using the preselected s
     "Pilot Alpha",
   );
   await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
-  // Пробные 99 не сохраняются: настоящий лист начинается со значения по умолчанию.
+  // Пробные 99 не сохраняются: сервер оставляет number пустым, min не является значением по умолчанию.
   expect(await screen.findByRole("textbox", { name: "Мощность" })).toHaveValue(
-    "2",
+    "",
   );
 });
 

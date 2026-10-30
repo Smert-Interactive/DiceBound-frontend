@@ -22,9 +22,25 @@ export function sanitizeNumberInput(raw: string, bounds: NumberBounds): string {
 // Число из строки ввода: «16», «-1.5», «1,5»; undefined для пустой строки и одинокого минуса.
 // «1.» во время набора читается как 1, чтобы ошибка не мигала на каждом разделителе.
 export function parseNumber(raw: string): number | undefined {
-  return /^-?\d+([.,]\d*)?$/.test(raw)
-    ? Number(raw.replace(",", "."))
-    : undefined;
+  if (!/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][+-]?\d+)?$/.test(raw))
+    return undefined;
+  const value = Number(raw.replace(",", "."));
+  return Number.isFinite(value) ? value : undefined;
+}
+
+// Разворачивает экспоненту серверного числа, чтобы обычное редактирование не меняло его порядок.
+export function formatNumberInput(value: number): string {
+  const text = String(value);
+  if (!text.includes("e")) return text;
+  const [mantissa, exponent] = text.split("e");
+  const sign = mantissa.startsWith("-") ? "-" : "";
+  const [integer, fraction = ""] = mantissa.replace("-", "").split(".");
+  const digits = integer + fraction;
+  const point = integer.length + Number(exponent);
+  if (point <= 0) return `${sign}0.${"0".repeat(-point)}${digits}`;
+  if (point >= digits.length)
+    return `${sign}${digits}${"0".repeat(point - digits.length)}`;
+  return `${sign}${digits.slice(0, point)}.${digits.slice(point)}`;
 }
 
 // Шаг кнопок − и +: на 1, результат зажат в min…max. Из пустого поля счёт идёт от min (или 0).
@@ -41,10 +57,10 @@ export function stepNumber(
   const next =
     current === undefined
       ? (bounds.min ?? 0)
-      : Number((current + direction).toFixed(decimals));
+      : Number((current + direction).toFixed(Math.min(decimals, 100)));
   const aboveMin = Math.max(bounds.min ?? -Infinity, next);
 
-  return String(Math.min(bounds.max ?? Infinity, aboveMin));
+  return formatNumberInput(Math.min(bounds.max ?? Infinity, aboveMin));
 }
 
 // «1–20» для подписи внутри поля; при одной границе или без границ подписи нет.

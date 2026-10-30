@@ -69,16 +69,18 @@ describe("saveMockCharacterVersion", () => {
       userData("Saved"),
       "alex@example.com",
     );
-    expect(created).toBe(before.current_version_number + 1);
+    expect(created.current_version_number).toBe(
+      before.current_version_number + 1,
+    );
 
     const after = getMockCharacterDetails(aldric.id)!;
-    expect(after.current_version_number).toBe(created);
+    expect(after.current_version_number).toBe(created.current_version_number);
     expect(after.data.name).toBe("Saved");
     // Формулы считает сервер: результат попадает в снимок, хотя в запросе его не было.
     expect(after.data.str_modifier).toBe(3);
     const versions = getMockCharacterVersions(aldric.id, "alex@example.com")!;
     expect(versions[0]).toMatchObject({
-      version_number: created,
+      version_number: created.current_version_number,
       is_current: true,
     });
     expect(versions.filter((item) => item.is_current)).toHaveLength(1);

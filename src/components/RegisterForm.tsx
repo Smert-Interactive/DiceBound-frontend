@@ -1,3 +1,4 @@
+import { CONTRACT_LIMITS } from "../api/contractLimits";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
@@ -112,6 +113,7 @@ export default function RegisterForm() {
         label="Почта"
         name="email"
         type="email"
+        maxLength={CONTRACT_LIMITS.email}
         autoComplete="email"
         inputMode="email"
         placeholder="you@example.com"
@@ -133,6 +135,7 @@ export default function RegisterForm() {
         label="Пароль"
         name="password"
         type="password"
+        maxLength={CONTRACT_LIMITS.password}
         autoComplete="new-password"
         required
         disabled={pending}
@@ -156,6 +159,7 @@ export default function RegisterForm() {
         label="Повторите пароль"
         name="password_confirmation"
         type="password"
+        maxLength={CONTRACT_LIMITS.password}
         autoComplete="new-password"
         required
         disabled={pending}

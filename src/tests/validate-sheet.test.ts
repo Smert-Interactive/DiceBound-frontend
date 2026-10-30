@@ -14,12 +14,12 @@ describe("validateSheet", () => {
     expect(validateSheet(schema, toDraft(schema, data))).toEqual({});
   });
 
-  test("an emptied number and an out-of-range number are errors of that field only", () => {
+  test("an optional empty number is omitted and an out-of-range number is rejected", () => {
     const draft = toDraft(schema, data);
     draft.str = "";
     draft.dex = "31";
     const errors = validateSheet(schema, draft);
-    expect(Object.keys(errors).sort()).toEqual(["dex", "str"]);
+    expect(Object.keys(errors).sort()).toEqual(["dex"]);
     expect(errors.dex).toBe("Допустимо от 1 до 30");
   });
 

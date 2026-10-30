@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
+import { getCharacterFieldErrors } from "../api/validationErrors";
 import CharacterHistory from "../components/CharacterHistory";
 import CharacterAccess from "../components/CharacterAccess";
 import ShareAddModal from "../components/ShareAddModal";
@@ -24,7 +25,6 @@ import {
 import CharacterHeader from "../components/CharacterHeader";
 import { getMockCharacterDetails } from "../mocks/characterDetails";
 import { getMockSheetSchema } from "../mocks/sheetSchemas";
-import { MOCK_SYSTEMS } from "../mocks/systems";
 import DynamicSheetRenderer from "../sheet/DynamicSheetRenderer";
 import { recalculateSheet } from "../sheet/recalculate";
 import {
@@ -33,6 +33,7 @@ import {
   type SavePhase,
 } from "../sheet/saveStatus";
 import { getStoredCalculated, toCharacterData } from "../sheet/sheetDraft";
+import type { CharacterDetails } from "../sheet/sheetTypes";
 import type { SheetDraftValue } from "../sheet/sheetDraft";
 import { useSheetDraft } from "../sheet/useSheetDraft";
 import { validateSheet } from "../sheet/validateSheet";
@@ -45,6 +46,7 @@ import type { TabItem } from "../shared/ui";
 
 import "./CharacterPage.css";
 
+// Показывает лист по контрактным данным; результаты сохранения становятся новой основой черновика.
 export default function CharacterPage() {
   const { id = "" } = useParams();
   const { user } = useAuth();
@@ -117,24 +119,28 @@ export default function CharacterPage() {
   const list = user && getMockCharacterList(user.email);
   const summary =
     list && [...list.owned, ...list.shared_view].find((item) => item.id === id);
-  const character = summary
+  const [savedCharacter, setSavedCharacter] = useState<CharacterDetails | null>(
+    null,
+  );
+  const loadedCharacter = summary
     ? getMockCharacterDetails(id, user!.email)
     : undefined;
+  const character =
+    savedCharacter?.id === id ? savedCharacter : loadedCharacter;
   const schema = character && getMockSheetSchema(character.sheet_schema_id);
-  const system = MOCK_SYSTEMS.find(
-    (item) => item.id === character?.game_system_id,
-  );
   // Черновик живёт здесь, а не во вкладке: вкладки показывают только активную панель.
   // Хук вызывается до проверок ниже, иначе нарушится порядок хуков.
   const sheet = useSheetDraft(
     schema?.schema,
     character?.data,
-    `${character?.current_version_number}:${character?.updated_at}`,
+    `${id}:${character?.current_version_number}:${character?.updated_at}`,
   );
   // Результат последнего запроса сохранения; правка листа или «Отменить» возвращают idle.
   const [savePhase, setSavePhase] = useState<SavePhase>("idle");
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   // 404 и 403 выглядят одинаково: интерфейс не раскрывает, существует ли чужой персонаж.
-  if (!user || !character || !schema || !system) return <NotFoundOrForbidden />;
+  if (!user || !character || !schema || !summary)
+    return <NotFoundOrForbidden />;
 
   // В VIEW берём сохранённые calculated; формулы исполняются только у редактируемого листа.
   const calculation = character.can_edit
@@ -149,7 +155,10 @@ export default function CharacterPage() {
   const isCopy = Boolean(summary?.copy_source_owner_name);
   const saveStatus = getSaveStatus({
     changedCount: sheet.changed.size,
-    hasErrors: hasSaveBlockers(fieldErrors, calculation.errors),
+    hasErrors: hasSaveBlockers(
+      { ...fieldErrors, ...serverErrors },
+      calculation.errors,
+    ),
     phase: savePhase,
   });
 
@@ -182,30 +191,39 @@ export default function CharacterPage() {
     );
   }
 
+  // Новая правка снимает устаревшие ошибки запроса и отмечает поле изменённым.
   function handleSheetChange(fieldId: string, value: SheetDraftValue) {
+    setServerErrors({});
     setSavePhase("idle");
     sheet.setValue(fieldId, value);
   }
 
+  // Возвращает значения последнего успешного ответа сервиса.
   function handleSheetReset() {
+    setServerErrors({});
     setSavePhase("idle");
     sheet.reset();
   }
 
+  // Сохраняет пользовательские значения и применяет полный ответ, сохраняя черновик при отказе.
   async function handleSave() {
     // «Повторить» после ошибки сети отправляет те же изменения, поэтому error тоже допустим.
     if (!user || !schema) return;
     if (saveStatus !== "dirty" && saveStatus !== "error") return;
     setSavePhase("saving");
     try {
-      await saveMockCharacterVersion(
+      const saved = await saveMockCharacterVersion(
         id,
         toCharacterData(schema.schema, sheet.draft),
         user.email,
       );
+      setSavedCharacter(saved);
+      setServerErrors({});
       setSavePhase("saved");
-    } catch {
-      setSavePhase("error");
+    } catch (error) {
+      const errors = getCharacterFieldErrors(error, schema.schema);
+      setServerErrors(errors);
+      setSavePhase(Object.keys(errors).length ? "idle" : "error");
     }
   }
 
@@ -224,7 +242,7 @@ export default function CharacterPage() {
             schema={schema.schema}
             draft={sheet.draft}
             calculated={calculation.values}
-            errors={{ ...calculation.errors, ...fieldErrors }}
+            errors={{ ...calculation.errors, ...fieldErrors, ...serverErrors }}
             changed={sheet.changed}
             readOnly={!character.can_edit}
             onChange={handleSheetChange}
@@ -248,6 +266,7 @@ export default function CharacterPage() {
       restoreTarget.version.version_number,
       user.email,
     );
+    setSavedCharacter(null);
     setIsRestoreOpen(false);
     // Без activeTab страница открывает «Лист»; баннер покажет эффект выше.
     navigate(location.pathname, {
@@ -267,7 +286,7 @@ export default function CharacterPage() {
         <CharacterHistory
           characterId={id}
           versions={versions}
-          ownerEmail={character.owner_username}
+          ownerName={character.owner_username}
           canRestore={character.access === "OWNER"}
           onRestore={handleRestoreRequest}
         />
@@ -298,7 +317,7 @@ export default function CharacterPage() {
           ? "character-page character-page--with-savebar"
           : "character-page"
       }
-      data-system={getSystemKind(system.name)}
+      data-system={getSystemKind()}
     >
       {notice && (
         <Banner
@@ -317,11 +336,11 @@ export default function CharacterPage() {
       )}
       <CharacterHeader
         name={character.name}
-        systemName={system.name}
+        systemName={summary.game_system_name}
         schemaName={schema.name}
         updatedAt={character.updated_at}
         version={character.current_version_number}
-        ownerEmail={
+        ownerName={
           character.access === "VIEW" ? character.owner_username : undefined
         }
         isCopy={isCopy}
@@ -370,7 +389,7 @@ export default function CharacterPage() {
           open={isShareOpen}
           characterName={character.name}
           shares={getMockCharacterShares(id, user.email) ?? []}
-          systemName={system.name}
+          systemName={summary.game_system_name}
           onCancel={handleShareCancel}
           onSubmit={handleShareSubmit}
         />

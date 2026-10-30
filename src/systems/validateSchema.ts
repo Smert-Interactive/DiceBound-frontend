@@ -1,10 +1,14 @@
 import {
-  findNodeAtLocation,
   getNodeValue,
   parseTree,
   type JSONPath,
   type ParseError,
 } from "jsonc-parser";
+import {
+  CONTRACT_LIMITS,
+  isSchemaTextWithinLimit,
+} from "../api/contractLimits";
+import { evaluateFormulaNode } from "../sheet/formula/evaluate";
 import { parseFormula } from "../sheet/formula/parse";
 import { getFormulaFunction } from "../sheet/formula/functions";
 import type { FormulaNode } from "../sheet/formula/types";
@@ -29,8 +33,21 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 // Локальная имитация серверной проверки. UI вызывает её только через mock-сервис.
-// Формулы разбираем существующим движком, но не вычисляем на выдуманных значениях полей.
+// Постоянные части формул проверяются без подстановки выдуманных значений персонажа.
 export function validateSchema(text: string): SchemaValidationResult {
+  if (!isSchemaTextWithinLimit(text))
+    return {
+      valid: false,
+      schema: null,
+      summary: null,
+      errors: [
+        {
+          path: "schema_text",
+          message: "JSON превышает 64 KiB UTF-8.",
+          line: null,
+        },
+      ],
+    };
   const parseErrors: ParseError[] = [];
   const tree = parseTree(text, parseErrors, {
     disallowComments: true,
@@ -57,9 +74,8 @@ export function validateSchema(text: string): SchemaValidationResult {
   const fields = new Map<string, { field: SheetField; path: JSONPath }>();
   const formulas = new Map<string, Set<string>>();
 
-  // Путь берём из структуры JSON, а строку — из её исходного дерева, без поиска по тексту.
+  // Семантическая ошибка возвращает путь и line:null, как HTTP API.
   function addError(path: JSONPath, message: string) {
-    const node = findNodeAtLocation(tree!, path);
     const name = path.reduce<string>(
       (result, part) =>
         typeof part === "number"
@@ -72,7 +88,7 @@ export function validateSchema(text: string): SchemaValidationResult {
     errors.push({
       path: name || "$",
       message,
-      line: node ? lineAt(node.offset) : null,
+      line: null,
     });
   }
 
@@ -85,6 +101,37 @@ export function validateSchema(text: string): SchemaValidationResult {
     const value = object[key];
     if (typeof value !== "string" || !value.trim())
       addError([...path, key], "Укажите непустую строку.");
+    else if (value.length > CONTRACT_LIMITS.name)
+      addError([...path, key], "Не длиннее 255 символов.");
+  }
+
+  // Неизвестные свойства отклоняются сервером на каждом уровне схемы.
+  function strictProperties(
+    object: Record<string, unknown>,
+    allowed: string[],
+    path: JSONPath,
+  ) {
+    for (const key of Object.keys(object))
+      if (!allowed.includes(key))
+        addError([...path, key], "Неизвестное свойство.");
+  }
+
+  // Секции не участвуют в формулах; поле должно быть допустимым именем переменной.
+  function identifier(
+    object: Record<string, unknown>,
+    path: JSONPath,
+    field = false,
+  ) {
+    const id = object.id;
+    if (
+      typeof id !== "string" ||
+      !id ||
+      id.length > CONTRACT_LIMITS.identifier ||
+      id.trim() !== id ||
+      ["__proto__", "prototype", "constructor"].includes(id) ||
+      (field && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(id))
+    )
+      addError([...path, "id"], "Недопустимый идентификатор.");
   }
 
   // Необязательная числовая граница должна быть конечным числом, если присутствует.
@@ -111,21 +158,42 @@ export function validateSchema(text: string): SchemaValidationResult {
       return;
     }
     const before = errors.length;
-    requiredText(value, "id", path);
+    identifier(value, path, true);
+    const extra: Record<string, string[]> = {
+      text: ["maxLength"],
+      number: ["min", "max"],
+      select: ["options"],
+      checkbox: [],
+      resource: ["min"],
+      calculated: ["formula"],
+    };
+    strictProperties(
+      value,
+      [
+        "id",
+        "type",
+        "label",
+        "required",
+        ...(Object.hasOwn(extra, String(value.type))
+          ? extra[String(value.type)]
+          : []),
+      ],
+      path,
+    );
+    if (value.required !== undefined && typeof value.required !== "boolean")
+      addError([...path, "required"], "Ожидается true или false.");
     requiredText(value, "label", path);
     switch (value.type) {
       case "text":
-        if (value.required !== undefined && typeof value.required !== "boolean")
-          addError([...path, "required"], "Ожидается true или false.");
         if (
           value.maxLength !== undefined &&
           (typeof value.maxLength !== "number" ||
-            !Number.isInteger(value.maxLength) ||
-            value.maxLength < 0)
+            !Number.isSafeInteger(value.maxLength) ||
+            value.maxLength <= 0)
         )
           addError(
             [...path, "maxLength"],
-            "Ожидается целое неотрицательное число.",
+            "Ожидается целое положительное число.",
           );
         break;
       case "number":
@@ -149,6 +217,8 @@ export function validateSchema(text: string): SchemaValidationResult {
           );
           break;
         }
+        if (value.options.length > CONTRACT_LIMITS.options)
+          addError([...path, "options"], "Допустимо не больше 1024 вариантов.");
         const values = new Set<string>();
         value.options.forEach((option: unknown, index: number) => {
           const optionPath = [...path, "options", index];
@@ -156,6 +226,7 @@ export function validateSchema(text: string): SchemaValidationResult {
             addError(optionPath, "Вариант должен быть объектом.");
             return;
           }
+          strictProperties(option, ["value", "label"], optionPath);
           requiredText(option, "value", optionPath);
           requiredText(option, "label", optionPath);
           if (typeof option.value === "string") {
@@ -172,7 +243,15 @@ export function validateSchema(text: string): SchemaValidationResult {
       case "checkbox":
         break;
       case "calculated":
-        requiredText(value, "formula", path);
+        if (
+          typeof value.formula !== "string" ||
+          !value.formula.trim() ||
+          value.formula.length > CONTRACT_LIMITS.formulaLength
+        )
+          addError(
+            [...path, "formula"],
+            "Нужна формула длиной от 1 до 2048 символов.",
+          );
         break;
       default:
         addError(
@@ -184,16 +263,16 @@ export function validateSchema(text: string): SchemaValidationResult {
   }
 
   const value: unknown = getNodeValue(tree);
-  if (
-    !isObject(value) ||
-    !Array.isArray(value.sections) ||
-    value.sections.length === 0
-  ) {
+  if (!isObject(value) || !Array.isArray(value.sections)) {
     addError(
       isObject(value) ? ["sections"] : [],
-      "Схема должна содержать непустой массив sections.",
+      "Схема должна содержать массив sections.",
     );
   } else {
+    strictProperties(value, ["sections"], []);
+    if (value.sections.length > CONTRACT_LIMITS.sections)
+      addError(["sections"], "Допустимо не больше 64 секций.");
+    let fieldCount = 0;
     const sectionIds = new Set<string>();
     value.sections.forEach((section: unknown, sectionIndex: number) => {
       const path: JSONPath = ["sections", sectionIndex];
@@ -201,17 +280,24 @@ export function validateSchema(text: string): SchemaValidationResult {
         addError(path, "Секция должна быть объектом.");
         return;
       }
-      requiredText(section, "id", path);
+      strictProperties(section, ["id", "label", "fields"], path);
+      identifier(section, path);
       requiredText(section, "label", path);
       if (typeof section.id === "string") {
         if (sectionIds.has(section.id))
           addError([...path, "id"], "Идентификатор секции уже используется.");
         sectionIds.add(section.id);
       }
-      if (!Array.isArray(section.fields) || section.fields.length === 0) {
-        addError([...path, "fields"], "Добавьте хотя бы одно поле.");
+      if (!Array.isArray(section.fields)) {
+        addError([...path, "fields"], "Ожидается массив fields.");
         return;
       }
+      fieldCount += section.fields.length;
+      if (section.fields.length > CONTRACT_LIMITS.fieldsPerSection)
+        addError(
+          [...path, "fields"],
+          "Допустимо не больше 256 полей в секции.",
+        );
       section.fields.forEach((item: unknown, index: number) => {
         const fieldPath = [...path, "fields", index];
         const field = validateField(item, fieldPath);
@@ -224,6 +310,8 @@ export function validateSchema(text: string): SchemaValidationResult {
         else fields.set(field.id, { field, path: fieldPath });
       });
     });
+    if (fieldCount > CONTRACT_LIMITS.fields)
+      addError(["sections"], "Допустимо не больше 1024 полей в схеме.");
   }
 
   // Разбор AST переиспользует грамматику renderer; ссылки проверяем после сбора всех полей.
@@ -265,14 +353,16 @@ export function validateSchema(text: string): SchemaValidationResult {
   for (const [id, { field, path }] of fields) {
     if (field.type !== "calculated") continue;
     const dependencies = new Set<string>();
+    const before = errors.length;
     try {
-      checkFormula(
-        parseFormula(field.formula),
-        [...path, "formula"],
-        dependencies,
-      );
+      const tree = parseFormula(field.formula);
+      checkFormula(tree, [...path, "formula"], dependencies);
+      if (errors.length === before) evaluateFormulaNode(tree, () => undefined);
     } catch {
-      addError([...path, "formula"], "Не удалось разобрать формулу.");
+      addError(
+        [...path, "formula"],
+        "Формула некорректна: проверьте синтаксис, деление на ноль и переполнение.",
+      );
     }
     formulas.set(id, dependencies);
   }
@@ -303,7 +393,12 @@ export function validateSchema(text: string): SchemaValidationResult {
     );
 
   if (errors.length)
-    return { valid: false, errors, summary: null, schema: null };
+    return {
+      valid: false,
+      errors: errors.slice(0, CONTRACT_LIMITS.errors),
+      summary: null,
+      schema: null,
+    };
   const schema = value as SheetSchemaBody;
   return {
     valid: true,

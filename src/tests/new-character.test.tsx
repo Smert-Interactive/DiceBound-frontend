@@ -1,3 +1,4 @@
+import * as systems from "../mocks/systems";
 import * as characters from "../mocks/characters";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
@@ -129,4 +130,24 @@ test("shows a creation failure, retains the draft and allows retry", async () =>
   await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
   await screen.findByRole("heading", { name: "Retry hero" });
   expect(create).toHaveBeenCalledTimes(2);
+});
+
+test("an empty systems response keeps creation unavailable", async () => {
+  vi.spyOn(systems, "getMockSystems").mockReturnValue([]);
+  const create = vi.spyOn(characters, "createMockCharacter");
+  const { user } = renderNewCharacter();
+  expect(screen.getByText(/Доступных систем пока нет/u)).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Имя персонажа"), "No system");
+  await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
+  expect(create).not.toHaveBeenCalled();
+});
+
+test("a system without schemas cannot create a character", async () => {
+  vi.spyOn(systems, "getMockSchemas").mockReturnValue([]);
+  const create = vi.spyOn(characters, "createMockCharacter");
+  const { user } = renderNewCharacter();
+  expect(screen.getByText(/нет доступных листов/u)).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Имя персонажа"), "No sheet");
+  await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
+  expect(create).not.toHaveBeenCalled();
 });

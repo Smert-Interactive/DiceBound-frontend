@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import * as versionsApi from "../mocks/characterVersions";
+import { getMockCharacterDetails } from "../mocks/characterDetails";
+import { ApiError } from "../api/client";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   cleanup,
   fireEvent,
@@ -40,6 +43,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
   Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
 });
@@ -144,4 +148,52 @@ describe("the sheet tab", () => {
       "data-changed",
     );
   });
+});
+
+test("saving uses the returned details even without updating the source store", async () => {
+  const before = getMockCharacterDetails(aldricId, MOCK_USER.email)!;
+  const response = {
+    ...before,
+    current_version_number: 42,
+    updated_at: "2030-01-01T00:00:00Z",
+    data: { ...before.data, name: "Server result", str: 17, str_modifier: 3 },
+  };
+  vi.spyOn(versionsApi, "saveMockCharacterVersion").mockResolvedValue(response);
+  const { user } = renderCharacter(aldricId);
+  fireEvent.change(screen.getByRole("textbox", { name: "Имя" }), {
+    target: { value: "Draft" },
+  });
+  await user.click(screen.getByRole("button", { name: "Сохранить" }));
+  expect(await screen.findByRole("textbox", { name: "Имя" })).toHaveValue(
+    "Server result",
+  );
+  expect(screen.getByRole("textbox", { name: "STR" })).toHaveValue("17");
+  expect(screen.getByRole("textbox", { name: "Имя" })).not.toHaveAttribute(
+    "data-changed",
+  );
+  expect(screen.getAllByText(/Версия\s*42/u).length).toBeGreaterThan(0);
+});
+
+test("422 details attach to a field without losing its draft", async () => {
+  vi.spyOn(versionsApi, "saveMockCharacterVersion").mockRejectedValue(
+    new ApiError(422, "VALIDATION_ERROR", "Invalid data", [
+      { field: "data.str", message: "Сервер отклонил значение" },
+    ]),
+  );
+  const { user } = renderCharacter(aldricId);
+  fireEvent.change(screen.getByRole("textbox", { name: "STR" }), {
+    target: { value: "16" },
+  });
+  await user.click(screen.getByRole("button", { name: "Сохранить" }));
+  expect(
+    await screen.findByText("Сервер отклонил значение"),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "STR" })).toHaveValue("16");
+  expect(screen.getByRole("textbox", { name: "STR" })).toBeInvalid();
+  fireEvent.change(screen.getByRole("textbox", { name: "STR" }), {
+    target: { value: "15" },
+  });
+  expect(
+    screen.queryByText("Сервер отклонил значение"),
+  ).not.toBeInTheDocument();
 });
