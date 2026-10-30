@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/authContext";
@@ -17,11 +17,34 @@ const accountDateFormat = new Intl.DateTimeFormat("ru-RU", {
   timeZone: "UTC",
 });
 
-// Показывает серверный профиль и завершает сессию с повтором после ошибки.
+// При каждом открытии обновляет профиль из /me; уже загруженные данные остаются видимыми.
 export default function ProfilePage() {
-  const { user, signOut, pending } = useAuth();
+  const { user, signOut, pending, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    refreshUser(controller.signal).then(
+      () => {
+        if (!controller.signal.aborted) setLoadState("ready");
+      },
+      () => {
+        if (!controller.signal.aborted) setLoadState("error");
+      },
+    );
+    return () => controller.abort();
+  }, [refreshUser, attempt]);
+
+  // Повторяет GET без очистки последнего успешно полученного профиля.
+  function handleRetry() {
+    setLoadState("loading");
+    setAttempt((value) => value + 1);
+  }
   // Маршрут защищён ProtectedRoute; проверка также сужает тип user для TypeScript.
   if (!user) return null;
 
@@ -39,10 +62,24 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <h1>Профиль</h1>
+      {loadState === "loading" && (
+        <Banner icon="clock" title="Обновление профиля…" notification />
+      )}
+      {loadState === "error" && (
+        <Banner
+          variant="error"
+          title="Не удалось обновить профиль"
+          actions={<Button onClick={handleRetry}>Повторить</Button>}
+        >
+          Показаны последние загруженные данные. Проверьте соединение и
+          попробуйте ещё раз.
+        </Banner>
+      )}
       {logoutError && <Banner variant="error" title={logoutError} />}
       <section
         className="profile-page__card ui-card"
         aria-label="Данные аккаунта"
+        aria-busy={loadState === "loading" || undefined}
       >
         <div className="profile-page__account">
           <div className="profile-page__avatar">

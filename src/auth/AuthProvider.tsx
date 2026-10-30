@@ -1,4 +1,10 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./authContext";
 import type { User } from "./authContext";
@@ -23,6 +29,26 @@ export default function AuthProvider({ initialUser, children }: Props) {
   const [attempt, setAttempt] = useState(0);
   const pendingRef = useRef(false);
   const actionRef = useRef<AbortController | null>(null);
+  const sessionRevision = useRef(0);
+
+  // Обновляет профиль по /me; старый ответ не восстанавливает сессию после входа или выхода.
+  const refreshUser = useCallback(async (signal: AbortSignal) => {
+    const revision = sessionRevision.current;
+    try {
+      const profile = await authApi.getCurrentUser(signal);
+      if (!signal.aborted && revision === sessionRevision.current)
+        setUser(profile);
+    } catch (error) {
+      if (
+        !signal.aborted &&
+        revision === sessionRevision.current &&
+        error instanceof ApiError &&
+        error.status === 401
+      )
+        setUser(null);
+      throw error;
+    }
+  }, []);
 
   useEffect(() => {
     if (initialUser !== undefined) return;
@@ -54,6 +80,7 @@ export default function AuthProvider({ initialUser, children }: Props) {
     onSuccess?: () => void,
   ) {
     if (pendingRef.current) return;
+    sessionRevision.current += 1;
     pendingRef.current = true;
     setPending(true);
     const controller = new AbortController();
@@ -105,7 +132,9 @@ export default function AuthProvider({ initialUser, children }: Props) {
       />
     );
   return (
-    <AuthContext.Provider value={{ user, pending, signIn, register, signOut }}>
+    <AuthContext.Provider
+      value={{ user, pending, signIn, register, signOut, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

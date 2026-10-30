@@ -14,6 +14,8 @@ export interface AuthState {
   signIn: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   signOut: (onSignedOut?: () => void) => Promise<void>;
+  // Обновляет серверный профиль; отмена запроса не меняет текущую сессию.
+  refreshUser: (signal: AbortSignal) => Promise<void>;
 }
 
 // null вместо значения по умолчанию: так хук поймёт, что провайдера нет.
