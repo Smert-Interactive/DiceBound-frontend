@@ -15,7 +15,7 @@ import {
   generatePath,
   RouterProvider,
 } from "react-router-dom";
-import { routes } from "../app/router";
+import { routes } from "./helpers/mockCharacterRoutes";
 import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../mocks/authUser";
 import { ROUTES } from "../constants/routes";

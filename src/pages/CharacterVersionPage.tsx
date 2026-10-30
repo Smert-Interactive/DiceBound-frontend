@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { generatePath, Link, useNavigate, useParams } from "react-router-dom";
 
+import { useCharacterLabel } from "../components/useCharacterName";
 import { useAuth } from "../auth/authContext";
 import CharacterHeader from "../components/CharacterHeader";
 import RestoreConfirmModal from "../components/RestoreConfirmModal";
@@ -38,6 +39,7 @@ export default function CharacterVersionPage() {
       ? getMockCharacterVersion(id, Number(version), user.email)
       : undefined;
   const character = snapshot && getMockCharacterDetails(id, user!.email);
+  useCharacterLabel(id, character?.name);
   const schema = character && getMockSheetSchema(character.sheet_schema_id);
   const list = user && getMockCharacterList(user.email);
   const summary =

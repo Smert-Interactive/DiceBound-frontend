@@ -1,6 +1,10 @@
 import { apiRequest } from "./client";
-import type { CharacterList, CreateCharacterRequest } from "./characterTypes";
-import type { Character } from "../sheet/sheetTypes";
+import type {
+  CharacterList,
+  CreateCharacterRequest,
+  SaveCharacterRequest,
+} from "./characterTypes";
+import type { Character, CharacterDetails } from "../sheet/sheetTypes";
 
 // Получает собственных персонажей и доступные оригиналы; права определяет сервер.
 export function getCharacters(signal?: AbortSignal) {
@@ -19,6 +23,26 @@ export function createCharacter(
 export function deleteCharacter(id: string, signal?: AbortSignal) {
   return apiRequest<void>(`/characters/${encodeURIComponent(id)}`, {
     method: "DELETE",
+    signal,
+  });
+}
+
+// Читает актуальный лист; проверка доступа остаётся на сервере.
+export function getCharacter(id: string, signal?: AbortSignal) {
+  return apiRequest<CharacterDetails>(`/characters/${encodeURIComponent(id)}`, {
+    signal,
+  });
+}
+
+// Полностью заменяет пользовательские поля; calculated и номер версии возвращает сервер.
+export function saveCharacter(
+  id: string,
+  body: SaveCharacterRequest,
+  signal?: AbortSignal,
+) {
+  return apiRequest<CharacterDetails>(`/characters/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body,
     signal,
   });
 }

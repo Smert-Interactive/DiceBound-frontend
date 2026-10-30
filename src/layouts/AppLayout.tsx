@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import AppSidebar from "../components/AppSidebar";
+import CharacterNameProvider from "../components/CharacterNameProvider";
 import AppHeader from "../components/AppHeader";
 
 import "./AppLayout.css";
@@ -59,36 +60,38 @@ export default function AppLayout() {
   }, [menuVisible, closeSidebar]);
 
   return (
-    <div className="app-layout">
-      {/* Desktop sidebar */}
-      <AppSidebar />
+    <CharacterNameProvider>
+      <div className="app-layout">
+        {/* Desktop sidebar */}
+        <AppSidebar />
 
-      <div className="app-layout__main">
-        {/* Header */}
-        <AppHeader
-          onMenuClick={openSidebar}
-          menuOpen={menuVisible}
-          menuButtonRef={menuButtonRef}
-        />
-
-        {/* Page content */}
-        <main className="app-layout__content">
-          <Outlet />
-        </main>
-      </div>
-
-      {/* Mobile sidebar */}
-      {menuVisible && (
-        <>
-          <div className="sidebar-overlay" onClick={closeSidebar} />
-
-          <AppSidebar
-            mobile
-            closing={menu === "closing"}
-            onClose={closeSidebar}
+        <div className="app-layout__main">
+          {/* Header */}
+          <AppHeader
+            onMenuClick={openSidebar}
+            menuOpen={menuVisible}
+            menuButtonRef={menuButtonRef}
           />
-        </>
-      )}
-    </div>
+
+          {/* Page content */}
+          <main className="app-layout__content">
+            <Outlet />
+          </main>
+        </div>
+
+        {/* Mobile sidebar */}
+        {menuVisible && (
+          <>
+            <div className="sidebar-overlay" onClick={closeSidebar} />
+
+            <AppSidebar
+              mobile
+              closing={menu === "closing"}
+              onClose={closeSidebar}
+            />
+          </>
+        )}
+      </div>
+    </CharacterNameProvider>
   );
 }

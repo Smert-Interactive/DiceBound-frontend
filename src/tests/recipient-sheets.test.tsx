@@ -3,7 +3,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { routes } from "../app/router";
+import { routes } from "./helpers/mockCharacterRoutes";
 import AuthProvider from "../auth/AuthProvider";
 import { MOCK_USER } from "../mocks/authUser";
 import * as recalculate from "../sheet/recalculate";

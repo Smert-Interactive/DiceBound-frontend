@@ -1,16 +1,22 @@
-import { useAuth } from "../auth/authContext";
-import { getMockCharacterList } from "../mocks/characters";
+import { useContext, useEffect } from "react";
+import { CharacterNameContext } from "./characterNameContext";
 
-// Имя персонажа для хлебных крошек. Берётся только из списка, доступного пользователю,
-// поэтому чужое имя по адресу не раскрывается. При подключении API заменится здесь.
+// Показывает имя только текущего загруженного персонажа, не раскрывая чужие данные.
 export function useCharacterName(
   characterId: string | undefined,
 ): string | undefined {
-  const { user } = useAuth();
-  if (!user || !characterId) return undefined;
+  const context = useContext(CharacterNameContext);
+  return context?.character?.id === characterId
+    ? context?.character?.name
+    : undefined;
+}
 
-  const list = getMockCharacterList(user.email);
-  return [...list.owned, ...list.shared_view].find(
-    (character) => character.id === characterId,
-  )?.name;
+// Обновляет крошки после загрузки листа и убирает имя при уходе со страницы.
+export function useCharacterLabel(id: string, name: string | undefined) {
+  const setCharacter = useContext(CharacterNameContext)?.setCharacter;
+  useEffect(() => {
+    if (!setCharacter || !name) return;
+    setCharacter({ id, name });
+    return () => setCharacter(null);
+  }, [id, name, setCharacter]);
 }

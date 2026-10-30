@@ -14,7 +14,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-import { routes } from "../app/router";
+import { routes } from "./helpers/mockCharacterRoutes";
 import AuthProvider from "../auth/AuthProvider";
 import { ROUTES } from "../constants/routes";
 
