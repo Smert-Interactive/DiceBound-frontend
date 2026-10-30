@@ -26,8 +26,8 @@ export default function SchemaValidationFeedback({
     );
   if (!result)
     return (
-      <Banner variant="error" title="Схему нельзя проверить">
-        Исправьте синтаксис JSON — предпросмотр появится после проверки схемы.
+      <Banner title="Предпросмотр листа">
+        Предпросмотр появится после проверки схемы.
       </Banner>
     );
   if (result.valid) {

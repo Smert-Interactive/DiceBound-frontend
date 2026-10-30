@@ -81,6 +81,10 @@
   align-items: center;
 }
 
+.ui-banner[data-closing] {
+  pointer-events: none;
+}
+
 .ui-banner--info {
   --ui-tint: var(--tint-banner-info-bg);
 }

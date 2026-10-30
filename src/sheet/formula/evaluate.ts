@@ -9,68 +9,73 @@ export type CalculationResult =
 // Значения полей, по которым считается формула. Нет ключа — поле неизвестно.
 type Values = Partial<CharacterData>;
 
-function evaluateNode(node: FormulaNode, values: Values): number {
+// Считает AST; undefined обозначает неизвестные данные при статической проверке схемы.
+// Постоянный ноль в знаменателе и переполнение проверяются даже без значений персонажа.
+export function evaluateFormulaNode(
+  node: FormulaNode,
+  resolve: (id: string) => number | undefined,
+): number | undefined {
   switch (node.type) {
     case "number":
-      return node.value;
-
-    case "field": {
-      if (!(node.id in values)) {
-        throw new FormulaError(
-          "unknown_field",
-          `Неизвестное поле «${node.id}»`,
-          node.id,
-        );
-      }
-      const value = values[node.id];
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        throw new FormulaError(
-          "not_a_number",
-          `В поле «${node.id}» нет числа`,
-          node.id,
-        );
-      }
-      return value;
+      return finite(node.value);
+    case "field":
+      return resolve(node.id);
+    case "negate": {
+      const value = evaluateFormulaNode(node.operand, resolve);
+      return value === undefined ? undefined : finite(-value);
     }
-
-    case "negate":
-      return -evaluateNode(node.operand, values);
-
     case "binary": {
-      const left = evaluateNode(node.left, values);
-      const right = evaluateNode(node.right, values);
-      if (node.operator === "+") return left + right;
-      if (node.operator === "-") return left - right;
-      if (node.operator === "*") return left * right;
-      if (right === 0) {
+      const left = evaluateFormulaNode(node.left, resolve);
+      const right = evaluateFormulaNode(node.right, resolve);
+      if (node.operator === "/" && right === 0)
         throw new FormulaError("division_by_zero", "Деление на ноль");
-      }
-      return left / right;
+      if (left === undefined || right === undefined) return undefined;
+      if (node.operator === "+") return finite(left + right);
+      if (node.operator === "-") return finite(left - right);
+      if (node.operator === "*") return finite(left * right);
+      return finite(left / right);
     }
-
     case "call": {
       const fn = getFormulaFunction(node.name);
-      if (!fn) {
+      if (!fn)
         throw new FormulaError(
           "unknown_function",
           `Неизвестная функция «${node.name}»`,
         );
-      }
-      if (node.args.length < fn.minArgs || node.args.length > fn.maxArgs) {
+      if (node.args.length < fn.minArgs || node.args.length > fn.maxArgs)
         throw new FormulaError(
           "wrong_arguments",
-          `Неверное число аргументов у «${node.name}»: ${node.args.length}`,
+          `Неверное число аргументов у «${node.name}»`,
         );
-      }
-      return fn.apply(node.args.map((arg) => evaluateNode(arg, values)));
+      const args = node.args.map((arg) => evaluateFormulaNode(arg, resolve));
+      if (args.some((value) => value === undefined)) return undefined;
+      return finite(fn.apply(args as number[]));
     }
   }
+}
+
+// Сервер отклоняет бесконечность, включая переполнение промежуточной операции.
+function finite(value: number): number {
+  if (!Number.isFinite(value))
+    throw new FormulaError(
+      "not_a_number",
+      "Результат должен быть конечным числом",
+    );
+  return value;
 }
 
 // Считает формулу и не бросает исключений: интерфейс получает значение или ошибку с кодом.
 export function calculate(source: string, values: Values): CalculationResult {
   try {
-    return { ok: true, value: evaluateNode(parseFormula(source), values) };
+    const value = evaluateFormulaNode(parseFormula(source), (id) => {
+      if (!Object.hasOwn(values, id))
+        throw new FormulaError("unknown_field", `Неизвестное поле «${id}»`, id);
+      const number = values[id];
+      if (typeof number !== "number" || !Number.isFinite(number))
+        throw new FormulaError("not_a_number", `В поле «${id}» нет числа`, id);
+      return number;
+    });
+    return { ok: true, value: finite(value!) };
   } catch (error) {
     if (error instanceof FormulaError) return { ok: false, error };
     throw error;

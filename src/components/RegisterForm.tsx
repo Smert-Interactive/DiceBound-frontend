@@ -1,6 +1,10 @@
+import { CONTRACT_LIMITS } from "../api/contractLimits";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { ApiError } from "../api/client";
+import { RegistrationSignInError } from "../api/auth";
+import { authErrorMessage } from "../auth/authErrorMessage";
 import { useAuth } from "../auth/authContext";
 import { Button, Input } from "../shared/ui";
 
@@ -19,6 +23,7 @@ interface FormErrors {
   passwordConfirmation?: string;
 }
 
+// Проверяет поля регистрации и сохраняет введённое при отказе сервера.
 export default function RegisterForm() {
   const { register, pending } = useAuth();
   // Значения полей не очищаются после проверки или отказа в регистрации.
@@ -35,12 +40,16 @@ export default function RegisterForm() {
   const passwordMissing = submitted && password.length === 0;
   const confirmationMissing = submitted && passwordConfirmation.length === 0;
 
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  // Проверяет все поля за один проход и запускает регистрацию с автоматическим входом.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Отменяем обычную отправку HTML-формы, чтобы не перезагружать страницу.
     event.preventDefault();
     // Повторную отправку игнорируем; AuthProvider дополнительно защищает запрос через ref.
     if (pending) return;
     setSubmitted(true);
+    setRequestError(null);
 
     // currentTarget — форма; по name находим настоящий input для браузерной проверки email.
     const emailInput = event.currentTarget.elements.namedItem("email");
@@ -76,9 +85,17 @@ export default function RegisterForm() {
     try {
       await register({ email, password, passwordConfirmation });
       // Новая сессия откроет список персонажей; он пока пустой.
-    } catch {
-      // Отказ не раскрывает существование аккаунта. Поля не очищаются.
-      setErrors({ email: REGISTRATION_ERROR });
+    } catch (error) {
+      // Различаем конфликт почты, сбой сети и сбой входа уже созданного аккаунта.
+      if (error instanceof ApiError && error.status === 409) {
+        setErrors({ email: REGISTRATION_ERROR });
+      } else {
+        setRequestError(
+          error instanceof RegistrationSignInError
+            ? error.message
+            : authErrorMessage(error),
+        );
+      }
     }
   }
 
@@ -96,6 +113,7 @@ export default function RegisterForm() {
         label="Почта"
         name="email"
         type="email"
+        maxLength={CONTRACT_LIMITS.email}
         autoComplete="email"
         inputMode="email"
         placeholder="you@example.com"
@@ -103,6 +121,7 @@ export default function RegisterForm() {
         disabled={pending}
         value={email}
         onChange={(event) => {
+          setRequestError(null);
           setEmail(event.target.value);
           // Сохраняем ошибки других полей, сбрасывая только сообщение для изменённой почты.
           setErrors((previous) => ({ ...previous, email: undefined }));
@@ -116,12 +135,14 @@ export default function RegisterForm() {
         label="Пароль"
         name="password"
         type="password"
+        maxLength={CONTRACT_LIMITS.password}
         autoComplete="new-password"
         required
         disabled={pending}
         value={password}
         onChange={(event) => {
           // При смене пароля прежняя проверка его подтверждения тоже становится неактуальной.
+          setRequestError(null);
           setPassword(event.target.value);
           setErrors((previous) => ({
             ...previous,
@@ -138,12 +159,14 @@ export default function RegisterForm() {
         label="Повторите пароль"
         name="password_confirmation"
         type="password"
+        maxLength={CONTRACT_LIMITS.password}
         autoComplete="new-password"
         required
         disabled={pending}
         value={passwordConfirmation}
         onChange={(event) => {
           // Новое подтверждение проверится при следующей отправке, остальные ошибки остаются.
+          setRequestError(null);
           setPasswordConfirmation(event.target.value);
           setErrors((previous) => ({
             ...previous,
@@ -153,6 +176,11 @@ export default function RegisterForm() {
         error={errors.passwordConfirmation}
         aria-invalid={confirmationMissing || undefined}
       />
+      {requestError && (
+        <div className="register-form__error" role="alert">
+          {requestError}
+        </div>
+      )}
       {/* submit вызывает handleSubmit по нажатию кнопки или Enter внутри формы. */}
       <Button
         type="submit"

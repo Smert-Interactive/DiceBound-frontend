@@ -55,9 +55,9 @@ test("scrolls numbers with the text and lets Tab leave the editor", async () => 
 test("updates the syntax status and accessible field description while typing", () => {
   render(<EditorExample />);
   const input = screen.getByRole("textbox", { name: "JSON-схема" });
-  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(input).not.toHaveAttribute("aria-invalid");
   expect(screen.getByRole("status")).toHaveTextContent(
-    "Ошибка синтаксиса JSON · строка 1",
+    "Введите JSON или загрузите файл",
   );
   fireEvent.change(input, { target: { value: "\n{}\n" } });
   expect(input).not.toHaveAttribute("aria-invalid");
@@ -70,6 +70,11 @@ test("updates the syntax status and accessible field description while typing", 
     "Ошибка синтаксиса JSON · строка 2",
   );
   expect(input).toHaveValue('{\n  "field": ]\n}');
+  fireEvent.change(input, { target: { value: " \n " } });
+  expect(input).not.toHaveAttribute("aria-invalid");
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Введите JSON или загрузите файл",
+  );
 });
 
 test("renders HTML-like strings as text without creating elements", () => {

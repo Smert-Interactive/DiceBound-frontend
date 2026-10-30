@@ -1,4 +1,5 @@
 import { useRef, useState, type RefObject } from "react";
+import { ApiError } from "../api/client";
 import type { GameSystemSummary } from "../systems/systemTypes";
 import { TrashIcon } from "../shared/icons";
 import { pluralize } from "../shared/pluralize";
@@ -13,6 +14,7 @@ interface Props {
   fallbackFocusRef?: RefObject<HTMLElement | null>;
   onCancel: () => void;
   onConfirm: () => Promise<void>;
+  onRefresh?: () => void;
 }
 
 // Подтверждение скрывает систему из выбора; существующие листы и история остаются доступны.
@@ -22,9 +24,11 @@ export default function DeleteSystemModal({
   fallbackFocusRef,
   onCancel,
   onConfirm,
+  onRefresh,
 }: Props) {
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
   const pendingRef = useRef(false);
   const count = system.character_count;
   const characters = `${count}${NO_BREAK_SPACE}${pluralize(count, {
@@ -43,11 +47,19 @@ export default function DeleteSystemModal({
     if (pendingRef.current) return;
     pendingRef.current = true;
     setPending(true);
-    setError(false);
+    setError(null);
+    setMissing(false);
     try {
       await onConfirm();
-    } catch {
-      setError(true);
+    } catch (error) {
+      setMissing(error instanceof ApiError && error.status === 404);
+      setError(
+        error instanceof ApiError && error.status === 404
+          ? "Система уже удалена или недоступна. Обновите список."
+          : error instanceof ApiError && error.status === 403
+            ? "Сервер запретил удаление этой системы."
+            : "Не удалось выполнить действие. Попробуйте ещё раз.",
+      );
     } finally {
       pendingRef.current = false;
       setPending(false);
@@ -68,15 +80,19 @@ export default function DeleteSystemModal({
           <Button onClick={handleCancel} disabled={pending}>
             Отмена
           </Button>
-          <Button
-            variant="danger"
-            icon={<TrashIcon />}
-            onClick={handleConfirm}
-            loading={pending}
-            loadingText="Удаление…"
-          >
-            Удалить систему
-          </Button>
+          {missing && onRefresh ? (
+            <Button onClick={onRefresh}>Обновить список</Button>
+          ) : (
+            <Button
+              variant="danger"
+              icon={<TrashIcon />}
+              onClick={handleConfirm}
+              loading={pending}
+              loadingText="Удаление…"
+            >
+              Удалить систему
+            </Button>
+          )}
         </>
       }
     >
@@ -91,12 +107,7 @@ export default function DeleteSystemModal({
           работать: лист, формулы и история версий используют сохранённую схему.
         </p>
       )}
-      {error && (
-        <Banner
-          variant="error"
-          title="Не удалось выполнить действие. Попробуйте ещё раз."
-        />
-      )}
+      {error && <Banner variant="error" title={error} />}
     </Modal>
   );
 }

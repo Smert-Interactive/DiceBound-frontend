@@ -1,3 +1,9 @@
+/* Неизвестные встроенные системы сохраняют нейтральный цвет. */
+[data-system="builtin"],
+[data-system="unknown"] {
+  --sheet-resource-fill: var(--color-text-secondary);
+}
+
 /* Цвет заливки по метке системы: data-system ставит страница на предка листа (ui-ux).
    По умолчанию красный, как у D&D. */
 [data-system="coc"] {

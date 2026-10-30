@@ -7,12 +7,13 @@ import "./CharacterHeader.css";
 interface Props {
   name: string;
   systemName: string;
+  systemId?: string;
   schemaName: string;
   updatedAt: string;
   // В снимке номер уже показан в баннере, поэтому повтор в метаданных не нужен.
   version?: number;
   // VIEW показывает владельца вместо номера версии; EDIT-копия помечается отдельным чипом.
-  ownerEmail?: string;
+  ownerName?: string;
   isCopy?: boolean;
   // На мобильной странице версии дата остаётся под именем, как в MVersion.
   showDateOnMobile?: boolean;
@@ -22,14 +23,15 @@ interface Props {
 export default function CharacterHeader({
   name,
   systemName,
+  systemId,
   schemaName,
   updatedAt,
   version,
-  ownerEmail,
+  ownerName,
   isCopy = false,
   showDateOnMobile = false,
 }: Props) {
-  const systemKind = getSystemKind(systemName);
+  const systemKind = getSystemKind(undefined, systemId);
 
   return (
     <header
@@ -39,7 +41,7 @@ export default function CharacterHeader({
         name={systemName}
         system={systemKind}
         size="sheet"
-        viewOnly={Boolean(ownerEmail)}
+        viewOnly={Boolean(ownerName)}
       />
       <div className="character-header__main">
         <div className="character-header__title">
@@ -53,9 +55,9 @@ export default function CharacterHeader({
             Изменён{" "}
             <time dateTime={updatedAt}>{formatDateTime(updatedAt)}</time>
           </span>
-          {ownerEmail ? (
+          {ownerName ? (
             <span className="character-header__owner">
-              Владелец: {ownerEmail}
+              Владелец: {ownerName}
             </span>
           ) : (
             version !== undefined && (

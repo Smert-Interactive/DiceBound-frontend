@@ -1,7 +1,7 @@
 import { Link, generatePath } from "react-router-dom";
 
 import { ROUTES } from "../constants/routes";
-import type { CharacterSummary } from "../mocks/characters";
+import type { CharacterSummary } from "../api/characterTypes";
 import { formatDateTime } from "../shared/formatDateTime";
 import { EyeIcon, TrashIcon } from "../shared/icons";
 import { SYSTEM_TONES, getSystemKind } from "../shared/systemKind";
@@ -19,7 +19,7 @@ interface Props {
 // Элемент li лежит в списке ul, который собирает страница.
 export default function CharacterCard({ character, onDelete }: Props) {
   const isViewOnly = character.access === "VIEW";
-  const systemKind = getSystemKind(character.game_system_name);
+  const systemKind = getSystemKind(undefined, character.game_system_id);
   const href = generatePath(ROUTES.character, { id: character.id });
 
   let note: string | null = null;

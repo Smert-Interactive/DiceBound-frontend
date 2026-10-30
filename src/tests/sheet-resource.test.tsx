@@ -17,6 +17,7 @@ const hpField: ResourceField = {
   id: "hp",
   type: "resource",
   label: "HP",
+  required: true,
   min: 0,
 };
 

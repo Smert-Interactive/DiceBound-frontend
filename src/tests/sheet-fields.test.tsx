@@ -17,6 +17,7 @@ const classField: SelectField = {
   id: "class",
   type: "select",
   label: "Класс",
+  required: true,
   options: [
     { value: "fighter", label: "Fighter" },
     { value: "wizard", label: "Wizard" },

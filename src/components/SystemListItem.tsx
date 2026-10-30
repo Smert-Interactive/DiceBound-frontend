@@ -13,6 +13,7 @@ interface Props {
   schemaNames: string[];
   isPhone: boolean;
   onDelete: (system: GameSystemSummary) => void;
+  canDelete?: boolean;
 }
 
 // Одна система: строка таблицы на широком экране или самостоятельная карточка на телефоне.
@@ -21,6 +22,7 @@ export default function SystemListItem({
   schemaNames,
   isPhone,
   onDelete,
+  canDelete = true,
 }: Props) {
   const imported = system.source === "IMPORTED";
   const sheets = `${schemaNames.length}${NO_BREAK_SPACE}${pluralize(
@@ -30,7 +32,7 @@ export default function SystemListItem({
       few: "листа",
       many: "листов",
     },
-  )} · ${schemaNames.join(", ")}`;
+  )}${schemaNames.length ? ` · ${schemaNames.join(", ")}` : ""}`;
   const characterCount = system.character_count;
   const characters =
     characterCount === 0
@@ -52,27 +54,31 @@ export default function SystemListItem({
       )}
     </div>
   );
-  const action = imported ? (
-    <Button
-      {...(isPhone
-        ? { variant: "default" as const }
-        : { variant: "ghost" as const })}
-      size="sm"
-      icon={<TrashIcon />}
-      aria-label={`Удалить систему ${system.name}`}
-      onClick={() => onDelete(system)}
-    >
-      Удалить
-    </Button>
-  ) : (
-    <span className="system-list-item__lock">
-      <LockIcon aria-hidden="true" />
-      Встроенную удалить нельзя
-    </span>
-  );
+  const action =
+    imported && canDelete ? (
+      <Button
+        {...(isPhone
+          ? { variant: "default" as const }
+          : { variant: "ghost" as const })}
+        size="sm"
+        icon={<TrashIcon />}
+        aria-label={`Удалить систему ${system.name}`}
+        onClick={() => onDelete(system)}
+      >
+        Удалить
+      </Button>
+    ) : (
+      <span className="system-list-item__lock">
+        <LockIcon aria-hidden="true" />
+        {imported ? "Удаление недоступно" : "Встроенную удалить нельзя"}
+      </span>
+    );
   const identity = (
     <div className="system-list-item__identity">
-      <SystemBadge name={system.name} system={getSystemKind(system.name)} />
+      <SystemBadge
+        name={system.name}
+        system={getSystemKind(system.source, system.id)}
+      />
       <div className="system-list-item__description">
         <b>{system.name}</b>
         <span>{sheets}</span>

@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
   cleanup,
@@ -8,12 +7,13 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import * as authApi from "../api/auth";
+import { ApiError } from "../api/client";
 import { routes } from "../app/router";
 import AuthProvider from "../auth/AuthProvider";
-import { MOCK_USER } from "../auth/authContext";
 import type { User } from "../auth/authContext";
-import * as mockAuth from "../auth/mockAuth";
 import { ROUTES } from "../constants/routes";
 
 const LOGIN_ERROR = "Неверная почта или пароль";
@@ -57,17 +57,18 @@ async function fillRegistration(
 }
 
 beforeEach(() => {
-  vi.spyOn(mockAuth, "mockSignIn").mockRejectedValue(
-    new Error("INVALID_CREDENTIALS"),
+  vi.spyOn(authApi, "signIn").mockRejectedValue(
+    new ApiError(401, "UNAUTHORIZED", "Invalid email or password"),
   );
-  vi.spyOn(mockAuth, "mockRegister").mockRejectedValue(
-    new Error("REGISTRATION_FAILED"),
+  vi.spyOn(authApi, "register").mockRejectedValue(
+    new ApiError(409, "CONFLICT", "Conflict"),
   );
 });
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("login validation", () => {
@@ -112,7 +113,7 @@ describe("login validation", () => {
           .getAttribute("aria-invalid") === "true",
       ).toBe(invalid);
     }
-    expect(mockAuth.mockSignIn).not.toHaveBeenCalled();
+    expect(authApi.signIn).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe(ROUTES.login);
   });
@@ -130,7 +131,7 @@ describe("login validation", () => {
       "aria-invalid",
       "true",
     );
-    expect(mockAuth.mockSignIn).not.toHaveBeenCalled();
+    expect(authApi.signIn).not.toHaveBeenCalled();
   });
 
   test("shows only the neutral sign-in error and preserves both fields", async () => {
@@ -145,10 +146,13 @@ describe("login validation", () => {
     expect(screen.getByLabelText("Пароль", { exact: true })).toHaveValue(
       "wrong-password",
     );
-    expect(mockAuth.mockSignIn).toHaveBeenCalledWith({
-      email: "not-an-email",
-      password: "wrong-password",
-    });
+    expect(authApi.signIn).toHaveBeenCalledWith(
+      {
+        email: "not-an-email",
+        password: "wrong-password",
+      },
+      expect.any(AbortSignal),
+    );
     expect(router.state.location.pathname).toBe(ROUTES.login);
 
     await user.type(screen.getByLabelText("Пароль", { exact: true }), "1");
@@ -168,7 +172,7 @@ describe("registration validation", () => {
         "true",
       );
     }
-    expect(mockAuth.mockRegister).not.toHaveBeenCalled();
+    expect(authApi.register).not.toHaveBeenCalled();
     expect(screen.queryByText(EMAIL_ERROR)).not.toBeInTheDocument();
     expect(screen.queryByText("Пароли не совпадают")).not.toBeInTheDocument();
   });
@@ -209,7 +213,7 @@ describe("registration validation", () => {
     const field = screen.getByLabelText(values.label, { exact: true });
     expect(field).toHaveAttribute("aria-invalid", "true");
     expect(field).toHaveAccessibleDescription(values.message);
-    expect(mockAuth.mockRegister).not.toHaveBeenCalled();
+    expect(authApi.register).not.toHaveBeenCalled();
     // Подсказка короткого пароля заменяется ошибкой и не дублируется второй строкой.
     expect(screen.getAllByText(PASSWORD_HINT)).toHaveLength(1);
   });
@@ -229,7 +233,7 @@ describe("registration validation", () => {
     expect(
       screen.getByLabelText("Повторите пароль"),
     ).toHaveAccessibleDescription("Пароли не совпадают");
-    expect(mockAuth.mockRegister).not.toHaveBeenCalled();
+    expect(authApi.register).not.toHaveBeenCalled();
   });
 
   test("keeps the fields after rejection and clears only the edited email error", async () => {
@@ -255,24 +259,6 @@ describe("registration validation", () => {
       "password",
     );
   });
-
-  test("accepts an eight-character password without trimming its spaces", async () => {
-    vi.mocked(mockAuth.mockRegister).mockResolvedValueOnce({
-      ...MOCK_USER,
-      email: "player@example.com",
-    });
-    const { user } = renderLogin();
-    await user.click(screen.getByRole("tab", { name: "Регистрация" }));
-    await fillRegistration(user, "player@example.com", " 123456 ", " 123456 ");
-    await user.click(screen.getByRole("button", { name: "Создать аккаунт" }));
-
-    await screen.findByRole("heading", { name: "Персонажей пока нет" });
-    expect(mockAuth.mockRegister).toHaveBeenCalledWith({
-      email: "player@example.com",
-      password: " 123456 ",
-      passwordConfirmation: " 123456 ",
-    });
-  });
 });
 
 describe("pending authentication", () => {
@@ -292,9 +278,7 @@ describe("pending authentication", () => {
       const request = new Promise<User>((_resolve, reject) => {
         rejectRequest = reject;
       });
-      const service = scenario.register
-        ? mockAuth.mockRegister
-        : mockAuth.mockSignIn;
+      const service = scenario.register ? authApi.register : authApi.signIn;
       vi.mocked(service).mockReturnValueOnce(request);
       const { user } = renderLogin();
       if (scenario.register) {

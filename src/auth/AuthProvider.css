@@ -1,0 +1,38 @@
+.auth-session-error,
+.auth-session-loading {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-session-loading__logo {
+  display: block;
+  width: min(240px, 70vw);
+  height: auto;
+  animation: auth-logo-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes auth-logo-pulse {
+  0%,
+  100% {
+    transform: scale(0.94);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-session-loading__logo {
+    animation: none;
+  }
+}
+
+.auth-session-error > .state-message {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+}

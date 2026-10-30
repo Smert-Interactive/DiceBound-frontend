@@ -164,6 +164,10 @@
   background: var(--color-error);
 }
 
+.json-editor__status[data-empty] .json-editor__status-dot {
+  background: var(--color-text-muted);
+}
+
 /* В контрастном режиме системный цвет текста сохраняет читаемость поля без слоя подсветки. */
 @media (forced-colors: active) {
   .json-editor__input {

@@ -1,14 +1,9 @@
 import { createContext, useContext } from "react";
 
-import type { LoginCredentials, RegisterCredentials } from "./mockAuth";
+import type { LoginCredentials, RegisterCredentials } from "../api/types";
 
-export interface User {
-  email: string;
-  // Данные профиля из контракта CurrentUser; до подключения API их отдаёт mock-сервис.
-  created_at: string;
-  owned_characters_count: number;
-  shared_characters_count: number;
-}
+export type { CurrentUser as User } from "../api/types";
+import type { CurrentUser as User } from "../api/types";
 
 export interface AuthState {
   // null — пользователь не вошёл.
@@ -18,20 +13,17 @@ export interface AuthState {
   // Асинхронные методы создают сессию при успехе; отказ перехватывается в форме.
   signIn: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
-  signOut: () => void;
+  signOut: (onSignedOut?: () => void) => Promise<void>;
+  // Обновляет серверный профиль; отмена запроса не меняет текущую сессию.
+  refreshUser: (signal: AbortSignal) => Promise<void>;
+  // Любой рабочий API-запрос может сообщить об истёкшей сессии.
+  handleUnauthorized: (error: unknown) => boolean;
 }
-
-// Демонстрационный пользователь для начальной сессии в тестах каркаса.
-export const MOCK_USER: User = {
-  email: "alex@example.com",
-  created_at: "2026-01-01T12:00:00Z",
-  owned_characters_count: 0,
-  shared_characters_count: 0,
-};
 
 // null вместо значения по умолчанию: так хук поймёт, что провайдера нет.
 export const AuthContext = createContext<AuthState | null>(null);
 
+// Возвращает сессию и действия только внутри провайдера авторизации.
 export function useAuth(): AuthState {
   const state = useContext(AuthContext);
 

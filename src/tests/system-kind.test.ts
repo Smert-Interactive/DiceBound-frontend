@@ -1,15 +1,32 @@
 import { expect, test } from "vitest";
-
 import { getSystemKind } from "../shared/systemKind";
 
-// Названия встроенных систем backend может дополнять: «Call of Cthulhu (simplified)».
-test.each([
-  ["D&D 5e", "dnd"],
-  ["Call of Cthulhu", "coc"],
-  ["Call of Cthulhu (simplified)", "coc"],
-  ["Custom System", "imported"],
-  ["My Call of Cthulhu", "imported"],
-  ["", "imported"],
-])("%j is %s", (name, kind) => {
-  expect(getSystemKind(name)).toBe(kind);
+test("source and missing metadata retain their fallback tones", () => {
+  expect(getSystemKind("IMPORTED")).toBe("imported");
+  expect(getSystemKind("BUILT_IN")).toBe("builtin");
+  expect(getSystemKind()).toBe("unknown");
+});
+
+test("published backend system IDs distinguish D&D and CoC without their names", () => {
+  expect(getSystemKind(undefined, "10000000-0000-4000-8000-000000000001")).toBe(
+    "dnd",
+  );
+  expect(getSystemKind(undefined, "10000000-0000-4000-8000-000000000002")).toBe(
+    "coc",
+  );
+  expect(
+    getSystemKind("BUILT_IN", "10000000-0000-4000-8000-000000000001"),
+  ).toBe("dnd");
+});
+
+test("imported and archived character systems keep their own tone", () => {
+  expect(getSystemKind(undefined, "90000000-0000-4000-8000-000000000001")).toBe(
+    "imported",
+  );
+  expect(
+    getSystemKind("IMPORTED", "10000000-0000-4000-8000-000000000001"),
+  ).toBe("imported");
+  expect(
+    getSystemKind("BUILT_IN", "90000000-0000-4000-8000-000000000001"),
+  ).toBe("builtin");
 });

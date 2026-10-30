@@ -1,4 +1,4 @@
-import { parseNumber } from "./numberField";
+import { formatNumberInput, parseNumber } from "./numberField";
 import { toResourceDraft, type ResourceDraft } from "./resourceField";
 import type { CharacterData, SheetField, SheetSchemaBody } from "./sheetTypes";
 
@@ -9,6 +9,7 @@ export type SheetDraftValue = string | boolean | ResourceDraft;
 // Черновик листа по field.id. Поля calculated в нём нет: их значения считает движок формул.
 export type SheetDraft = Record<string, SheetDraftValue>;
 
+// Собирает поля независимо от количества и порядка секций.
 function allFields(schema: SheetSchemaBody): SheetField[] {
   return schema.sections.flatMap((section) => section.fields);
 }
@@ -29,7 +30,8 @@ export function toDraft(
         draft[field.id] = typeof value === "string" ? value : "";
         break;
       case "number":
-        draft[field.id] = typeof value === "number" ? String(value) : "";
+        draft[field.id] =
+          typeof value === "number" ? formatNumberInput(value) : "";
         break;
       case "checkbox":
         draft[field.id] = value === true;
@@ -63,8 +65,10 @@ export function toCharacterData(
 
     switch (field.type) {
       case "text":
-      case "select":
         if (typeof value === "string") data[field.id] = value;
+        break;
+      case "select":
+        if (typeof value === "string" && value !== "") data[field.id] = value;
         break;
       case "number": {
         const number =
@@ -92,6 +96,7 @@ export function toCharacterData(
   return data;
 }
 
+// Сравнивает ресурс по значениям, а остальные поля — по содержимому черновика.
 function isSameValue(a: SheetDraftValue, b: SheetDraftValue | undefined) {
   if (typeof a === "object" && typeof b === "object") {
     return a.current === b.current && a.max === b.max;

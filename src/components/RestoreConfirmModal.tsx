@@ -1,4 +1,7 @@
 import { useRef, useState } from "react";
+import type { RefObject } from "react";
+import { ApiError } from "../api/client";
+import { getRestoreError } from "../history/restoreError";
 import type { CharacterVersionSummary } from "../history/historyTypes";
 import { formatDateTime } from "../shared/formatDateTime";
 import { RestoreIcon } from "../shared/icons";
@@ -15,6 +18,8 @@ interface Props {
   onCancel: () => void;
   // Родитель меняет данные и выполняет переход; окно управляет ожиданием и ошибкой.
   onConfirm?: () => Promise<void>;
+  onRefresh?: () => void;
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 const listFormatter = new Intl.ListFormat("ru", {
@@ -22,36 +27,46 @@ const listFormatter = new Intl.ListFormat("ru", {
   type: "conjunction",
 });
 
+// Объясняет удаление поздних версий и блокирует закрытие и повторный POST во время запроса.
 export default function RestoreConfirmModal({
   open,
   version,
   versions,
   onCancel,
   onConfirm,
+  onRefresh,
+  fallbackFocusRef,
 }: Props) {
   // Телефон (лист снизу) показывает короткий текст без подписей к таймлайну, как MVersion.
   const isMobile = useMediaQuery("(max-width: 639px)");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
   // Ref блокирует повторное подтверждение сразу, ещё до следующей отрисовки React.
   const pendingRef = useRef(false);
 
+  // Закрывает подтверждение без изменения данных.
   function handleCancel() {
     if (pendingRef.current) return;
     setError(null);
     onCancel();
   }
 
+  // Сохраняет окно и выбранную цель при отказе сервера, чтобы пользователь видел причину.
   async function handleConfirm() {
     if (!onConfirm || pendingRef.current) return;
     pendingRef.current = true;
     setPending(true);
     setError(null);
+    setNeedsRefresh(false);
     try {
       await onConfirm();
-    } catch {
+    } catch (error) {
       // При ошибке цель и таймлайн остаются на экране, действие можно повторить.
-      setError("Не удалось выполнить действие. Попробуйте ещё раз.");
+      setError(getRestoreError(error));
+      setNeedsRefresh(
+        error instanceof ApiError && [404, 409].includes(error.status),
+      );
     } finally {
       pendingRef.current = false;
       setPending(false);
@@ -82,6 +97,7 @@ export default function RestoreConfirmModal({
   return (
     <Modal
       open={open}
+      fallbackFocusRef={fallbackFocusRef}
       {...(pending
         ? { dismissible: false as const }
         : { onClose: handleCancel })}
@@ -93,16 +109,27 @@ export default function RestoreConfirmModal({
           <Button onClick={handleCancel} disabled={pending}>
             Отмена
           </Button>
-          <Button
-            variant="danger"
-            icon={<RestoreIcon />}
-            disabled={!onConfirm || deletedVersions.length === 0}
-            loading={pending}
-            loadingText="Восстановление…"
-            onClick={handleConfirm}
-          >
-            Восстановить и удалить {deletedVersions.length} {versionsWord}
-          </Button>
+          {needsRefresh && onRefresh ? (
+            <Button
+              onClick={() => {
+                handleCancel();
+                onRefresh();
+              }}
+            >
+              Обновить данные
+            </Button>
+          ) : (
+            <Button
+              variant="danger"
+              icon={<RestoreIcon />}
+              disabled={!onConfirm || deletedVersions.length === 0}
+              loading={pending}
+              loadingText="Восстановление…"
+              onClick={handleConfirm}
+            >
+              Восстановить и удалить {deletedVersions.length} {versionsWord}
+            </Button>
+          )}
         </>
       }
     >

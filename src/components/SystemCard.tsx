@@ -1,4 +1,4 @@
-import type { GameSystemSummary } from "../mocks/systems";
+import type { GameSystemSummary } from "../systems/systemTypes";
 import { NO_BREAK_SPACE } from "../shared/noBreakSpace";
 import { pluralize } from "../shared/pluralize";
 import { getSystemKind } from "../shared/systemKind";
@@ -44,7 +44,10 @@ export default function SystemCard({
         checked={checked}
         onChange={() => onSelect(system.id)}
       />
-      <SystemBadge name={system.name} system={getSystemKind(system.name)} />
+      <SystemBadge
+        name={system.name}
+        system={getSystemKind(system.source, system.id)}
+      />
       <span className="system-card__text">
         <span className="system-card__name">{system.name}</span>
         <span className="system-card__meta">{meta}</span>

@@ -1,35 +1,37 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
 import DeleteSystemModal from "../components/DeleteSystemModal";
 import SystemListItem from "../components/SystemListItem";
 import { ROUTES } from "../constants/routes";
-import {
-  deleteMockSystem,
-  getMockSchemas,
-  getMockSystems,
-} from "../mocks/systems";
+import { deleteSystem, getCreationCatalog } from "../api/systems";
+import { useApiQuery } from "../api/useApiQuery";
+import { LoadingSkeleton, LoadErrorState } from "../shared/states";
 import type { GameSystemSummary } from "../systems/systemTypes";
-import { CloseIcon, UploadIcon } from "../shared/icons";
+import { UploadIcon } from "../shared/icons";
 import { useMediaQuery } from "../shared/states/useMediaQuery";
-import { Banner, Button, getButtonClassName } from "../shared/ui";
+import { Banner, getButtonClassName } from "../shared/ui";
 
 import "./SystemsPage.css";
 
 // Управление доступными системами; UI получает список из сервиса, не меняя исходные схемы.
 export default function SystemsPage() {
-  const { user } = useAuth();
+  const { user, handleUnauthorized } = useAuth();
+  const query = useApiQuery(getCreationCatalog, user?.id ?? "");
+  const deleting = useRef<AbortController | null>(null);
+  useEffect(() => () => deleting.current?.abort(), []);
   const isPhone = useMediaQuery("(max-width: 639px)");
   const importLinkRef = useRef<HTMLAnchorElement>(null);
   const [target, setTarget] = useState<GameSystemSummary | null>(null);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
-  const [, refresh] = useState(0);
-  const systems = getMockSystems(user?.email ?? "");
+  const [noticeId, setNoticeId] = useState(0);
+  const systems = query.data?.systems ?? [];
 
   // Новое подтверждение сбрасывает прошлую ошибку; цель сохраняется до конца закрытия.
   function handleDeleteRequest(system: GameSystemSummary) {
+    if (system.source !== "IMPORTED" || system.owner_id !== user?.id) return;
     setTarget(system);
     setSession((value) => value + 1);
     setOpen(true);
@@ -37,11 +39,24 @@ export default function SystemsPage() {
 
   // Строка исчезает только после успеха. Ошибку запроса показывает окно подтверждения.
   async function handleDeleteConfirm() {
-    if (!target || !user) return;
-    await deleteMockSystem(target.id, user.email);
-    refresh((value) => value + 1);
-    setNotice(`Система «${target.name}» удалена из списка игровых систем.`);
-    setOpen(false);
+    if (!target || !user || deleting.current) return;
+    const controller = new AbortController();
+    deleting.current = controller;
+    try {
+      await deleteSystem(target.id, controller.signal);
+      if (controller.signal.aborted) return;
+      query.update((previous) => ({
+        ...previous,
+        systems: previous.systems.filter((system) => system.id !== target.id),
+      }));
+      setNoticeId((value) => value + 1);
+      setNotice(`Система «${target.name}» удалена из списка игровых систем.`);
+      setOpen(false);
+    } catch (error) {
+      if (!controller.signal.aborted && !handleUnauthorized(error)) throw error;
+    } finally {
+      if (deleting.current === controller) deleting.current = null;
+    }
   }
 
   // Кнопка закрытия исчезает с баннером, поэтому переводим фокус на оставшуюся ссылку.
@@ -54,23 +69,13 @@ export default function SystemsPage() {
     <div className="systems-page">
       {notice && (
         <Banner
+          key={noticeId}
           variant="success"
           title={notice}
           notification
           className="systems-page__notice"
-          onClose={isPhone ? undefined : handleNoticeClose}
-          actions={
-            isPhone ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                icon={<CloseIcon />}
-                aria-label="Закрыть уведомление"
-                onClick={handleNoticeClose}
-              />
-            ) : undefined
-          }
+          onClose={handleNoticeClose}
+          closeIconOnly={isPhone}
         />
       )}
       <div className="systems-page__header">
@@ -95,17 +100,24 @@ export default function SystemsPage() {
           </span>
         </Link>
       </div>
-      {isPhone ? (
+      {query.loading ? (
+        <LoadingSkeleton variant="list" label="Игровые системы загружаются" />
+      ) : query.error ? (
+        <LoadErrorState onRetry={query.retry} />
+      ) : !systems.length ? (
+        <Banner title="Игровых систем пока нет" />
+      ) : isPhone ? (
         <ul className="systems-page__cards" aria-label="Игровые системы">
           {systems.map((system) => (
             <SystemListItem
               key={system.id}
               system={system}
               isPhone
-              schemaNames={getMockSchemas(system.id).map(
+              schemaNames={(query.data?.schemasBySystem[system.id] ?? []).map(
                 (schema) => schema.name,
               )}
               onDelete={handleDeleteRequest}
+              canDelete={system.owner_id === user?.id}
             />
           ))}
         </ul>
@@ -132,10 +144,11 @@ export default function SystemsPage() {
                   key={system.id}
                   system={system}
                   isPhone={false}
-                  schemaNames={getMockSchemas(system.id).map(
-                    (schema) => schema.name,
-                  )}
+                  schemaNames={(
+                    query.data?.schemasBySystem[system.id] ?? []
+                  ).map((schema) => schema.name)}
                   onDelete={handleDeleteRequest}
+                  canDelete={system.owner_id === user?.id}
                 />
               ))}
             </tbody>
@@ -155,6 +168,10 @@ export default function SystemsPage() {
           fallbackFocusRef={importLinkRef}
           onCancel={() => setOpen(false)}
           onConfirm={handleDeleteConfirm}
+          onRefresh={() => {
+            setOpen(false);
+            query.retry();
+          }}
         />
       )}
     </div>

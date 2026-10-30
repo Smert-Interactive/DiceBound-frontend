@@ -27,7 +27,11 @@ export default function SheetSelectField({
     <Select
       label={field.label}
       // Значение не из списка: без пункта «Не выбрано» select молча показал бы первый.
-      options={isKnown ? field.options : [EMPTY_OPTION, ...field.options]}
+      options={
+        isKnown && field.required
+          ? field.options
+          : [EMPTY_OPTION, ...field.options]
+      }
       value={isKnown ? value : ""}
       onChange={(event) => onChange(event.target.value)}
       error={error}

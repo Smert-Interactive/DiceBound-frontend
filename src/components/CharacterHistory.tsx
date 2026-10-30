@@ -12,17 +12,20 @@ import "./CharacterHistory.css";
 interface Props {
   characterId: string;
   versions: readonly CharacterVersionSummary[];
-  ownerEmail: string;
+  ownerName: string;
   canRestore: boolean;
+  restoreDisabled?: boolean;
   // Окно подтверждения подключается отдельно; без обработчика восстановление недоступно.
   onRestore?: (version: CharacterVersionSummary) => void;
 }
 
+// Показывает серверные метаданные и доступные действия, сохраняя номера и порядок версий.
 export default function CharacterHistory({
   characterId,
   versions,
-  ownerEmail,
+  ownerName,
   canRestore,
+  restoreDisabled = false,
   onRestore,
 }: Props) {
   const helpId = useId();
@@ -30,7 +33,7 @@ export default function CharacterHistory({
   return (
     <div className="character-history">
       {!canRestore && (
-        <Banner title={`${ownerEmail} открыл вам историю версий.`}>
+        <Banner title={`${ownerName} открыл вам историю версий.`}>
           Открывать старые версии можно, восстанавливать — только владельцу.
         </Banner>
       )}
@@ -84,7 +87,7 @@ export default function CharacterHistory({
                     <Button
                       size="sm"
                       icon={<RestoreIcon />}
-                      disabled={!onRestore}
+                      disabled={!onRestore || restoreDisabled}
                       onClick={() => onRestore?.(version)}
                       aria-label={`Восстановить версию ${version.version_number}`}
                     >

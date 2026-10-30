@@ -18,6 +18,7 @@ const strField: NumberField = {
   id: "str",
   type: "number",
   label: "STR",
+  required: true,
   min: 1,
   max: 30,
 };
@@ -73,7 +74,7 @@ describe("number input helpers", () => {
     expect(parseNumber("1.")).toBe(1);
     expect(parseNumber("")).toBeUndefined();
     expect(parseNumber("-")).toBeUndefined();
-    expect(parseNumber(".5")).toBeUndefined();
+    expect(parseNumber(".5")).toBe(0.5);
     expect(parseNumber("1.5.2")).toBeUndefined();
   });
 

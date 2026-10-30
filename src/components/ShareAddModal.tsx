@@ -1,3 +1,4 @@
+import { CONTRACT_LIMITS } from "../api/contractLimits";
 import { useId, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, FormEvent } from "react";
 import {
@@ -156,6 +157,7 @@ export default function ShareAddModal({
           label="Почта пользователя"
           name="recipient_email"
           type="email"
+          maxLength={CONTRACT_LIMITS.email}
           inputMode="email"
           autoComplete="off"
           autoCapitalize="none"
