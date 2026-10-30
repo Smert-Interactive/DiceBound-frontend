@@ -1,3 +1,4 @@
+import { installDataApi } from "./helpers/dataApi";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   act,
@@ -58,6 +59,7 @@ async function fillRegistration(
 }
 
 beforeEach(() => {
+  installDataApi("registration-new@example.com");
   vi.spyOn(authApi, "signIn").mockRejectedValue(
     new ApiError(401, "UNAUTHORIZED", "Invalid email or password"),
   );
@@ -69,6 +71,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe("login validation", () => {

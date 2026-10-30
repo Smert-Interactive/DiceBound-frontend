@@ -1,3 +1,4 @@
+import { installDataApi } from "./helpers/dataApi";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
   act,
@@ -19,6 +20,7 @@ import { MOCK_SYSTEMS, SPACE_FRONTIER_SYSTEM_ID } from "../mocks/systems";
 
 // Подменяем только нативный dialog, чтобы сценарий работал в jsdom.
 beforeEach(() => {
+  installDataApi();
   Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
     configurable: true,
     value: function (this: HTMLDialogElement) {
@@ -34,6 +36,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(HTMLDialogElement.prototype, "showModal");
   Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
 });
@@ -79,7 +82,7 @@ test("cancel preserves the system; deletion removes it from creation and preserv
     screen.queryByRole("radio", { name: /Space Frontier/u }),
   ).not.toBeInTheDocument();
   expect(
-    screen.getByRole("radio", { name: /Custom System/u }),
+    await screen.findByRole("radio", { name: /Custom System/u }),
   ).toBeInTheDocument();
   await act(() => router.navigate(ROUTES.systems));
   await user.click(

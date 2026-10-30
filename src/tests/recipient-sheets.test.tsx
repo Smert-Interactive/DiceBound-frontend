@@ -1,3 +1,4 @@
+import { installDataApi } from "./helpers/dataApi";
 import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -13,10 +14,12 @@ const viktorId = "c1a00000-0000-4000-8000-000000000003";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 // Начинаем с реального маршрута и выбранного mock-аккаунта, без подмены данных листа.
 function renderRecipient(path: string, email = MOCK_USER.email) {
+  installDataApi(email);
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <AuthProvider initialUser={{ ...MOCK_USER, email }}>
@@ -29,7 +32,7 @@ function renderRecipient(path: string, email = MOCK_USER.email) {
 test("Merlin opens from available characters as a read-only original", async () => {
   const calculate = vi.spyOn(recalculate, "recalculateSheet");
   const user = renderRecipient("/characters");
-  await user.click(screen.getByRole("link", { name: "Merlin" }));
+  await user.click(await screen.findByRole("link", { name: "Merlin" }));
   expect(screen.getByRole("heading", { name: "Merlin" })).toBeInTheDocument();
   expect(screen.getByText("Владелец: gm@example.com")).toBeInTheDocument();
   expect(

@@ -1,3 +1,4 @@
+import { createDataApi } from "./helpers/dataApi";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -36,9 +37,12 @@ beforeEach(() => {
     [MOCK_USER.email, { user: MOCK_USER, password: MOCK_PASSWORD }],
   ]);
   let session: User | null = MOCK_USER;
+  const dataApi = createDataApi(() => session?.email ?? "");
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, options: RequestInit) => {
+      const dataResponse = await dataApi(url, options);
+      if (dataResponse) return dataResponse;
       const body = options.body ? JSON.parse(String(options.body)) : {};
       if (url.endsWith("/register")) {
         if (accounts.has(body.email))
@@ -101,7 +105,9 @@ describe("authentication redirects through HTTP", () => {
     await signIn(user);
 
     await screen.findByRole("heading", { name: "Профиль" });
-    const profile = screen.getByRole("region", { name: "Данные аккаунта" });
+    const profile = await screen.findByRole("region", {
+      name: "Данные аккаунта",
+    });
     expect(within(profile).getByText(MOCK_USER.email)).toBeInTheDocument();
     const [year, month, day] = MOCK_USER.created_at.slice(0, 10).split("-");
     expect(

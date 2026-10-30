@@ -108,7 +108,9 @@ test("refreshes counters again when returning to the profile", async () => {
   await waitFor(() =>
     expect(screen.getAllByRole("definition")[0]).toHaveTextContent("5"),
   );
-  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(
+    fetchMock.mock.calls.filter(([url]) => url === "/api/v1/auth/me"),
+  ).toHaveLength(2);
 });
 
 test.each([new TypeError("Offline"), "500"])(

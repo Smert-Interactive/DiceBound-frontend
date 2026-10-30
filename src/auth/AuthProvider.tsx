@@ -31,6 +31,14 @@ export default function AuthProvider({ initialUser, children }: Props) {
   const actionRef = useRef<AbortController | null>(null);
   const sessionRevision = useRef(0);
 
+  // Сбрасывает истёкшую сессию: ProtectedRoute сохраняет исходный адрес для повторного входа.
+  const handleUnauthorized = useCallback((error: unknown) => {
+    if (!(error instanceof ApiError) || error.status !== 401) return false;
+    sessionRevision.current += 1;
+    setUser(null);
+    return true;
+  }, []);
+
   // Обновляет профиль по /me; старый ответ не восстанавливает сессию после входа или выхода.
   const refreshUser = useCallback(async (signal: AbortSignal) => {
     const revision = sessionRevision.current;
@@ -133,7 +141,15 @@ export default function AuthProvider({ initialUser, children }: Props) {
     );
   return (
     <AuthContext.Provider
-      value={{ user, pending, signIn, register, signOut, refreshUser }}
+      value={{
+        user,
+        pending,
+        signIn,
+        register,
+        signOut,
+        refreshUser,
+        handleUnauthorized,
+      }}
     >
       {children}
     </AuthContext.Provider>

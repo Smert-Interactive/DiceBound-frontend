@@ -16,6 +16,8 @@ export interface AuthState {
   signOut: (onSignedOut?: () => void) => Promise<void>;
   // Обновляет серверный профиль; отмена запроса не меняет текущую сессию.
   refreshUser: (signal: AbortSignal) => Promise<void>;
+  // Любой рабочий API-запрос может сообщить об истёкшей сессии.
+  handleUnauthorized: (error: unknown) => boolean;
 }
 
 // null вместо значения по умолчанию: так хук поймёт, что провайдера нет.

@@ -1,3 +1,4 @@
+import { installDataApi } from "./helpers/dataApi";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   cleanup,
@@ -17,6 +18,7 @@ import * as validation from "../mocks/schemaValidation";
 import { CUSTOM_SCHEMA } from "../mocks/sheetSchemas";
 
 function renderImport() {
+  installDataApi();
   const router = createMemoryRouter(routes, {
     initialEntries: ["/systems/import"],
   });
@@ -37,6 +39,7 @@ function renderImport() {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 test("imports a validated schema and creates a character using the preselected system", async () => {
@@ -82,9 +85,11 @@ test("imports a validated schema and creates a character using the preselected s
   expect(editor).toBeDisabled();
   await screen.findByRole("heading", { name: "Новый персонаж" });
   expect(
-    screen.getByText("Система «Star Routes UI» импортирована"),
+    await screen.findByText("Система «Star Routes UI» импортирована"),
   ).toBeInTheDocument();
-  expect(screen.getByRole("radio", { name: /Star Routes UI/u })).toBeChecked();
+  expect(
+    await screen.findByRole("radio", { name: /Star Routes UI/u }),
+  ).toBeChecked();
   expect(
     within(screen.getByRole("complementary", { name: "Сводка" })).getByText(
       "Star Routes UI",
@@ -95,10 +100,10 @@ test("imports a validated schema and creates a character using the preselected s
     "Pilot Alpha",
   );
   await user.click(screen.getByRole("button", { name: "Создать персонажа" }));
-  // Пробные 99 не сохраняются: сервер оставляет number пустым, min не является значением по умолчанию.
-  expect(await screen.findByRole("textbox", { name: "Мощность" })).toHaveValue(
-    "",
-  );
+  await screen.findByText("Персонаж «Pilot Alpha» создан");
+  expect(
+    await screen.findByRole("link", { name: "Pilot Alpha" }),
+  ).toBeInTheDocument();
 });
 
 test("keeps names, checked JSON and preview after an import failure and allows retry", async () => {

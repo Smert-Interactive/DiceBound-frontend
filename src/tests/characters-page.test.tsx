@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { installDataApi } from "./helpers/dataApi";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
@@ -11,6 +12,7 @@ import { ROUTES } from "../constants/routes";
 // Открывает /characters с готовой сессией. Данные списка зависят от почты пользователя:
 // у MOCK_USER это данные холста, у любой другой почты список пуст.
 function renderCharacters(email = MOCK_USER.email) {
+  installDataApi(email);
   const router = createMemoryRouter(routes, {
     initialEntries: [ROUTES.characters],
   });
@@ -22,7 +24,10 @@ function renderCharacters(email = MOCK_USER.email) {
   return userEvent.setup();
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("character list rules", () => {
   test("only own characters can be deleted, a VIEW character cannot", async () => {
